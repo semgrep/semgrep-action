@@ -15,6 +15,7 @@ outputs:
     description: 'The sgrep findings'
 runs:
   using: 'docker'
-  image: 'returntocorp/sgrep'
+  image: 'docker://returntocorp/sgrep:latest'
   args:
-    - ${{ inputs.who-to-greet }}
+    - --config ${{ inputs.config }}
+    - ${{ inputs.targets }}
