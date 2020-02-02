@@ -1,0 +1,16 @@
+# action.yml
+name: 'sgrep'
+description: 'Run sgrep with the given config and return the findings'
+inputs:
+  config:  # id of input
+    description: 'config'
+  targets:
+    description: 'targets'
+outputs:
+  findings: # id of output
+    description: 'The sgrep findings'
+runs:
+  using: 'docker'
+  image: 'returntocorp/sgrep'
+  args:
+    - ${{ inputs.who-to-greet }}
