@@ -26,9 +26,9 @@ function main() {
     fi
 
     if uses "${INPUT_OUTPUT}"; then
-        OUTPUT_ARG = "--output ${INPUT_OUTPUT}"
+        OUTPUT_ARG="--output ${INPUT_OUTPUT}"
     else
-        OUTPUT_ARG = ""
+        OUTPUT_ARG=""
     fi
 
     set +e
