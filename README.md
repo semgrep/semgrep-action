@@ -14,7 +14,7 @@ The target(s) to scan
 
 ### `error`
 
-**required** If `true` will exit `1` which will break the build.
+If `true` will exit `1` which will break the build.
 
 ## Outputs
 
