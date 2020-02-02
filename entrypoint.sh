@@ -33,6 +33,7 @@ function main() {
     OUTPUT=$(/bin/sgrep-lint ${ERROR} --config "${INPUT_CONFIG}" $INPUT_TARGETS)
     EXIT_CODE=$?
     set -e
+    echo $OUTPUT
     echo "::set-output name=output::${OUTPUT}"
     exit 0
 }
