@@ -33,9 +33,10 @@ function main() {
     OUTPUT=$(/bin/sgrep-lint ${ERROR} --config "${INPUT_CONFIG}" $INPUT_TARGETS)
     EXIT_CODE=$?
     set -e
+    ## echo to STDERR so output shows up in GH action UI
     >&2 echo $OUTPUT
     echo "::set-output name=output::${OUTPUT}"
-    exit 0
+    exit $EXIT_CODE
 }
 
 main
