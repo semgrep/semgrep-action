@@ -9,7 +9,7 @@ jobs:
     steps:
     - name: sgrep action step
       id: sgrep
-      uses: returntocorp/sgrep-action@v1
+      uses: returntocorp/sgrep-action@v0.1-beta
       with:
         config: 'tests/sgrep-onfig.yml'
     # Use the output from the `hello` step
