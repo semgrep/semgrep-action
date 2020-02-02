@@ -24,9 +24,11 @@ The output of `sgrep`
 
 ## Example usage
 
+Put in `.github/workflows/sgrep.yml`
+
 ```yaml
 
-name: Sgrep
+name: sgrep
 
 on: [push]
 
