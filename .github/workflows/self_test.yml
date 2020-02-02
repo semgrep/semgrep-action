@@ -14,5 +14,6 @@ jobs:
         with:
           config: tests/self_test.yml
           targets: tests
+          error: false
       - name: Get the output from sgrep
         run: echo "sgrep ${{ steps.sgrep.outputs.output }}"
