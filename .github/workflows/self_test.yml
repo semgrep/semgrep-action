@@ -12,5 +12,5 @@ jobs:
         id: sgrep
         uses: returntocorp/sgrep-action@master
         with:
-          config: ./tests/self_test.yml
-          targets: ./tests
+          config: tests/self_test.yml
+          targets: tests
