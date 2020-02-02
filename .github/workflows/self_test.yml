@@ -12,7 +12,7 @@ jobs:
       uses: returntocorp/sgrep-action@master
       with:
         config: 'r2c'
-        targets: '/github/workspace'
+        targets: '/github/home'
     # Use the output from the `hello` step
     - name: Get the output findings
       run: echo "The time was ${{ steps.sgrep.outputs.findings }}"
