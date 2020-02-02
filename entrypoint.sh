@@ -24,12 +24,15 @@ function main() {
     sanitize "${INPUT_TARGETS}" "targets"
 
     if usesBoolean "${INPUT_ERROR}"; then
-        OUTPUT=$(/bin/sgrep-lint --error --config "${INPUT_CONFIG}" $INPUT_TARGETS)
-        EXIT_CODE=$?
+        ERROR="--error"
     else
-        OUTPUT=$(/bin/sgrep-lint --config "${INPUT_CONFIG}" $INPUT_TARGETS)
-        EXIT_CODE=$?
+        ERROR=""
     fi
+
+    set +e
+    OUTPUT=$(/bin/sgrep-lint ${ERROR} --config "${INPUT_CONFIG}" $INPUT_TARGETS)
+    EXIT_CODE=$?
+    set -e
     echo "::set-output name=output::${OUTPUT}"
     exit $EXIT_CODE
 }
