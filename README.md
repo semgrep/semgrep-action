@@ -12,15 +12,24 @@ The config `file|directory|yaml_url|tar|url|registry_name`.
 
 The target(s) to scan
 
-## Outputs
-
-### `findings`
-
-The findings sgrep finds
-
 ## Example usage
 
-uses: returntocorp/sgrep-action@v1
-with:
-  config: 'r2c'
-  
+```yaml
+
+name: Sgrep
+
+on: [push]
+
+jobs:
+  self_test:
+    runs-on: ubuntu-latest
+    name: A job to run sgrep
+    steps:
+      - uses: actions/checkout@v2
+      - name: sgrep action step
+        id: sgrep
+        uses: returntocorp/sgrep-action@master
+        with:
+          config: './tests/self_test.yml'
+          targets: './tests'
+```

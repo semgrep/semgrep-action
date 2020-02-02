@@ -13,3 +13,4 @@ jobs:
         uses: returntocorp/sgrep-action@master
         with:
           config: './tests/self_test.yml'
+          targets: './tests'

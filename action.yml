@@ -10,9 +10,6 @@ inputs:
     description: 'config'
   targets:
     description: 'targets'
-outputs:
-  findings: # id of output
-    description: 'The sgrep findings'
 runs:
   using: 'docker'
   image: 'docker://returntocorp/sgrep:latest'
