@@ -24,6 +24,7 @@ function main() {
     sanitize "${INPUT_TARGETS}" "targets"
 
     if usesBoolean "${INPUT_ERROR}"; then
+        /bin/sgrep-lint --config "${INPUT_CONFIG}" $INPUT_TARGETS
         ERROR="--error"
     else
         ERROR=""
@@ -33,12 +34,8 @@ function main() {
     OUTPUT=$(/bin/sgrep-lint ${ERROR} --config "${INPUT_CONFIG}" $INPUT_TARGETS)
     EXIT_CODE=$?
     set -e
-    echo ""
-    echo $OUTPUT
-    echo ""
-    sleep 1
     echo "::set-output name=output::${OUTPUT}"
-    exit $EXIT_CODE
+    exit 0
 }
 
 main
