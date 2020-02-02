@@ -1,0 +1,17 @@
+name: Self Test
+
+on: [push]
+
+jobs:
+  self_test:
+    runs-on: ubuntu-latest
+    name: A job to run sgrep
+    steps:
+    - name: sgrep action step
+      id: sgrep
+      uses: returntocorp/sgrep-action@v1
+      with:
+        config: 'tests/sgrep-onfig.yml'
+    # Use the output from the `hello` step
+    - name: Get the output findings
+      run: echo "The time was ${{ steps.sgrep.outputs.findings }}"
