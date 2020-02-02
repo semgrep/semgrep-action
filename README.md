@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: sgrep action step
         id: sgrep
-        uses: returntocorp/sgrep-action@master
+        uses: returntocorp/sgrep-action@develop
         with:
           config: './tests/self_test.yml'
           targets: './tests'
