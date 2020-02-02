@@ -25,7 +25,7 @@ function main() {
         ERROR=""
     fi
 
-    if uses "${INPUT_OUTPUT}": then
+    if uses "${INPUT_OUTPUT}"; then
         OUTPUT_ARG = "--output ${INPUT_OUTPUT}"
     else
         OUTPUT_ARG = ""
@@ -36,7 +36,7 @@ function main() {
     EXIT_CODE=$?
     set -e
     ## echo to STDERR so output shows up in GH action UI
-    >&2 echo $OUTPUT
+    echo >&2 $OUTPUT
     echo "::set-output name=output::${OUTPUT}"
     exit $EXIT_CODE
 }
