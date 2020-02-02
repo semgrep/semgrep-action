@@ -8,6 +8,10 @@ This action runs [sgrep](https://sgrep.dev) and returns the output
 
 The config `file|directory|yaml_url|tar|url|registry_name`.
 
+### `output`
+
+The output arg `file|url`
+
 ### `targets`
 
 The target(s) to scan

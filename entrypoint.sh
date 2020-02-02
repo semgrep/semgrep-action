@@ -25,8 +25,14 @@ function main() {
         ERROR=""
     fi
 
+    if uses "${INPUT_OUTPUT}": then
+        OUTPUT_ARG = "--output ${INPUT_OUTPUT}"
+    else
+        OUTPUT_ARG = ""
+    fi
+
     set +e
-    OUTPUT=$(/bin/sgrep-lint ${ERROR} --config "${INPUT_CONFIG}" $INPUT_TARGETS)
+    OUTPUT=$(/bin/sgrep-lint ${ERROR} --config "${INPUT_CONFIG}" $OUTPUT_ARG $INPUT_TARGETS)
     EXIT_CODE=$?
     set -e
     ## echo to STDERR so output shows up in GH action UI

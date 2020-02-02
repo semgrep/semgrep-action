@@ -9,7 +9,9 @@ inputs:
   error:
     description: 'action exits 1 if the findings are find thus breaking the build'
   config:
-    description: 'config'
+    description: 'config arg'
+  output:
+    description: 'output arg'
   targets:
     description: 'targets'
 outputs:

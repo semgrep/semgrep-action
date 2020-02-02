@@ -12,7 +12,9 @@ jobs:
         id: sgrep
         uses: returntocorp/sgrep-action@develop
         with:
-          config: tests/self_test.yml
+          config: https://sgrep.r2c.dev/api/pattern/4b07be97-84a7-4d31-9727-74fb64086ab3
+          output: https://sgrep.r2c.dev/api/report/4b07be97-84a7-4d31-9727-74fb64086ab3/gh-action
           targets: tests
+
       - name: Get the output from sgrep
         run: echo "sgrep ${{ steps.sgrep.outputs.output }}"
