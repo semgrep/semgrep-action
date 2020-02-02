@@ -16,9 +16,4 @@ inputs:
     description: 'targets'
 runs:
   using: 'docker'
-  image: 'docker://returntocorp/sgrep:latest'
-  args:
-    - ${{ '--error' if inputs.error else ''}}
-    - --config 
-    - ${{ inputs.config }}
-    - ${{ inputs.targets }}
+  image: 'Dockerfile'
