@@ -8,8 +8,6 @@ icon: 'align-left'
 inputs:
   error:
     description: 'action exits 1 if the findings are find thus breaking the build'
-    required: false
-    default: true
   config:
     description: 'config'
   targets:
