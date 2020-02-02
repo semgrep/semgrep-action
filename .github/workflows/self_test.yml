@@ -9,9 +9,10 @@ jobs:
     steps:
     - name: sgrep action step
       id: sgrep
-      uses: returntocorp/sgrep-action@v0.1-beta
+      uses: returntocorp/sgrep-action@master
       with:
-        config: 'tests/sgrep-onfig.yml'
+        config: 'r2c'
+        targets: '/github/workspace'
     # Use the output from the `hello` step
     - name: Get the output findings
       run: echo "The time was ${{ steps.sgrep.outputs.findings }}"
