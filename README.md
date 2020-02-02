@@ -40,6 +40,8 @@ jobs:
         id: sgrep
         uses: returntocorp/sgrep-action@develop
         with:
-          config: './tests/self_test.yml'
-          targets: './tests'
+          config: tests/self_test.yml
+          targets: tests'
+      - name: Get the output from sgrep
+        run: echo "sgrep ${{ steps.sgrep.outputs.output }}"
 ```
