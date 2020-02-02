@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-function sanitize() {
+function checkRequired() {
     if [ -z "${1}" ]; then
         echo >&2 "Unable to find the ${2}. Did you set with.${2}?"
         exit 1
@@ -18,10 +18,6 @@ function usesBoolean() {
 
 function main() {
     echo "" # see https://github.com/actions/toolkit/issues/168
-
-    sanitize "${INPUT_CONFIG}" "config"
-    sanitize "${INPUT_ERROR}" "error"
-    sanitize "${INPUT_TARGETS}" "targets"
 
     if usesBoolean "${INPUT_ERROR}"; then
         ERROR="--error"
