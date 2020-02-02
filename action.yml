@@ -14,6 +14,9 @@ inputs:
     description: 'config'
   targets:
     description: 'targets'
+outputs:
+  output:
+    description: 'output of sgrep'
 runs:
   using: 'docker'
   image: 'Dockerfile'

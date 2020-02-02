@@ -10,8 +10,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: sgrep action step
         id: sgrep
-        uses: returntocorp/sgrep-action@dd/add-error
+        uses: returntocorp/sgrep-action@develop
         with:
           config: tests/self_test.yml
           targets: tests
-          error: false
+      # Use the output from the `sgrep` step
+      - name: Get the output from sgrep
+        run: echo "sgrep: ${{ steps.sgrep.outputs.output }}"

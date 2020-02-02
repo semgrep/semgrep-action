@@ -16,6 +16,12 @@ The target(s) to scan
 
 **required** If `true` will exit `1` which will break the build. Default: `true`.
 
+## Outputs
+
+### `output`
+
+The output of `sgrep`
+
 ## Example usage
 
 ```yaml
