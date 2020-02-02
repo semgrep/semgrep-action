@@ -1,6 +1,7 @@
 # action.yml
 name: 'sgrep-lint'
 description: 'Run sgrep-lint with the given config and return the findings'
+icon: 'align-left'
 inputs:
   config:  # id of input
     description: 'config'
