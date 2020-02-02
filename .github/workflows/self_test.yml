@@ -11,8 +11,8 @@ jobs:
       id: sgrep
       uses: returntocorp/sgrep-action@master
       with:
-        config: '/github/home/tests/self_test.yml'
-        targets: '/github/home/'
+        config: '/github/workspace/tests/self_test.yml'
+        targets: '/github/workspace/'
     # Use the output from the `hello` step
     - name: Get the output findings
       run: echo "The time was ${{ steps.sgrep.outputs.findings }}"
