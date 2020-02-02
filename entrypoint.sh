@@ -24,7 +24,6 @@ function main() {
     sanitize "${INPUT_TARGETS}" "targets"
 
     if usesBoolean "${INPUT_ERROR}"; then
-        /bin/sgrep-lint --config "${INPUT_CONFIG}" $INPUT_TARGETS
         ERROR="--error"
     else
         ERROR=""
