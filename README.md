@@ -16,12 +16,12 @@ The target(s) to scan
 
 ```yaml
 
-name: Sgrep
+name: sgrep
 
 on: [push]
 
 jobs:
-  self_test:
+  sgrep:
     runs-on: ubuntu-latest
     name: A job to run sgrep
     steps:
@@ -30,6 +30,6 @@ jobs:
         id: sgrep
         uses: returntocorp/sgrep-action@master
         with:
-          config: './tests/self_test.yml'
-          targets: './tests'
+          config: tests/self_test.yml
+          targets: tests
 ```
