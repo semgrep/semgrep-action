@@ -6,7 +6,11 @@ branding:
   color: 'gray-dark'
 icon: 'align-left'
 inputs:
-  config:  # id of input
+  error:
+    description: 'action exits 1 if the findings are find thus breaking the build'
+    required: false
+    default: true
+  config:
     description: 'config'
   targets:
     description: 'targets'
@@ -14,6 +18,7 @@ runs:
   using: 'docker'
   image: 'docker://returntocorp/sgrep:latest'
   args:
+    - ${{ --error if inputs.error else ''}}
     - --config 
     - ${{ inputs.config }}
     - ${{ inputs.targets }}

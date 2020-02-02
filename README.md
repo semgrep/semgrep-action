@@ -12,6 +12,10 @@ The config `file|directory|yaml_url|tar|url|registry_name`.
 
 The target(s) to scan
 
+### `error`
+
+**required** If `true` will exit `1` which will break the build. Default: `true`.
+
 ## Example usage
 
 ```yaml
