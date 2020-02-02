@@ -1,6 +1,6 @@
 # action.yml
-name: 'sgrep'
-description: 'Run sgrep with the given config and return the findings'
+name: 'sgrep-lint'
+description: 'Run sgrep-lint with the given config and return the findings'
 inputs:
   config:  # id of input
     description: 'config'
