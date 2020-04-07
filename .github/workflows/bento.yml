@@ -8,7 +8,7 @@ jobs:
       name: Bento
       uses: returntocorp/bento-action@v1
       with:
-        acceptTermsWithEmail: bence@underyx.me
+        acceptTermsWithEmail: test@returntocorp.com
         slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
 name: Bento
 'on':
