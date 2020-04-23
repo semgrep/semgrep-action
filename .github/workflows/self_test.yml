@@ -5,16 +5,15 @@ on: [push]
 jobs:
   self_test:
     runs-on: ubuntu-latest
-    name: A job to run sgrep
+    name: A job to run semgrep
     steps:
       - uses: actions/checkout@v2
-      - name: sgrep action step
-        id: sgrep
-        uses: returntocorp/sgrep-action@develop
+      - name: semgrep action step
+        id: semgrep
+        uses: returntocorp/semgrep-action@develop
         with:
-          config: https://sgrep.r2c.dev/api/pattern/4b07be97-84a7-4d31-9727-74fb64086ab3
-          output: https://sgrep.r2c.dev/api/report/4b07be97-84a7-4d31-9727-74fb64086ab3/gh-action
+          config: https://semgrep.live/c/r/r2c
           targets: tests
 
-      - name: Get the output from sgrep
-        run: echo "sgrep ${{ steps.sgrep.outputs.output }}"
+      - name: Get the output from semgrep
+        run: echo "semgrep ${{ steps.semgrep.outputs.output }}"

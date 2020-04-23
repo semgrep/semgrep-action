@@ -1,6 +1,6 @@
 # action.yml
-name: 'sgrep-lint'
-description: 'Run sgrep-lint with the given config and return the findings'
+name: 'semgrep'
+description: 'Run semgrep with the given config and return the findings'
 branding:
   icon: 'align-left'
   color: 'gray-dark'
@@ -16,7 +16,7 @@ inputs:
     description: 'targets'
 outputs:
   output:
-    description: 'output of sgrep'
+    description: 'output of semgrep'
 runs:
   using: 'docker'
   image: 'Dockerfile'

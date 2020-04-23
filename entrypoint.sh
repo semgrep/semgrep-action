@@ -32,7 +32,7 @@ function main() {
     fi
 
     set +e
-    OUTPUT=$(/bin/sgrep-lint ${ERROR} --config "${INPUT_CONFIG}" ${OUTPUT_ARG} $INPUT_TARGETS)
+    OUTPUT=$(/bin/semgrep ${ERROR} --config "${INPUT_CONFIG}" ${OUTPUT_ARG} $INPUT_TARGETS)
     EXIT_CODE=$?
     set -e
     ## echo to STDERR so output shows up in GH action UI

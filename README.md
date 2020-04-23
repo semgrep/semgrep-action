@@ -1,6 +1,6 @@
-# sgrep action
+# semgrep action
 
-This action runs [sgrep](https://sgrep.dev) and returns the output
+This action runs [semgrep](https://semgrep.dev) and returns the output
 
 ## Inputs
 
@@ -24,30 +24,30 @@ If `true` will exit `1` which will break the build.
 
 ### `output`
 
-The output of `sgrep`
+The output of `semgrep`
 
 ## Example usage
 
-Put in `.github/workflows/sgrep.yml`
+Put in `.github/workflows/semgrep.yml`
 
 ```yaml
 
-name: sgrep
+name: semgrep
 
 on: [push]
 
 jobs:
   self_test:
     runs-on: ubuntu-latest
-    name: A job to run sgrep
+    name: A job to run semgrep
     steps:
       - uses: actions/checkout@v2
-      - name: sgrep action step
-        id: sgrep
-        uses: returntocorp/sgrep-action@develop
+      - name: semgrep action step
+        id: semgrep
+        uses: returntocorp/semgrep-action@develop
         with:
           config: tests/self_test.yml
           targets: tests'
-      - name: Get the output from sgrep
-        run: echo "sgrep ${{ steps.sgrep.outputs.output }}"
+      - name: Get the output from semgrep
+        run: echo "semgrep ${{ steps.semgrep.outputs.output }}"
 ```
