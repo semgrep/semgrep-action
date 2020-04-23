@@ -1,5 +1,5 @@
 # action.yml
-name: 'semgrep'
+name: 'semgrep-action'
 description: 'Run semgrep with the given config and return the findings'
 branding:
   icon: 'align-left'
