@@ -90,7 +90,7 @@ check_prerequisites() {
 }
 
 main() {
-  echo "== action's environment: $($bento_path --version), $(python --version)"
+  echo "== action's environment: semgrep/$(semgrep --version), $($bento_path --version), $(python --version)"
 
   check_prerequisites
   echo "== triggered by a ${GITHUB_EVENT_NAME}"
