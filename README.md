@@ -29,7 +29,7 @@ jobs:
 ```
 
 Note that the `r/all` config value
-will enable all 160+ checks from [our registry](https://semgrep.live/r).
+will enable the hundreds of checks from [our registry](https://semgrep.live/r).
 You will probably want to configure a specific set of checks,
 see how to do that below.
 
