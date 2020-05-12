@@ -44,12 +44,6 @@ You can set specify rules in one of the following ways:
   referring to a subset of the [semgrep.live registry](https://semgrep.live/r)
 - **semgrep.live rule ID**: `config: xYz`  
   referring to a rule published from the [semgrep.live editor](https://semgrep.live)
-- **YAML file URL**: `config: https://rules.example.com/one-rule.yaml`  
-  referring to a rule, accessible via HTTP
-- **tar file URL**: `config: https://rules.example.com/many-rules.tar.gz`  
-  referring to an archive containing rules, accessible via HTTP
-- **file path**: `config: .misc/semgrep-rules`  
-  referring to a file or directory in your repo, containing rule files
 
 If `config` is unset,
 the default behavior is to look for rules

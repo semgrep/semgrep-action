@@ -16,18 +16,6 @@ jobs:
       with:
         config: QKP
         slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
-    - id: rule-url
-      name: Rule URL
-      uses: ./
-      with:
-        config: https://raw.githubusercontent.com/returntocorp/semgrep-rules/develop/template.yaml
-        slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
-    - id: rule-path
-      name: Rule Path
-      uses: ./
-      with:
-        config: tests/local_rule.yaml
-        slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
     - id: default-config
       name: Default Config
       uses: ./
