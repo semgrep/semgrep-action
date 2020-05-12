@@ -25,10 +25,10 @@ jobs:
       id: semgrep
       uses: returntocorp/semgrep-action@v1
       with:
-        config: r/r2c
+        config: r/all
 ```
 
-Note that the `r/r2c` config value
+Note that the `r/all` config value
 will enable all 160+ checks from [our registry](https://semgrep.live/r).
 You will probably want to configure a specific set of checks,
 see how to do that below.
@@ -40,7 +40,7 @@ see how to do that below.
 The `config` value lets you choose what rules and patterns semgrep should scan for.
 You can set specify rules in one of the following ways:
 
-- **semgrep.live registry ID**: `config: r/r2c.python.flask`  
+- **semgrep.live registry ID**: `config: r/python.flask`  
   referring to a subset of the [semgrep.live registry](https://semgrep.live/r)
 - **semgrep.live rule ID**: `config: xYz`  
   referring to a rule published from the [semgrep.live editor](https://semgrep.live)
