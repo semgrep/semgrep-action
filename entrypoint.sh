@@ -31,11 +31,29 @@ bento() {
 }
 
 handle_pull_request() {
+  # the github ref would be `refs/pull/<pr #>/merge` which isn't known by name here
+  # the github sha seems to refer to the base on re-runs
+  # so we keep our own head ref around
+  real_head_sha=$(git rev-parse HEAD)
+
   echo
-  echo "== seeing if there are any new findings"
+  echo "== [1/3] going to go back to the commit you based your pull request on…"
+  echo
+  git checkout "${GITHUB_BASE_REF}"
+  git status --branch --short
+
+  echo
+  echo "== [2/3] …now adding your pull request's changes back…"
+  echo
+
+  git checkout "${real_head_sha}" -- .
+  git status --branch --short
+
+  echo
+  echo "== [3/3] …and seeing if there are any new findings!"
   echo
   bento init &> /dev/null
-  bento check --tool=semgrep --diff-against="${GITHUB_BASE_REF}"
+  bento check --tool=semgrep
 }
 
 handle_push() {
@@ -72,7 +90,7 @@ check_prerequisites() {
 }
 
 main() {
-  echo "== action's environment: semgrep/$(semgrep --version), $($bento_path --version), $(python --version)"
+  echo "== action's environment: $($bento_path --version), $(python --version)"
 
   check_prerequisites
   echo "== triggered by a ${GITHUB_EVENT_NAME}"
