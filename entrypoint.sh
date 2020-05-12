@@ -95,7 +95,7 @@ main() {
   check_prerequisites
   echo "== triggered by a ${GITHUB_EVENT_NAME}"
 
-  export BENTO_REGISTRY=$INPUT_CONFIG
+  [[ -n "${INPUT_CONFIG}" ]] && export BENTO_REGISTRY=$INPUT_CONFIG
 
   case ${GITHUB_EVENT_NAME} in
     pull_request)
