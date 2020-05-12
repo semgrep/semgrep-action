@@ -1,0 +1,12 @@
+rules:
+  # Example rules with basic patterns
+  - id: possible_unnecessary_comparison_always_true
+    pattern: $X == $X
+    message: $X == $X is always true (Unless X is NAN ...)
+    languages: [python, javascript]
+    severity: WARNING
+  - id: possible_unnecessary_comparison_always_false
+    pattern: $X != $X
+    message: $X != $X is always false (Unless X is NAN ...)
+    languages: [python, javascript]
+    severity: WARNING
