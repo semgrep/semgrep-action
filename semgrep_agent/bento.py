@@ -7,6 +7,7 @@ from textwrap import dedent
 import time
 from typing import Any, Dict, List
 
+import requests
 import click
 import sh
 from sh.contrib import git
@@ -68,8 +69,10 @@ def scan_pull_request(config: str) -> sh.RunningCommand:
 
 def scan_push(config: str) -> sh.RunningCommand:
     env = os.environ.copy()
-    if config:
-        env["BENTO_REGISTRY"] = config
+    if config and config.startswith("r/"):
+        resp = requests.get(f"https://semgrep.live/c/{config}")
+        with Path(".bento/semgrep.yml").open("w") as fd:
+            fd.write(resp.content.decode("utf-8"))
 
     click.echo("== seeing if there are any findings")
     bento.check(tool="semgrep", all=True, _env=env, _out=sys.stdout, _err=sys.stderr)
