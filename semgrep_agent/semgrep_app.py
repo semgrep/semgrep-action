@@ -1,0 +1,61 @@
+from dataclasses import dataclass, field
+from typing import Optional
+
+from boltons.iterutils import chunked_iter
+import click
+import requests
+
+
+@dataclass
+class Sapp:
+    ctx: click.Context
+    url: str
+    token: str
+    deployment_id: int
+    scan_id: Optional[int] = None
+    session: requests.Session = field(init=False)
+
+    def __post_init__(self):
+        self.session = requests.Session()
+        self.session.headers["Authorization"] = f"Bearer {self.token}"
+
+    def report_start(self):
+        if self.token is None or self.deployment_id is None:
+            return
+
+        try:
+            response = self.session.post(
+                f"{self.url}/api/agent/deployment/{self.deployment_id}/scan",
+                json={"meta": self.ctx.obj.meta.to_dict()},
+            )
+            response.raise_for_status()
+        except requests.RequestException:
+            click.echo(f"Semgrep App returned this error: {response.text}", err=True)
+        else:
+            self.scan_id = response.json()["scan"]["id"]
+
+    def report_results(self, results):
+        if self.token is None or self.deployment_id is None or self.scan_id is None:
+            return
+
+        # report findings
+        for chunk in chunked_iter(results.findings, 10_000):
+            try:
+                response = self.session.post(
+                    f"{self.url}/api/agent/scan/{self.scan_id}/findings", json=chunk,
+                )
+                response.raise_for_status()
+            except requests.RequestException:
+                click.echo(
+                    f"Semgrep App returned this error: {response.text}", err=True
+                )
+
+        # mark as complete
+        try:
+            response = self.session.post(
+                f"{self.url}/api/agent/scan/{self.scan_id}/complete",
+                json=results.stats,
+            )
+            response.raise_for_status()
+        except requests.RequestException:
+            click.echo(f"Semgrep App returned this error: {response.text}", err=True)

@@ -8,6 +8,9 @@ verify_ssl = true
 [packages]
 bento-cli = "*"
 requests = "*"
+click = "*"
+sh = "*"
+boltons = "*"
 
 [requires]
 python_version = "3.8"

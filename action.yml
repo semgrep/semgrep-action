@@ -11,10 +11,10 @@ inputs:
   slackWebhookURL:
     description: |
       A Slack incoming webhook URL that you want findings posted to.
-  semgrepAppToken:
+  publishToken:
     description: |
       Access token to post results to the semgrep app.
-  deploymentId:
+  publishDeployment:
     description: |
       Deployment ID on semgrep app.
 branding:

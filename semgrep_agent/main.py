@@ -1,0 +1,88 @@
+from dataclasses import dataclass
+from textwrap import dedent
+import os
+from pathlib import Path
+import sys
+
+import click
+import sh
+
+from .meta import Meta
+from .semgrep_app import Sapp
+from .slack import Slack
+from . import bento
+
+
+def url(string: str) -> str:
+    return string.rstrip("/")
+
+
+@dataclass
+class CliObj:
+    event_type: str
+    config: str
+    meta: Meta
+    sapp: Sapp
+    slack: Slack
+
+
+def get_event_type():
+    if "GITHUB_ACTIONS" in os.environ:
+        return os.environ["GITHUB_EVENT_TYPE"]
+
+    return "push"
+
+
+@click.command()
+@click.option("--config", envvar="INPUT_CONFIG", type=str)
+@click.option(
+    "--publish-url", envvar="INPUT_PUBLISHURL", type=url, default="https://semgrep.live"
+)
+@click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
+@click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
+@click.option("--slack-url", envvar="INPUT_SLACKWEBHOOKURL", type=url)
+@click.pass_context
+def main(
+    ctx: click.Context,
+    config: str,
+    publish_url: str,
+    publish_token: str,
+    publish_deployment: int,
+    slack_url: str,
+):
+    click.echo(
+        f"== action's environment: semgrep/{sh.semgrep(version=True).strip()}, {sh.bento(version=True).strip()}, {sh.python(version=True).strip()}"
+    )
+
+    if not config and not (Path(".bento") / "semgrep.yml").is_file():
+        message = """
+            == [WARNING] you didn't configure what rules semgrep should scan for.
+
+            Please either set a config in the action's configuration according to
+            https://github.com/returntocorp/semgrep-action#configuration
+            or commit your own rules at the default path of .bento/semgrep.yml
+        """
+        message = dedent(message).strip()
+        click.echo(message, err=True)
+
+    obj = ctx.obj = CliObj(
+        event_type=get_event_type(),
+        config=config,
+        meta=Meta(),
+        sapp=Sapp(
+            ctx=ctx,
+            url=publish_url,
+            token=publish_token,
+            deployment_id=publish_deployment,
+        ),
+        slack=Slack(ctx=ctx, webhook_url=slack_url),
+    )
+
+    obj.sapp.report_start()
+
+    results = bento.scan(ctx)
+
+    obj.sapp.report_results(results)
+    obj.slack.report_results(results)
+
+    sys.exit(results.exit_code)
