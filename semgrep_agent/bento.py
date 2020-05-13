@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import sys
 from textwrap import dedent
+import time
 from typing import Any, Dict, List
 
 import click
@@ -24,17 +25,19 @@ ALLOWED_EVENT_TYPES = frozenset(["push", "pull_request"])
 class Results:
     exit_code: int
     findings: List[Dict[str, Any]]
+    total_time: float
 
     @classmethod
-    def from_sh_command(cls, sh_command: sh.RunningCommand):
+    def from_sh_command(cls, sh_command: sh.RunningCommand, elapsed: float):
         return cls(
             exit_code=sh_command.exit_code,
             findings=json.loads(sh_command.stdout.decode()),
+            total_time=elapsed,
         )
 
     @property
     def stats(self) -> Dict[str, Any]:
-        return {"findings": len(self.findings)}
+        return {"findings": len(self.findings), "total_time": self.total_time}
 
 
 def scan_pull_request(config: str) -> sh.RunningCommand:
@@ -96,11 +99,12 @@ def scan(ctx: click.Context) -> Results:
 
     bento.init()
 
+    before = time.time()
     try:
         if event_type == "pull_request":
-            return Results.from_sh_command(scan_pull_request(ctx.obj.config))
+            results = scan_pull_request(ctx.obj.config)
         elif event_type == "push":
-            return Results.from_sh_command(scan_push(ctx.obj.config))
+            results = scan_push(ctx.obj.config)
     except sh.ErrorReturnCode as error:
         click.echo((Path.home() / ".bento" / "last.log").read_text(), err=True)
         message = f"""
@@ -113,3 +117,6 @@ def scan(ctx: click.Context) -> Results:
         message = dedent(message).strip()
         click.echo(message, err=True)
         sys.exit(error.exit_code)
+    after = time.time()
+
+    return Results.from_sh_command(results, after - before)
