@@ -2,6 +2,7 @@ import os
 
 import click
 import git
+import sh
 
 from dataclasses import dataclass
 
@@ -72,4 +73,7 @@ class Meta:
             "on": self.ci_event,
             "branch": self.commit_ref,
             "pull_request_id": self.pr_id,
+            "semgrep_version": sh.semgrep(version=True).strip(),
+            "bento_version": sh.bento(version=True).strip(),
+            "python_version": sh.python(version=True).strip(),
         }
