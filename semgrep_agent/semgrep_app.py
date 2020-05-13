@@ -27,6 +27,7 @@ class Sapp:
             response = self.session.post(
                 f"{self.url}/api/agent/deployment/{self.deployment_id}/scan",
                 json={"meta": self.ctx.obj.meta.to_dict()},
+                timeout=30,
             )
             response.raise_for_status()
         except requests.RequestException:
@@ -42,7 +43,9 @@ class Sapp:
         for chunk in chunked_iter(results.findings, 10_000):
             try:
                 response = self.session.post(
-                    f"{self.url}/api/agent/scan/{self.scan_id}/findings", json=chunk,
+                    f"{self.url}/api/agent/scan/{self.scan_id}/findings",
+                    json=chunk,
+                    timeout=30,
                 )
                 response.raise_for_status()
             except requests.RequestException:
@@ -55,6 +58,7 @@ class Sapp:
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan_id}/complete",
                 json=results.stats,
+                timeout=30,
             )
             response.raise_for_status()
         except requests.RequestException:

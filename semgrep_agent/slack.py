@@ -36,7 +36,7 @@ class Slack:
         }
         try:
             response = requests.post(
-                self.webhook_url, data={"payload": json.dumps(payload)},
+                self.webhook_url, data={"payload": json.dumps(payload)}, timeout=30
             )
             response.raise_for_status()
         except requests.RequestException:
