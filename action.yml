@@ -1,4 +1,4 @@
-name: 'semgrep-action'
+name: 'Semgrep Action'
 author: 'Return To Corporation'
 description: 'Easily detect and prevent bugs and anti-patterns in your codebase'
 runs:
@@ -11,6 +11,12 @@ inputs:
   slackWebhookURL:
     description: |
       A Slack incoming webhook URL that you want findings posted to.
+  semgrepAppToken:
+    description: |
+      Access token to post results to the semgrep app.
+  deploymentId:
+    description: |
+      Deployment ID on semgrep app.
 branding:
   icon: 'align-left'
   color: 'gray-dark'

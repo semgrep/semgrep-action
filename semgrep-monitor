@@ -2,17 +2,42 @@
 import argparse
 import json
 import os
+from pathlib import Path
 import subprocess
 import sys
-from typing import Any, Dict
-import urllib.error
-import urllib.parse
-import urllib.request
+from typing import Any, Dict, List
 
-parser = argparse.ArgumentParser(description="Notify about Semgrep results.")
-parser.add_argument("exitcode", type=int, help="Semgrep's exit code")
-parser.add_argument("--slack-url", type=str, help="Slack webhook URL")
-args = parser.parse_args()
+import requests
+
+
+def url(string: str) -> str:
+    return string.rstrip("/")
+
+
+parser = argparse.ArgumentParser(
+    prog="semgrep-monitor", description="Notify about Semgrep results."
+)
+parser.add_argument("--semgrep-app-url", type=url, help="Semgrep app URL")
+parser.add_argument("--semgrep-app-token", type=str, help="Semgrep app auth token")
+
+subparsers = parser.add_subparsers(help="Event to report")
+
+parser_start = subparsers.add_parser(
+    "start", help="Report that a scan is being started"
+)
+parser_start.add_argument("deployment_id", type=int, help="Semgrep app deployment ID")
+
+parser_finish = subparsers.add_parser(
+    "finish", help="Report results of a finished scan"
+)
+
+parser_finish.add_argument("exitcode", type=int, help="Semgrep's exit code")
+parser_finish.add_argument(
+    "results_file", type=argparse.FileType("r"), help="Path to Semgrep's JSON output"
+)
+
+parser_finish.add_argument("--slack-url", type=url, help="Slack webhook URL")
+parser_finish.add_argument("--scan-id", type=int, help="Semgrep app scan ID")
 
 
 repo_name = os.environ["GITHUB_REPOSITORY"]
@@ -20,7 +45,7 @@ repo_url = f"https://github.com/{repo_name}"
 action_url = f"{repo_url}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
 
 
-def generate_message(notify_reason: str) -> Dict[str, Any]:
+def generate_message(notify_reason: str) -> List[Dict[str, Any]]:
     return [
         {
             "type": "section",
@@ -50,11 +75,40 @@ def generate_message(notify_reason: str) -> Dict[str, Any]:
     ]
 
 
-def main():
-    if not args.slack_url:
-        return  # user never configured this script, not printing anything
+def report_start_to_semgrep_app():
+    if not args.semgrep_app_token:
+        return
 
-    print("== sending notifications if needed")
+    api_url = f"{args.semgrep_app_url}/api/agent/deployment/{args.deployment_id}/scan"
+    metadata = {
+        "repository": repo_name,
+        "commit": os.environ["GITHUB_SHA"],
+        "on": os.environ["GITHUB_EVENT_NAME"],
+        "branch": os.environ["GITHUB_REF"],
+    }
+    try:
+        response = requests.post(
+            api_url,
+            headers={"Authorization": f"Bearer {args.semgrep_app_token}"},
+            json={"meta": metadata},
+        )
+        response.raise_for_status()
+    except requests.RequestException:
+        print(f"Semgrep App returned this error: {response.text}", file=sys.stderr)
+    else:
+        print(response.json()["scan"]["id"])
+
+
+def report_finish():
+    report_finish_to_slack()
+    report_finish_to_semgrep_app()
+
+
+def report_finish_to_slack():
+    if not args.slack_url:
+        return
+
+    print("== sending slack notifications if needed", file=sys.stderr)
 
     notify_reason = None
     if args.exitcode == 2:
@@ -63,7 +117,10 @@ def main():
         notify_reason = "encountered an error"
 
     if not notify_reason:
-        print("not sending a notification, there's nothing to notify about")
+        print(
+            "not sending a notification, there's nothing to notify about",
+            file=sys.stderr,
+        )
         return
 
     payload = {
@@ -73,13 +130,57 @@ def main():
         "username": "Semgrep",
     }
     try:
-        urllib.request.urlopen(
-            args.slack_url,
-            urllib.parse.urlencode({"payload": json.dumps(payload)}).encode(),
-        )
-    except urllib.error.HTTPError as e:
-        print(f"Slack returned this error: {e.read().decode()}")
+        response = requests.post(args.slack_url, data={"payload": json.dumps(payload)},)
+        response.raise_for_status()
+    except requests.RequestException:
+        print(f"Slack returned this error: {response.text}", file=sys.stderr)
 
+
+def report_finish_to_semgrep_app():
+    if not args.semgrep_app_token:
+        return
+
+    # send findings
+    results = json.load(args.results_file)
+    payload = [
+        {
+            "path": result["path"],
+            "rule": result["check_id"],
+            "startLine": result["line"],
+            "endLine": result["line"],  # TODO get end line from semgrep
+        }
+        for result in results
+    ]
+    api_url = f"{args.semgrep_app_url}/api/agent/scan/{args.scan_id}/findings"
+    try:
+        response = requests.post(
+            api_url,
+            headers={"Authorization": f"Bearer {args.semgrep_app_token}"},
+            json=payload,
+        )
+        response.raise_for_status()
+    except requests.RequestException:
+        print(f"Semgrep App returned this error: {response.text}", file=sys.stderr)
+
+    # mark as complete
+    stats = {
+        "findings": len(results)
+    }  # TODO: {…, "files_scanned": 552, "total_time": 1.34, "cpu_time": 4.32}
+    api_url = f"{args.semgrep_app_url}/api/agent/scan/{args.scan_id}/complete"
+    try:
+        response = requests.post(
+            api_url,
+            headers={"Authorization": f"Bearer {args.semgrep_app_token}"},
+            json={"exit_code": args.exitcode, "stats": stats},
+        )
+        response.raise_for_status()
+    except requests.RequestException:
+        print(f"Semgrep App returned this error: {response.text}", file=sys.stderr)
+
+
+parser_start.set_defaults(handler=report_start_to_semgrep_app)
+parser_finish.set_defaults(handler=report_finish)
 
 if __name__ == "__main__":
-    main()
+    args = parser.parse_args()
+    args.handler()

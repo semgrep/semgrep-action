@@ -4,13 +4,23 @@ set -euo pipefail
 bento_path=$(which bento)
 
 bento() {
-  bento_result=0
+  local bento_result=0
   $bento_path --agree --email "semgrep-action@returntocorp.com" "$@" || bento_result=$?
 
   if [[ "$1" == "check" ]]
   then
+    local bento_output_path=$(mktemp)
+    $bento_path --agree --email "semgrep-action@returntocorp.com" --formatter json "$@" > "$bento_output_path"
+
     echo
-    /app/semgrep-monitor "$bento_result" "--slack-url=${INPUT_SLACKWEBHOOKURL-}" || true
+    /app/semgrep-monitor \
+      "--semgrep-app-url=https://semgrep.live"\
+      "--semgrep-app-token=${INPUT_SEMGREPAPPTOKEN-}"\
+      "finish" \
+      "$bento_result"
+      "$bento_output_path"
+      "--scan-id=${scan_id-}" \
+      "--slack-url=${INPUT_SLACKWEBHOOKURL-}" || true
     echo
   fi
 
@@ -96,6 +106,16 @@ main() {
   echo "== triggered by a ${GITHUB_EVENT_NAME}"
 
   [[ -n "${INPUT_CONFIG}" ]] && export BENTO_REGISTRY=$INPUT_CONFIG
+
+  echo
+  scan_id=$(
+    /app/semgrep-monitor \
+    "--semgrep-app-url=https://semgrep.live"\
+    "--semgrep-app-token=${INPUT_SEMGREPAPPTOKEN-}"\
+    "start" \
+    "${INPUT_DEPLOYMENTID-}"
+  )
+  echo
 
   case ${GITHUB_EVENT_NAME} in
     pull_request)
