@@ -31,7 +31,7 @@ tools:
     run: true
   dlint:
     ignore: []
-    run: true
+    run: false
   flake8:
     ignore:
     - bad-wildcard-import
@@ -41,7 +41,7 @@ tools:
     - unused-loop-variable
     - unused-module
     - unused-variable
-    run: true
+    run: false
   hadolint:
     ignore:
     - DL3008
@@ -56,17 +56,17 @@ tools:
   r2c.click:
     ignore:
     - names-are-well-formed
-    run: true
+    run: false
   r2c.flask:
     ignore: []
-    run: true
+    run: false
   r2c.registry.latest:
     ignore: []
     run: true
   r2c.requests:
     ignore:
     - use-timeout
-    run: true
+    run: false
   semgrep:
     ignore: []
     run: false

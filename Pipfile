@@ -11,6 +11,7 @@ requests = "*"
 click = "*"
 sh = "*"
 boltons = "*"
+gitpython = "~=2.1"
 
 [requires]
 python_version = "3.8"

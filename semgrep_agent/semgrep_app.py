@@ -57,7 +57,7 @@ class Sapp:
         try:
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan_id}/complete",
-                json=results.stats,
+                json={"exit_code": results.exit_code, "stats": results.stats},
                 timeout=30,
             )
             response.raise_for_status()

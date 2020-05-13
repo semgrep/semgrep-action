@@ -68,7 +68,7 @@ def main(
     obj = ctx.obj = CliObj(
         event_type=get_event_type(),
         config=config,
-        meta=Meta(),
+        meta=Meta(ctx=ctx),
         sapp=Sapp(
             ctx=ctx,
             url=publish_url,

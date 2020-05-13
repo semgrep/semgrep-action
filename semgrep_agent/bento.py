@@ -34,7 +34,7 @@ class Results:
 
     @property
     def stats(self) -> Dict[str, Any]:
-        return {"findings": len(self.findings), "exit_code": self.exit_code}
+        return {"findings": len(self.findings)}
 
 
 def scan_pull_request(config: str) -> sh.RunningCommand:
