@@ -28,7 +28,7 @@ class CliObj:
 
 def get_event_type():
     if "GITHUB_ACTIONS" in os.environ:
-        return os.environ["GITHUB_EVENT_TYPE"]
+        return os.environ["GITHUB_EVENT_NAME"]
 
     return "push"
 

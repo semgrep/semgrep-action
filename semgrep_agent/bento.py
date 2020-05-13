@@ -48,7 +48,7 @@ def scan_pull_request(config: str) -> sh.RunningCommand:
     # the github ref would be `refs/pull/<pr #>/merge` which isn't known by name here
     # the github sha seems to refer to the base on re-runs
     # so we keep our own head ref around
-    real_head_sha = git("rev-parse", "HEAD").stdout
+    real_head_sha = git("rev-parse", "HEAD").stdout.strip()
 
     click.echo(
         "== [1/3] going to go back to the commit you based your pull request on…"
