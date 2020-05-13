@@ -68,7 +68,6 @@ The Semgrep Action can notify you on Slack about findings.
        slackWebhookURL: ${{ secrets.SEMGREP_SLACK_WEBHOOK_URL }}
    ```
 
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)

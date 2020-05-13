@@ -16,9 +16,10 @@ COPY --from=semgrep /bin/semgrep-core /bin/semgrep-core
 
 RUN ln -s /bin/semgrep-files/semgrep /bin/semgrep
 
-COPY entrypoint.sh semgrep-monitor ./
+COPY ./semgrep_agent /app/semgrep_agent
+ENV PYTHONPATH=/app
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["python", "-m", "semgrep_agent"]
 
 ENV BENTO_ACTION=true\
     SEMGREP_ACTION=true\
