@@ -5,9 +5,9 @@
 This project is under active development and we do our best to support the latest versions. 
 
 | Version | Supported          |
-| ------- | ------------------ |
-| master   | :white_check_mark: |
-| develop  | :rocket:         |
+|---------|--------------------|
+| master  | :white_check_mark: |
+| develop | :rocket:           |
 
 ## Reporting a Vulnerability
 

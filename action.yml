@@ -1,22 +1,16 @@
-# action.yml
-name: 'semgrep-action'
-description: 'Run semgrep with the given config and return the findings'
+name: 'Semgrep'
+author: 'Return To Corporation'
+description: 'Easily detect and prevent bugs and anti-patterns in your codebase'
+runs:
+  using: 'docker'
+  image: 'docker://returntocorp/semgrep-action:v1'
+inputs:
+  config:
+    description: |
+      Rules and patterns to search for with semgrep.
+  slackWebhookURL:
+    description: |
+      A Slack incoming webhook URL that you want findings posted to.
 branding:
   icon: 'align-left'
   color: 'gray-dark'
-icon: 'align-left'
-inputs:
-  error:
-    description: 'action exits 1 if the findings are find thus breaking the build'
-  config:
-    description: 'config arg'
-  output:
-    description: 'output arg'
-  targets:
-    description: 'targets'
-outputs:
-  output:
-    description: 'output of semgrep'
-runs:
-  using: 'docker'
-  image: 'Dockerfile'

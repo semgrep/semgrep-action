@@ -1,19 +1,27 @@
-name: Self Test
-
-on: [push]
-
 jobs:
-  self_test:
+  semgrep:
+    name: Check
     runs-on: ubuntu-latest
-    name: A job to run semgrep
     steps:
-      - uses: actions/checkout@v2
-      - name: semgrep action step
-        id: semgrep
-        uses: returntocorp/semgrep-action@develop
-        with:
-          config: https://semgrep.live/c/r/r2c
-          targets: tests
-
-      - name: Get the output from semgrep
-        run: echo "semgrep ${{ steps.semgrep.outputs.output }}"
+    - uses: actions/checkout@v1
+    - id: semgrep-live-registry-id
+      name: semgrep.live Registry ID
+      uses: ./
+      with:
+        config: r/r2c
+        slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
+    - id: semgrep-live-id
+      name: semgrep.live Rule ID
+      uses: ./
+      with:
+        config: QKP
+        slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
+    - id: default-config
+      name: Default Config
+      uses: ./
+      with:
+        slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
+name: Self Test
+'on':
+- pull_request
+- push

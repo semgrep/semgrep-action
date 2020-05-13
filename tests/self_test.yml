@@ -1,7 +1,0 @@
-
-rules:
-  - id: stupid-eq
-    pattern: '$X == $X'
-    message: "Dude, $X == $X is stupid!"
-    languages: [python]
-    severity: ERROR
