@@ -1,4 +1,4 @@
-name: 'Semgrep'
+name: 'semgrep-action'
 author: 'Return To Corporation'
 description: 'Easily detect and prevent bugs and anti-patterns in your codebase'
 runs:
