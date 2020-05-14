@@ -12,6 +12,7 @@ click = "*"
 sh = "*"
 boltons = "*"
 gitpython = "~=2.1"
+glom = "*"
 
 [requires]
 python_version = "3.8"

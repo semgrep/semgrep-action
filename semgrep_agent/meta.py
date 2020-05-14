@@ -1,6 +1,10 @@
+import json
 import os
+from pathlib import Path
 
+from boltons.cacheutils import cachedproperty
 import click
+from glom import glom
 import git
 import sh
 
@@ -11,54 +15,57 @@ from dataclasses import dataclass
 class Meta:
     ctx: click.Context
 
-    @property
+    def glom_event(self, spec):
+        return glom(self.event, spec)
+
+    @cachedproperty
+    def event(self):
+        if value := os.getenv("GITHUB_EVENT_PATH"):
+            return json.loads(Path(value).read_text())
+
+    @cachedproperty
     def repo(self):
         return git.Repo()
 
-    @property
+    @cachedproperty
     def repo_name(self):
         if value := os.getenv("GITHUB_REPOSITORY"):
             return value
 
-    @property
+    @cachedproperty
     def repo_url(self):
         if self.repo_name:
             return f"https://github.com/{self.repo_name}"
 
-    @property
+    @cachedproperty
     def commit_sha(self):
         if value := os.getenv("GITHUB_SHA"):
             return value
         return self.repo.head.commit.hexsha
 
-    @property
+    @cachedproperty
     def commit(self) -> git.Commit:
         return self.repo.commit(self.commit_sha)
 
-    @property
+    @cachedproperty
     def commit_ref(self):
         if value := os.getenv("GITHUB_REF"):
             return value
 
-    @property
+    @cachedproperty
     def ci_actor(self):
         if value := os.getenv("GITHUB_ACTOR"):
             return value
 
-    @property
+    @cachedproperty
     def ci_url(self):
         if self.repo_url and (value := os.getenv("GITHUB_RUN_ID")):
             return f"{self.repo_url}/actions/runs/{value}"
 
-    @property
-    def ci_event(self):
+    @cachedproperty
+    def ci_event_name(self):
         if value := os.getenv("GITHUB_EVENT_NAME"):
             return value
-
-    @property
-    def pr_id(self):
-        if (ref := os.environ.get("GITHUB_REF")).startswith("refs/pull/"):
-            return int(ref.split("/")[2])
 
     def to_dict(self):
         return {
@@ -70,9 +77,12 @@ class Meta:
             "commit_authored_timestamp": self.commit.authored_datetime.isoformat(),
             "commit_title": self.commit.summary,
             "config": self.ctx.obj.config,
-            "on": self.ci_event,
+            "on": self.ci_event_name,
             "branch": self.commit_ref,
-            "pull_request_id": self.pr_id,
+            "pull_request_timestamp": self.glom_event("pull_request.created_at"),
+            "pull_request_author_name": self.glom_event("pull_request.user.name"),
+            "pull_request_id": self.glom_event("pull_request.number"),
+            "pull_request_title": self.glom_event("pull_request.title"),
             "semgrep_version": sh.semgrep(version=True).strip(),
             "bento_version": sh.bento(version=True).strip(),
             "python_version": sh.python(version=True).strip(),
