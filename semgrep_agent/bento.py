@@ -9,11 +9,12 @@ from typing import Any
 from typing import Dict
 from typing import List
 
-import requests
 import click
+import requests
 import sh
-from semgrep_agent.meta import Meta
 from sh.contrib import git
+
+from semgrep_agent.meta import Meta
 
 bento = sh.bento.bake(
     agree=True,
