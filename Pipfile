@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-bento-cli = "*"
+bento-cli = "==0.13.0b1"
 requests = "*"
 click = "*"
 sh = "*"
@@ -16,3 +16,6 @@ glom = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
