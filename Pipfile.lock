@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1a49fd1afc95e0878ca441ce909e8df7a687765cab3f88f33724f7779594293e"
+            "sha256": "3d5c669c74e3930e03009326a0a4140f128d4def53cb0cd1ea1b3930475079cf"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -39,11 +39,11 @@
         },
         "bento-cli": {
             "hashes": [
-                "sha256:3f0548a257b61fbf30ef60940472c08974b17dfa69e324d8871611317f75baa3",
-                "sha256:d5fad36c1d15ca72fd6f4b9258190fce24af1b61e148705b141fae67a66a75d1"
+                "sha256:178258dcb54a50be01e7494d243f05ec273479c390c955433cd870c9220d8199",
+                "sha256:66baeea5182cf0ded5ffdbeeaa99dfe1efd05edfb396969bd95c8eb9373185da"
             ],
             "index": "pypi",
-            "version": "==0.12.0"
+            "version": "==0.13.0b1"
         },
         "boltons": {
             "hashes": [
@@ -102,6 +102,13 @@
             ],
             "version": "==0.4.0"
         },
+        "face": {
+            "hashes": [
+                "sha256:3790311a7329e4b0d90baee346eecad54b337629576edf3a246683a5f0d24446",
+                "sha256:7d59ca5ba341316e58cf72c6aff85cca2541cf5056c4af45cb63af9a814bed3e"
+            ],
+            "version": "==20.1.1"
+        },
         "filelock": {
             "hashes": [
                 "sha256:18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59",
@@ -129,6 +136,14 @@
             ],
             "index": "pypi",
             "version": "==2.1.15"
+        },
+        "glom": {
+            "hashes": [
+                "sha256:953cf65080dbe01db03b4d4fa0743f9a10e6e35f5404807fdc59425ca7af19e6",
+                "sha256:e753d2e8d16647ffcd9f0f99ac85d3db523ff0a1f097cf0a154a60702bca7e42"
+            ],
+            "index": "pypi",
+            "version": "==20.5.0"
         },
         "identify": {
             "hashes": [
@@ -262,10 +277,10 @@
         },
         "toml": {
             "hashes": [
-                "sha256:229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c",
-                "sha256:235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e"
+                "sha256:926b612be1e5ce0634a2ca03470f95169cf16f939018233a670519cb4ac58b0f",
+                "sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88"
             ],
-            "version": "==0.10.0"
+            "version": "==0.10.1"
         },
         "tqdm": {
             "hashes": [

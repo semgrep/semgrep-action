@@ -1,9 +1,12 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Optional
 
-from boltons.iterutils import chunked_iter
 import click
 import requests
+from boltons.iterutils import chunked_iter
+
+from .bento import Results
 
 
 @dataclass
@@ -15,11 +18,11 @@ class Sapp:
     scan_id: Optional[int] = None
     session: requests.Session = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.session = requests.Session()
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
-    def report_start(self):
+    def report_start(self) -> None:
         if self.token is None or self.deployment_id is None:
             return
 
@@ -35,7 +38,7 @@ class Sapp:
         else:
             self.scan_id = response.json()["scan"]["id"]
 
-    def report_results(self, results):
+    def report_results(self, results: Results) -> None:
         if self.token is None or self.deployment_id is None or self.scan_id is None:
             return
 

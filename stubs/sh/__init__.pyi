@@ -1,0 +1,33 @@
+from typing import Any, Callable, Union
+
+class ErrorReturnCode(Exception):
+    @property
+    def full_cmd(self) -> str: ...
+    @property
+    def exit_code(self) -> int: ...
+
+class SubcommandsMixin:
+    # bento subcommands
+    @property
+    def init(self) -> Command: ...
+    @property
+    def check(self) -> Command: ...
+    # python subcommands
+    @property
+    def version(self) -> Command: ...
+
+class Command(SubcommandsMixin):
+    def __call__(self, *args: Any, **kwargs: Any) -> RunningCommand: ...
+    def bake(self, *args: Any, **kwargs: Any) -> Command: ...
+
+class RunningCommand(str, SubcommandsMixin):
+    @property
+    def stdout(self) -> bytes: ...
+    @property
+    def stderr(self) -> bytes: ...
+    @property
+    def exit_code(self) -> int: ...
+
+bento: Command
+semgrep: Command
+python: Command

@@ -1,16 +1,18 @@
-from dataclasses import dataclass
-from textwrap import dedent
 import os
-from pathlib import Path
 import sys
+from dataclasses import dataclass
+from pathlib import Path
+from textwrap import dedent
+from typing import NoReturn
 
 import click
 import sh
 
+from . import bento
+from . import semgrep
 from .meta import Meta
 from .semgrep_app import Sapp
 from .slack import Slack
-from . import bento
 
 
 def url(string: str) -> str:
@@ -26,7 +28,7 @@ class CliObj:
     slack: Slack
 
 
-def get_event_type():
+def get_event_type() -> str:
     if "GITHUB_ACTIONS" in os.environ:
         return os.environ["GITHUB_EVENT_NAME"]
 
@@ -49,7 +51,7 @@ def main(
     publish_token: str,
     publish_deployment: int,
     slack_url: str,
-):
+) -> NoReturn:
     click.echo(
         f"== action's environment: semgrep/{sh.semgrep(version=True).strip()}, {sh.bento(version=True).strip()}, {sh.python(version=True).strip()}"
     )
@@ -81,6 +83,7 @@ def main(
     obj.sapp.report_start()
 
     results = bento.scan(ctx)
+    semgrep.scan_into_sarif(ctx)
 
     obj.sapp.report_results(results)
     obj.slack.report_results(results)
