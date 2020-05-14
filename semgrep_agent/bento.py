@@ -9,6 +9,7 @@ from typing import Any, Dict, List
 
 import click
 import sh
+from semgrep_agent.meta import Meta
 from sh.contrib import git
 
 bento = sh.bento.bake(
@@ -28,10 +29,15 @@ class Results:
     total_time: float
 
     @classmethod
-    def from_sh_command(cls, sh_command: sh.RunningCommand, elapsed: float):
+    def from_sh_command(cls, sh_command: sh.RunningCommand, meta: Meta, elapsed: float):
+        commit_date = meta.commit.committed_datetime.isoformat()
+        findings = json.loads(sh_command.stdout.decode())
+        # Augment each findings result with commit date for slicing purposes
+        for f in findings:
+            f["commit_date"] = commit_date
         return cls(
             exit_code=sh_command.exit_code,
-            findings=json.loads(sh_command.stdout.decode()),
+            findings=findings,
             total_time=elapsed,
         )
 
@@ -119,4 +125,4 @@ def scan(ctx: click.Context) -> Results:
         sys.exit(error.exit_code)
     after = time.time()
 
-    return Results.from_sh_command(results, after - before)
+    return Results.from_sh_command(results, ctx.obj.meta, after - before)
