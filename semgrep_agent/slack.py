@@ -5,6 +5,8 @@ from typing import Any, Dict, List
 import click
 import requests
 
+from . import Meta
+
 
 @dataclass
 class Slack:
@@ -43,7 +45,7 @@ class Slack:
             click.echo(f"Slack returned this error: {response.text}", err=True)
 
     @staticmethod
-    def generate_message(notify_reason: str, meta) -> List[Dict[str, Any]]:
+    def generate_message(notify_reason: str, meta: Meta) -> List[Dict[str, Any]]:
         return [
             {
                 "type": "section",
@@ -62,11 +64,11 @@ class Slack:
                     {"type": "mrkdwn", "text": f"*Triggered by:*\n{meta.ci_actor}",},
                     {
                         "type": "mrkdwn",
-                        "text": f"*Scanned git ref:*\n`{meta.repo_ref}`",
+                        "text": f"*Scanned git ref:*\n`{meta.commit_ref}`",
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"*Scanned git SHA:*\n`{meta.repo_sha[:8]}`",
+                        "text": f"*Scanned git SHA:*\n`{meta.commit_sha[:8]}`",
                     },
                 ],
             },
