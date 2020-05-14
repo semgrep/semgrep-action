@@ -17,6 +17,9 @@ inputs:
   publishDeployment:
     description: |
       Deployment ID on semgrep app.
+  generateSarif:
+    description: |
+      Set if you want a semgrep.sarif file to be written with all semgrep findings.
 branding:
   icon: 'align-left'
   color: 'gray-dark'

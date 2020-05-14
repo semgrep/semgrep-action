@@ -10,7 +10,7 @@ import sh
 from .meta import Meta
 from .semgrep_app import Sapp
 from .slack import Slack
-from . import bento
+from . import bento, semgrep
 
 
 def url(string: str) -> str:
@@ -81,6 +81,7 @@ def main(
     obj.sapp.report_start()
 
     results = bento.scan(ctx)
+    semgrep.scan_into_sarif(ctx)
 
     obj.sapp.report_results(results)
     obj.slack.report_results(results)

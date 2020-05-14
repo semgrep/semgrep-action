@@ -16,7 +16,7 @@ class Meta:
     ctx: click.Context
 
     def glom_event(self, spec):
-        return glom(self.event, spec)
+        return glom(self.event, spec, default=None)
 
     @cachedproperty
     def event(self):
