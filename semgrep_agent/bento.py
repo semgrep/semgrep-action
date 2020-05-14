@@ -70,7 +70,7 @@ def scan_pull_request(config: str) -> sh.RunningCommand:
 def scan_push(config: str) -> sh.RunningCommand:
     env = os.environ.copy()
     if config and config.startswith("r/"):
-        resp = requests.get(f"https://semgrep.live/c/{config}")
+        resp = requests.get(f"https://semgrep.live/c/{config}", timeout=10)
         with Path(".bento/semgrep.yml").open("w") as fd:
             fd.write(resp.content.decode("utf-8"))
 
