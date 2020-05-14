@@ -1,73 +1,83 @@
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 
-from boltons.cacheutils import cachedproperty
 import click
-from glom import glom
 import git
 import sh
-
-from dataclasses import dataclass
+from boltons.cacheutils import cachedproperty
+from glom import glom
 
 
 @dataclass
 class Meta:
     ctx: click.Context
 
-    def glom_event(self, spec):
+    def glom_event(self, spec: str) -> Optional[str]:
         return glom(self.event, spec, default=None)
 
     @cachedproperty
-    def event(self):
+    def event(self) -> Optional[Dict[str, Any]]:
         if value := os.getenv("GITHUB_EVENT_PATH"):
-            return json.loads(Path(value).read_text())
+            return json.loads(Path(value).read_text())  # type: ignore
+        return None
 
     @cachedproperty
-    def repo(self):
+    def repo(self) -> git.Repo:  # type: ignore
         return git.Repo()
 
     @cachedproperty
-    def repo_name(self):
+    def repo_name(self) -> Optional[str]:
         if value := os.getenv("GITHUB_REPOSITORY"):
             return value
+        return None
 
     @cachedproperty
-    def repo_url(self):
+    def repo_url(self) -> Optional[str]:
         if self.repo_name:
             return f"https://github.com/{self.repo_name}"
+        return None
 
     @cachedproperty
-    def commit_sha(self):
+    def commit_sha(self) -> Optional[str]:
         if value := os.getenv("GITHUB_SHA"):
             return value
-        return self.repo.head.commit.hexsha
+        return self.repo.head.commit.hexsha  # type: ignore
 
     @cachedproperty
-    def commit(self) -> git.Commit:
+    def commit(self) -> git.Commit:  # type: ignore
         return self.repo.commit(self.commit_sha)
 
     @cachedproperty
-    def commit_ref(self):
+    def commit_ref(self) -> Optional[str]:
         if value := os.getenv("GITHUB_REF"):
             return value
+        return None
 
     @cachedproperty
-    def ci_actor(self):
+    def ci_actor(self) -> Optional[str]:
         if value := os.getenv("GITHUB_ACTOR"):
             return value
+        return None
 
     @cachedproperty
-    def ci_url(self):
+    def ci_url(self) -> Optional[str]:
         if self.repo_url and (value := os.getenv("GITHUB_RUN_ID")):
             return f"{self.repo_url}/actions/runs/{value}"
+        return None
 
     @cachedproperty
-    def ci_event_name(self):
+    def ci_event_name(self) -> Optional[str]:
         if value := os.getenv("GITHUB_EVENT_NAME"):
             return value
+        return None
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "repository": self.repo_name,
             "commit": self.commit_sha,

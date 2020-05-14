@@ -1,11 +1,14 @@
-from dataclasses import dataclass
 import json
-from typing import Any, Dict, List
+from dataclasses import dataclass
+from typing import Any
+from typing import Dict
+from typing import List
 
 import click
 import requests
 
-from . import Meta
+from .bento import Results
+from .meta import Meta
 
 
 @dataclass
@@ -13,7 +16,7 @@ class Slack:
     ctx: click.Context
     webhook_url: str
 
-    def report_results(self, results):
+    def report_results(self, results: Results) -> None:
         obj = self.ctx.obj
         if not self.webhook_url:
             return

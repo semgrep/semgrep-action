@@ -1,12 +1,12 @@
 import os
 from pathlib import Path
 
-from bento.target_file_manager import TargetFileManager
 import click
 import sh
+from bento.target_file_manager import TargetFileManager
 
 
-def scan_into_sarif(ctx: click.Context):
+def scan_into_sarif(ctx: click.Context) -> None:
     if not os.getenv("INPUT_GENERATESARIF"):
         return
 

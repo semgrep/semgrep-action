@@ -1,11 +1,13 @@
-from dataclasses import dataclass
 import json
 import os
-from pathlib import Path
 import sys
-from textwrap import dedent
 import time
-from typing import Any, Dict, List
+from dataclasses import dataclass
+from pathlib import Path
+from textwrap import dedent
+from typing import Any
+from typing import Dict
+from typing import List
 
 import requests
 import click
@@ -30,16 +32,16 @@ class Results:
     total_time: float
 
     @classmethod
-    def from_sh_command(cls, sh_command: sh.RunningCommand, meta: Meta, elapsed: float):
+    def from_sh_command(
+        cls, sh_command: sh.RunningCommand, meta: Meta, elapsed: float
+    ) -> "Results":
         commit_date = meta.commit.committed_datetime.isoformat()
         findings = json.loads(sh_command.stdout.decode())
         # Augment each findings result with commit date for slicing purposes
         for f in findings:
             f["commit_date"] = commit_date
         return cls(
-            exit_code=sh_command.exit_code,
-            findings=findings,
-            total_time=elapsed,
+            exit_code=sh_command.exit_code, findings=findings, total_time=elapsed,
         )
 
     @property
@@ -89,7 +91,7 @@ def scan_push(config: str) -> sh.RunningCommand:
 def fail_on_unknown_event() -> None:
     message = f"""
         == [ERROR] the Semgrep action was triggered by an unsupported GitHub event.
-        
+
         This error is often caused by an unsupported value for `on:` in the action's configuration.
         To resolve this issue, please confirm that the `on:` key only contains values from the following list: {list(ALLOWED_EVENT_TYPES)}.
         If the problem persists, please file an issue at https://github.com/returntocorp/semgrep/issues/new/choose
@@ -117,9 +119,9 @@ def scan(ctx: click.Context) -> Results:
     except sh.ErrorReturnCode as error:
         click.echo((Path.home() / ".bento" / "last.log").read_text(), err=True)
         message = f"""
-        
+
         == [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
-    
+
         This is an internal error, please file an issue at https://github.com/returntocorp/semgrep/issues/new/choose
         and include the log output from above.
         """
