@@ -108,23 +108,20 @@ def scan_pull_request(ctx: click.Context) -> sh.RunningCommand:
 
 
 def scan_push(ctx: click.Context) -> sh.RunningCommand:
-    env = os.environ.copy()
+    debug_echo("== adding the bento configuration")
+    configure_bento()
+
     if ctx.obj.config and ctx.obj.config.startswith("r/"):
         resp = requests.get(f"https://semgrep.live/c/{ctx.obj.config}", timeout=10)
         with Path(".bento/semgrep.yml").open("w") as fd:
             fd.write(resp.content.decode("utf-8"))
 
-    debug_echo("== adding the bento configuration")
-    configure_bento()
-
     debug_echo("== seeing if there are any findings")
-    human_run = bento.check(
-        tool="semgrep", all=True, _env=env, _out=sys.stdout, _err=sys.stderr
-    )
+    human_run = bento.check(tool="semgrep", all=True, _out=sys.stdout, _err=sys.stderr)
 
     if not ctx.obj.sapp.is_configured:
         return human_run
-    return bento.check(tool="semgrep", all=True, _env=env, formatter="json")
+    return bento.check(tool="semgrep", all=True, formatter="json")
 
 
 def fail_on_unknown_event() -> None:
