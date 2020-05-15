@@ -52,7 +52,7 @@ class Sapp:
         debug_echo(f"== reporting results to semgrep app at {self.url}")
 
         # report findings
-        if not results.findings:
+        if results.findings is None:
             raise RuntimeError(
                 "sapp is configured so we should've decided to run bento --json"
             )
