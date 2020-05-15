@@ -7,6 +7,7 @@ import requests
 from boltons.iterutils import chunked_iter
 
 from .bento import Results
+from .utils import debug_echo
 
 
 @dataclass
@@ -24,7 +25,9 @@ class Sapp:
 
     def report_start(self) -> None:
         if self.token is None or self.deployment_id is None:
+            debug_echo("== no semgrep app config, skipping report_start")
             return
+        debug_echo(f"== reporting start to semgrep app at {self.url}")
 
         try:
             response = self.session.post(
@@ -32,6 +35,7 @@ class Sapp:
                 json={"meta": self.ctx.obj.meta.to_dict()},
                 timeout=30,
             )
+            debug_echo(f"== POST .../scan responded: {response!r}")
             response.raise_for_status()
         except requests.RequestException:
             click.echo(f"Semgrep App returned this error: {response.text}", err=True)
@@ -40,7 +44,9 @@ class Sapp:
 
     def report_results(self, results: Results) -> None:
         if self.token is None or self.deployment_id is None or self.scan_id is None:
+            debug_echo("== no semgrep app config, skipping report_results")
             return
+        debug_echo(f"== reporting results to semgrep app at {self.url}")
 
         # report findings
         for chunk in chunked_iter(results.findings, 10_000):
@@ -50,6 +56,7 @@ class Sapp:
                     json=chunk,
                     timeout=30,
                 )
+                debug_echo(f"== POST .../findings responded: {response!r}")
                 response.raise_for_status()
             except requests.RequestException:
                 click.echo(
@@ -63,6 +70,7 @@ class Sapp:
                 json={"exit_code": results.exit_code, "stats": results.stats},
                 timeout=30,
             )
+            debug_echo(f"== POST .../complete responded: {response!r}")
             response.raise_for_status()
         except requests.RequestException:
             click.echo(f"Semgrep App returned this error: {response.text}", err=True)

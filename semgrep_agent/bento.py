@@ -14,7 +14,8 @@ import requests
 import sh
 from sh.contrib import git
 
-from semgrep_agent.meta import Meta
+from .meta import Meta
+from .utils import debug_echo
 
 bento = sh.bento.bake(
     agree=True,
@@ -60,17 +61,17 @@ def scan_pull_request(config: str) -> sh.RunningCommand:
     # so we keep our own head ref around
     real_head_sha = git("rev-parse", "HEAD").stdout.strip()
 
-    click.echo(
+    debug_echo(
         "== [1/3] going to go back to the commit you based your pull request on…"
     )
-    git("checkout", os.environ["GITHUB_BASE_REF"])
-    git("status", "--branch", "--short", _out=sys.stdout, _err=sys.stderr)
+    git.checkout(os.environ["GITHUB_BASE_REF"])
+    debug_echo(git.status("--branch", "--short").stdout.decode())
 
-    click.echo("== [2/3] …now adding your pull request's changes back…")
-    git("checkout", real_head_sha, "--", ".")
-    git("status", "--branch", "--short", _out=sys.stdout, _err=sys.stderr)
+    debug_echo("== [2/3] …now adding your pull request's changes back…")
+    git.checkout(real_head_sha, "--", ".")
+    debug_echo(git.status("--branch", "--short").stdout.decode())
 
-    click.echo("== [3/3] …and seeing if there are any new findings!")
+    debug_echo("== [3/3] …and seeing if there are any new findings!")
     bento.check(tool="semgrep", _env=env, _out=sys.stdout, _err=sys.stderr)
 
     return bento.check(tool="semgrep", _env=env, formatter="json")
@@ -83,7 +84,7 @@ def scan_push(config: str) -> sh.RunningCommand:
         with Path(".bento/semgrep.yml").open("w") as fd:
             fd.write(resp.content.decode("utf-8"))
 
-    click.echo("== seeing if there are any findings")
+    debug_echo("== seeing if there are any findings")
     bento.check(tool="semgrep", all=True, _env=env, _out=sys.stdout, _err=sys.stderr)
 
     return bento.check(tool="semgrep", all=True, _env=env, formatter="json")
@@ -104,7 +105,7 @@ def fail_on_unknown_event() -> None:
 
 def scan(ctx: click.Context) -> Results:
     event_type = ctx.obj.event_type
-    click.echo(f"== triggered by a {event_type}")
+    debug_echo(f"== triggered by a {event_type}")
 
     if event_type not in ALLOWED_EVENT_TYPES:
         fail_on_unknown_event()
@@ -120,7 +121,6 @@ def scan(ctx: click.Context) -> Results:
     except sh.ErrorReturnCode as error:
         click.echo((Path.home() / ".bento" / "last.log").read_text(), err=True)
         message = f"""
-
         == [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
 
         This is an internal error, please file an issue at https://github.com/returntocorp/semgrep/issues/new/choose

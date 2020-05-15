@@ -9,6 +9,7 @@ import requests
 
 from .bento import Results
 from .meta import Meta
+from .utils import debug_echo
 
 
 @dataclass
@@ -19,9 +20,10 @@ class Slack:
     def report_results(self, results: Results) -> None:
         obj = self.ctx.obj
         if not self.webhook_url:
+            debug_echo("== no Slack webhook URL, skipping")
             return
 
-        click.echo("== sending slack notifications if needed")
+        debug_echo("== sending slack notifications if needed")
 
         notify_reason = None
         if results.exit_code == 2:
@@ -30,7 +32,7 @@ class Slack:
             notify_reason = "encountered an error"
 
         if not notify_reason:
-            click.echo("not sending a notification, there's nothing to notify about",)
+            debug_echo("not sending a notification, there's nothing to notify about")
             return
 
         payload = {
@@ -43,6 +45,7 @@ class Slack:
             response = requests.post(
                 self.webhook_url, data={"payload": json.dumps(payload)}, timeout=30
             )
+            debug_echo(f"== Slack responded: {response!r}")
             response.raise_for_status()
         except requests.RequestException:
             click.echo(f"Slack returned this error: {response.text}", err=True)

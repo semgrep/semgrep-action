@@ -13,6 +13,8 @@ import sh
 from boltons.cacheutils import cachedproperty
 from glom import glom
 
+from .utils import debug_echo
+
 
 @dataclass
 class Meta:
@@ -24,12 +26,15 @@ class Meta:
     @cachedproperty
     def event(self) -> Optional[Dict[str, Any]]:
         if value := os.getenv("GITHUB_EVENT_PATH"):
+            debug_echo(f"found github event data at {value}")
             return json.loads(Path(value).read_text())  # type: ignore
         return None
 
     @cachedproperty
     def repo(self) -> git.Repo:  # type: ignore
-        return git.Repo()
+        repo = git.Repo()
+        debug_echo(f"found repo: {repo!r}")
+        return repo
 
     @cachedproperty
     def repo_name(self) -> Optional[str]:
@@ -51,7 +56,9 @@ class Meta:
 
     @cachedproperty
     def commit(self) -> git.Commit:  # type: ignore
-        return self.repo.commit(self.commit_sha)
+        commit = self.repo.commit(self.commit_sha)
+        debug_echo(f"found commit: {commit!r}")
+        return commit
 
     @cachedproperty
     def commit_ref(self) -> Optional[str]:
