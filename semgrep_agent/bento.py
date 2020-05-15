@@ -121,6 +121,7 @@ def scan_push(ctx: click.Context) -> sh.RunningCommand:
 
     if not ctx.obj.sapp.is_configured:
         return human_run
+
     return bento.check(tool="semgrep", all=True, formatter="json")
 
 
