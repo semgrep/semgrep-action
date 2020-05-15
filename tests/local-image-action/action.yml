@@ -1,0 +1,25 @@
+name: 'Semgrep Action'
+author: 'Return To Corporation'
+description: 'Easily detect and prevent bugs and anti-patterns in your codebase'
+runs:
+  using: 'docker'
+  image: '../../Dockerfile'
+inputs:
+  config:
+    description: |
+      Rules and patterns to search for with semgrep.
+  slackWebhookURL:
+    description: |
+      A Slack incoming webhook URL that you want findings posted to.
+  publishToken:
+    description: |
+      Access token to post results to the semgrep app.
+  publishDeployment:
+    description: |
+      Deployment ID on semgrep app.
+  generateSarif:
+    description: |
+      Set to 1 if you want a semgrep.sarif file to be written with all semgrep findings.
+branding:
+  icon: 'align-left'
+  color: 'gray-dark'
