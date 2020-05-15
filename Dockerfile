@@ -8,6 +8,7 @@ RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &
     apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
     pip install --no-cache-dir pipenv==2018.11.26 &&\
     pipenv install --system &&\
+    pip uninstall -y pipenv &&\
     apk del .build-deps &&\
     rm -rf /root/.cache/* /tmp/*
 
