@@ -69,20 +69,6 @@ def main(
         slack=Slack(ctx=ctx, webhook_url=slack_url),
     )
 
-    if not config and not (Path(".bento") / "semgrep.yml").is_file():
-        if obj.sapp.is_configured:
-            obj.sapp.download_rules()
-        else:
-            message = """
-                == [WARNING] you didn't configure what rules semgrep should scan for.
-
-                Please either set a config in the action's configuration according to
-                https://github.com/returntocorp/semgrep-action#configuration
-                or commit your own rules at the default path of .bento/semgrep.yml
-            """
-            message = dedent(message).strip()
-            click.echo(message, err=True)
-
     obj.sapp.report_start()
 
     if not config and not (Path(".bento") / "semgrep.yml").is_file():
