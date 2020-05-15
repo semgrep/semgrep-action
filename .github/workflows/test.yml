@@ -1,27 +1,30 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [master, develop]
+
 jobs:
-  semgrep:
-    name: Check
+  test-semgrep:
+    name: Test runs of semgrep-action
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - id: semgrep-live-registry-id
-      name: semgrep.live Registry ID
-      uses: ./
+      name: with a semgrep.live Registry ID
+      uses: ./tests/local-image-action
       with:
         config: r/r2c
         slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
     - id: semgrep-live-id
-      name: semgrep.live Rule ID
-      uses: ./
+      name: with a semgrep.live Rule ID
+      uses: ./tests/local-image-action
       with:
         config: QKP
         slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
     - id: default-config
-      name: Default Config
-      uses: ./
+      name: with the implicit default config
+      uses: ./tests/local-image-action
       with:
         slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
-name: Self Test
-'on':
-- pull_request
-- push
