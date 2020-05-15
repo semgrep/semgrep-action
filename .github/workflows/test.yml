@@ -7,7 +7,7 @@ on:
 
 jobs:
   test-semgrep:
-    name: Test runs of semgrep-action
+    name: Live runs of action
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
