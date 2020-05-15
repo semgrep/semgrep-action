@@ -59,6 +59,22 @@ class Results:
         }
 
 
+def configure_bento() -> None:
+    TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
+
+    Path(".bento").mkdir(exist_ok=True)
+
+    bentoignore_path = Path(".bentoignore").resolve()
+    if not bentoignore_path.is_file():
+        debug_echo(f"creating bentoignore at {bentoignore_path}")
+        bentoignore_path.write_text((TEMPLATES_DIR / ".bentoignore").read_text())
+
+    bento_config_path = (Path(".bento") / "config.yml").resolve()
+    if not bento_config_path.is_file():
+        debug_echo(f"creating bento config at {bento_config_path}")
+        bento_config_path.write_text((TEMPLATES_DIR / "config.yml").read_text())
+
+
 def scan_pull_request(ctx: click.Context) -> sh.RunningCommand:
     env = os.environ.copy()
     if ctx.obj.config:
@@ -70,16 +86,19 @@ def scan_pull_request(ctx: click.Context) -> sh.RunningCommand:
     real_head_sha = git("rev-parse", "HEAD").stdout.strip()
 
     debug_echo(
-        "== [1/3] going to go back to the commit you based your pull request on…"
+        "== [1/4] going to go back to the commit you based your pull request on…"
     )
     git.checkout(os.environ["GITHUB_BASE_REF"])
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
-    debug_echo("== [2/3] …now adding your pull request's changes back…")
+    debug_echo("== [2/4] …now adding your pull request's changes back…")
     git.checkout(real_head_sha, "--", ".")
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
-    debug_echo("== [3/3] …and seeing if there are any new findings!")
+    debug_echo("== [3/4] …adding the bento configuration…")
+    configure_bento()
+
+    debug_echo("== [4/4] …and seeing if there are any new findings!")
     human_run = bento.check(tool="semgrep", _env=env, _out=sys.stdout, _err=sys.stderr)
 
     if not ctx.obj.sapp.is_configured:
@@ -94,6 +113,9 @@ def scan_push(ctx: click.Context) -> sh.RunningCommand:
         resp = requests.get(f"https://semgrep.live/c/{ctx.obj.config}", timeout=10)
         with Path(".bento/semgrep.yml").open("w") as fd:
             fd.write(resp.content.decode("utf-8"))
+
+    debug_echo("== adding the bento configuration")
+    configure_bento()
 
     debug_echo("== seeing if there are any findings")
     human_run = bento.check(
@@ -124,8 +146,6 @@ def scan(ctx: click.Context) -> Results:
 
     if event_type not in ALLOWED_EVENT_TYPES:
         fail_on_unknown_event()
-
-    bento.init()
 
     before = time.time()
     try:

@@ -17,15 +17,13 @@ def scan_into_sarif(ctx: click.Context) -> None:
     else:
         return
 
-    paths = [Path(".")]
-    if Path(".bentoignore").is_file():
-        targets = TargetFileManager(
-            base_path=Path(".").resolve(),
-            paths=[Path(".").resolve()],
-            staged=False,
-            ignore_rules_file_path=Path(".bentoignore"),
-        )
-        paths = targets._target_paths
+    targets = TargetFileManager(
+        base_path=Path(".").resolve(),
+        paths=[Path(".").resolve()],
+        staged=False,
+        ignore_rules_file_path=Path(".bentoignore"),
+    )
+    paths = targets._target_paths
 
     sarif_path = Path(os.environ["GITHUB_WORKSPACE"]) / "semgrep.sarif"
     with sarif_path.open("w") as sarif_file:

@@ -1,0 +1,19 @@
+# Ignore Bento environment files
+.bento/
+
+# Ignore git items
+.gitignore
+.git/
+
+# Common large directories
+node_modules/
+build/
+dist/
+env/
+.env/
+venv/
+.venv/
+
+# Common test directories
+test/
+tests/

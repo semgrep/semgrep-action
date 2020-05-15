@@ -1,0 +1,8 @@
+autorun:
+  block: true
+formatter:
+- clippy: {}
+tools:
+  semgrep:
+    ignore: []
+    run: true
