@@ -1,5 +1,7 @@
+import sys
 from dataclasses import dataclass
 from dataclasses import field
+from pathlib import Path
 from typing import Optional
 
 import click
@@ -44,6 +46,29 @@ class Sapp:
             click.echo(f"Semgrep App returned this error: {response.text}", err=True)
         else:
             self.scan_id = response.json()["scan"]["id"]
+
+    def fetch_rules_text(self) -> str:
+        """Get a YAML string with the configured semgrep rules in it."""
+        if self.scan_id is None:
+            raise RuntimeError("sapp is configured so we should've gotten a scan_id")
+
+        try:
+            response = self.session.get(
+                f"{self.url}/api/agent/scan/{self.scan_id}/rules.yaml", timeout=30,
+            )
+            debug_echo(f"== POST .../rules.yaml responded: {response!r}")
+            response.raise_for_status()
+        except requests.RequestException:
+            click.echo(f"Semgrep App returned this error: {response.text}", err=True)
+            click.echo("Failed to get configured rules", err=True)
+            sys.exit(1)
+        else:
+            return response.text
+
+    def download_rules(self) -> None:
+        """Save the rules configured on semgrep app to .bento/semgrep.yml"""
+        Path(".bento").mkdir(exist_ok=True)
+        (Path(".bento") / "semgrep.yml").write_text(self.fetch_rules_text())
 
     def report_results(self, results: Results) -> None:
         if not self.is_configured or self.scan_id is None:
