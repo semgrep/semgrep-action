@@ -17,14 +17,17 @@ class Sapp:
     token: str
     deployment_id: int
     scan_id: Optional[int] = None
+    is_configured: bool = False
     session: requests.Session = field(init=False)
 
     def __post_init__(self) -> None:
+        if self.token and self.deployment_id:
+            self.is_configured = True
         self.session = requests.Session()
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
     def report_start(self) -> None:
-        if self.token is None or self.deployment_id is None:
+        if not self.is_configured:
             debug_echo("== no semgrep app config, skipping report_start")
             return
         debug_echo(f"== reporting start to semgrep app at {self.url}")
@@ -43,12 +46,16 @@ class Sapp:
             self.scan_id = response.json()["scan"]["id"]
 
     def report_results(self, results: Results) -> None:
-        if self.token is None or self.deployment_id is None or self.scan_id is None:
+        if not self.is_configured or self.scan_id is None:
             debug_echo("== no semgrep app config, skipping report_results")
             return
         debug_echo(f"== reporting results to semgrep app at {self.url}")
 
         # report findings
+        if not results.findings:
+            raise RuntimeError(
+                "sapp is configured so we should've decided to run bento --json"
+            )
         for chunk in chunked_iter(results.findings, 10_000):
             try:
                 response = self.session.post(

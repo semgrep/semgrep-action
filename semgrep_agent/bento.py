@@ -8,6 +8,7 @@ from textwrap import dedent
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 
 import click
 import requests
@@ -30,7 +31,7 @@ ALLOWED_EVENT_TYPES = frozenset(["push", "pull_request"])
 @dataclass
 class Results:
     exit_code: int
-    findings: List[Dict[str, Any]]
+    findings: Optional[List[Dict[str, Any]]]
     total_time: float
 
     @classmethod
@@ -38,23 +39,30 @@ class Results:
         cls, sh_command: sh.RunningCommand, meta: Meta, elapsed: float
     ) -> "Results":
         commit_date = meta.commit.committed_datetime.isoformat()
-        findings = json.loads(sh_command.stdout.decode())
-        # Augment each findings result with commit date for slicing purposes
-        for f in findings:
-            f["commit_date"] = commit_date
+
+        findings = None
+        if sh_command.stdout:
+            findings = json.loads(sh_command.stdout.decode())
+            # Augment each findings result with commit date for slicing purposes
+            for f in findings:
+                f["commit_date"] = commit_date
+
         return cls(
             exit_code=sh_command.exit_code, findings=findings, total_time=elapsed,
         )
 
     @property
     def stats(self) -> Dict[str, Any]:
-        return {"findings": len(self.findings), "total_time": self.total_time}
+        return {
+            "findings": len(self.findings) if self.findings else None,
+            "total_time": self.total_time,
+        }
 
 
-def scan_pull_request(config: str) -> sh.RunningCommand:
+def scan_pull_request(ctx: click.Context) -> sh.RunningCommand:
     env = os.environ.copy()
-    if config:
-        env["BENTO_REGISTRY"] = config
+    if ctx.obj.config:
+        env["BENTO_REGISTRY"] = ctx.obj.config
 
     # the github ref would be `refs/pull/<pr #>/merge` which isn't known by name here
     # the github sha seems to refer to the base on re-runs
@@ -72,21 +80,28 @@ def scan_pull_request(config: str) -> sh.RunningCommand:
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [3/3] …and seeing if there are any new findings!")
-    bento.check(tool="semgrep", _env=env, _out=sys.stdout, _err=sys.stderr)
+    human_run = bento.check(tool="semgrep", _env=env, _out=sys.stdout, _err=sys.stderr)
+
+    if not ctx.obj.sapp.is_configured:
+        return human_run
 
     return bento.check(tool="semgrep", _env=env, formatter="json")
 
 
-def scan_push(config: str) -> sh.RunningCommand:
+def scan_push(ctx: click.Context) -> sh.RunningCommand:
     env = os.environ.copy()
-    if config and config.startswith("r/"):
-        resp = requests.get(f"https://semgrep.live/c/{config}", timeout=10)
+    if ctx.obj.config and ctx.obj.config.startswith("r/"):
+        resp = requests.get(f"https://semgrep.live/c/{ctx.obj.config}", timeout=10)
         with Path(".bento/semgrep.yml").open("w") as fd:
             fd.write(resp.content.decode("utf-8"))
 
     debug_echo("== seeing if there are any findings")
-    bento.check(tool="semgrep", all=True, _env=env, _out=sys.stdout, _err=sys.stderr)
+    human_run = bento.check(
+        tool="semgrep", all=True, _env=env, _out=sys.stdout, _err=sys.stderr
+    )
 
+    if not ctx.obj.sapp.is_configured:
+        return human_run
     return bento.check(tool="semgrep", all=True, _env=env, formatter="json")
 
 
@@ -115,9 +130,9 @@ def scan(ctx: click.Context) -> Results:
     before = time.time()
     try:
         if event_type == "pull_request":
-            results = scan_pull_request(ctx.obj.config)
+            results = scan_pull_request(ctx)
         elif event_type == "push":
-            results = scan_push(ctx.obj.config)
+            results = scan_push(ctx)
     except sh.ErrorReturnCode as error:
         click.echo((Path.home() / ".bento" / "last.log").read_text(), err=True)
         message = f"""
