@@ -32,13 +32,13 @@ class Sapp:
             return
         debug_echo(f"== reporting start to semgrep app at {self.url}")
 
+        response = self.session.post(
+            f"{self.url}/api/agent/deployment/{self.deployment_id}/scan",
+            json={"meta": self.ctx.obj.meta.to_dict()},
+            timeout=30,
+        )
+        debug_echo(f"== POST .../scan responded: {response!r}")
         try:
-            response = self.session.post(
-                f"{self.url}/api/agent/deployment/{self.deployment_id}/scan",
-                json={"meta": self.ctx.obj.meta.to_dict()},
-                timeout=30,
-            )
-            debug_echo(f"== POST .../scan responded: {response!r}")
             response.raise_for_status()
         except requests.RequestException:
             click.echo(f"Semgrep App returned this error: {response.text}", err=True)
@@ -57,13 +57,13 @@ class Sapp:
                 "sapp is configured so we should've decided to run bento --json"
             )
         for chunk in chunked_iter(results.findings, 10_000):
+            response = self.session.post(
+                f"{self.url}/api/agent/scan/{self.scan_id}/findings",
+                json=chunk,
+                timeout=30,
+            )
+            debug_echo(f"== POST .../findings responded: {response!r}")
             try:
-                response = self.session.post(
-                    f"{self.url}/api/agent/scan/{self.scan_id}/findings",
-                    json=chunk,
-                    timeout=30,
-                )
-                debug_echo(f"== POST .../findings responded: {response!r}")
                 response.raise_for_status()
             except requests.RequestException:
                 click.echo(
