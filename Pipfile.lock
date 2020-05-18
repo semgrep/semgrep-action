@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "285c6ae3673621f943129bef1b32dc046be1af673a3ee6560de36e20861b5bf1"
+            "sha256": "83c7c95808c01c6b51c28d6923ec72f070eaea1d576bfe5812247e2f70c57b3d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -39,11 +39,11 @@
         },
         "bento-cli": {
             "hashes": [
-                "sha256:9b1c791d1901f5b7717bb4ea193983d8664ce6c850be02931a6699230dd58e8f",
-                "sha256:c1a19b9ce121f236c635a74d08674c4073114d840493cb87d29255a3b9976b3c"
+                "sha256:143a09ac23e130a5bd91a934e69ccbc62181d0982dbcece6b9a9006d83e3ecaa",
+                "sha256:88db856223622923e7a3f0a1a6fa5b79b4d4e759b67edebf1c9113db5f952d02"
             ],
             "index": "pypi",
-            "version": "==0.13.0b2"
+            "version": "==0.13.0b3"
         },
         "boltons": {
             "hashes": [

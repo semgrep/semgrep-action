@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-bento-cli = "==0.13.0b2"
+bento-cli = "==0.13.0b3"
 requests = "*"
 click = "*"
 sh = "*"
