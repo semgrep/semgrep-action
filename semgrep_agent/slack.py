@@ -57,7 +57,7 @@ class Slack:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f":point_right: Semgrep Action {notify_reason} during *<{meta.ci_url}|a scan on {meta.repo_name}>*",
+                    "text": f":point_right: Semgrep Action {notify_reason} during *<{meta.ci_job_url}|a scan on {meta.repo_name}>*",
                 },
             },
             {
