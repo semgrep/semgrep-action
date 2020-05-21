@@ -1,0 +1,20 @@
+name: Semgrep
+
+on:
+  pull_request:
+  push:
+    branches: [master, develop]
+
+jobs:
+  run-r2c-config:
+    name: with r2c registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Semgrep
+        id: semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: r/all
+          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
+          publishDeployment: ${{ secrets.SEMGREP_APP_DEPLOYMENT }}
