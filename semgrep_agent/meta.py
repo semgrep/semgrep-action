@@ -13,6 +13,7 @@ import sh
 from boltons.cacheutils import cachedproperty
 from glom import glom
 from glom import T
+from glom import TType
 
 from .utils import debug_echo
 
@@ -21,7 +22,7 @@ from .utils import debug_echo
 class Meta:
     ctx: click.Context
 
-    def glom_event(self, spec: str) -> Optional[str]:
+    def glom_event(self, spec: TType) -> Optional[str]:
         return glom(self.event, spec, default=None)
 
     @cachedproperty
@@ -94,20 +95,26 @@ class Meta:
             "commit_timestamp": self.commit.committed_datetime.isoformat(),
             "commit_author_email": git.Repo().head.commit.author.email,
             "commit_author_name": git.Repo().head.commit.author.name,
-            "commit_author_username": self.glom_event(T.commits[0].author.login),
-            "commit_author_image_url": self.glom_event(T.commits[0].author.avatar_url),
+            "commit_author_username": self.glom_event(
+                T["commits"][0]["author"]["login"]
+            ),
+            "commit_author_image_url": self.glom_event(
+                T["commits"][0]["author"]["avatar_url"]
+            ),
             "commit_authored_timestamp": self.commit.authored_datetime.isoformat(),
             "commit_title": self.commit.summary,
             "config": self.ctx.obj.config,
             "on": self.ci_event_name,
             "branch": self.commit_ref,
-            "pull_request_timestamp": self.glom_event(T.pull_request.created_at),
-            "pull_request_author_username": self.glom_event(T.pull_request.user.login),
-            "pull_request_author_image_url": self.glom_event(
-                T.pull_request.user.avatar_url
+            "pull_request_timestamp": self.glom_event(T["pull_request"]["created_at"]),
+            "pull_request_author_username": self.glom_event(
+                T["pull_request"]["user"]["login"]
             ),
-            "pull_request_id": self.glom_event(T.pull_request.number),
-            "pull_request_title": self.glom_event(T.pull_request.title),
+            "pull_request_author_image_url": self.glom_event(
+                T["pull_request"]["user"]["avatar_url"]
+            ),
+            "pull_request_id": self.glom_event(T["pull_request"]["number"]),
+            "pull_request_title": self.glom_event(T["pull_request"]["title"]),
             "semgrep_version": sh.semgrep(version=True).strip(),
             "bento_version": sh.bento(version=True).strip(),
             "python_version": sh.python(version=True).strip(),
