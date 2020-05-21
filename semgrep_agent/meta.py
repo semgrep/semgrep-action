@@ -13,7 +13,7 @@ import sh
 from boltons.cacheutils import cachedproperty
 from glom import glom
 from glom import T
-from glom import TType
+from glom.core import TType
 
 from .utils import debug_echo
 
