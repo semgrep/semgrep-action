@@ -68,6 +68,7 @@ def main(
         ),
         slack=Slack(ctx=ctx, webhook_url=slack_url),
     )
+    obj.meta.event
 
     obj.sapp.report_start()
 
