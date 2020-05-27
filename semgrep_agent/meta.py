@@ -95,12 +95,8 @@ class Meta:
             "commit_timestamp": self.commit.committed_datetime.isoformat(),
             "commit_author_email": git.Repo().head.commit.author.email,
             "commit_author_name": git.Repo().head.commit.author.name,
-            "commit_author_username": self.glom_event(
-                T["commits"][0]["author"]["login"]
-            ),
-            "commit_author_image_url": self.glom_event(
-                T["commits"][0]["author"]["avatar_url"]
-            ),
+            "commit_author_username": self.glom_event(T["sender"]["login"]),
+            "commit_author_image_url": self.glom_event(T["sender"]["avatar_url"]),
             "commit_authored_timestamp": self.commit.authored_datetime.isoformat(),
             "commit_title": self.commit.summary,
             "config": self.ctx.obj.config,
