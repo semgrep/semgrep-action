@@ -29,6 +29,7 @@ class Meta:
     def event(self) -> Optional[Dict[str, Any]]:
         if value := os.getenv("GITHUB_EVENT_PATH"):
             debug_echo(f"found github event data at {value}")
+            print(json.dumps(json.loads(Path(value).read_text()), pretty=2))
             return json.loads(Path(value).read_text())  # type: ignore
         return None
 
