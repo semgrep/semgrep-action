@@ -33,11 +33,11 @@ jobs:
     - uses: pre-commit/action@v1.0.1
 
   semgrep:
-    name: semgrep with r2c registry
+    name: semgrep with managed policy
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - uses: returntocorp/semgrep-action@v1
       with:
-        config: r/all
-        slackWebhookURL: ${{ secrets.BENTO_SLACK_WEBHOOK_URL }}
+        publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
+        publishDeployment: ${{ secrets.SEMGREP_APP_DEPLOYMENT }}

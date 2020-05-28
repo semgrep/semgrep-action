@@ -59,13 +59,11 @@ class Sapp:
         except requests.RequestException:
             click.echo(f"Semgrep App returned this error: {response.text}", err=True)
         else:
-            payload = response.json()
+            body = response.json()
             self.scan = Scan(
-                id=glom(payload, T["scan"]["id"]),
-                config=glom(payload, T["scan"]["meta"].get("config")),
-                ignore_patterns=glom(
-                    payload, T["scan"]["meta"].get("ignored_files", [])
-                ),
+                id=glom(body, T["scan"]["id"]),
+                config=glom(body, T["scan"]["meta"].get("config")),
+                ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
             )
             debug_echo(f"== Our scan object is: {self.scan!r}")
 
