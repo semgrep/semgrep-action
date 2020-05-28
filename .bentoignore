@@ -30,26 +30,4 @@
 # Ignore git items
 .gitignore
 .git/
-# Ignore node packaging directories
-node_modules/
-packages/
-
-# Ignore Python packaging directories
-__pycache__/
-build/
-develop-eggs/
-dist/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-
-# Ignore mypy stuff
-.mypy_cache/
+:include .gitignore
