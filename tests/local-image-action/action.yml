@@ -8,9 +8,6 @@ inputs:
   config:
     description: |
       Rules and patterns to search for with semgrep.
-  slackWebhookURL:
-    description: |
-      A Slack incoming webhook URL that you want findings posted to.
   publishToken:
     description: |
       Access token to post results to the semgrep app.
