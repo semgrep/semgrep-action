@@ -12,7 +12,6 @@ from . import bento
 from . import semgrep
 from .meta import Meta
 from .semgrep_app import Sapp
-from .slack import Slack
 
 
 def url(string: str) -> str:
@@ -25,7 +24,6 @@ class CliObj:
     config: str
     meta: Meta
     sapp: Sapp
-    slack: Slack
 
 
 def get_event_type() -> str:
@@ -42,7 +40,6 @@ def get_event_type() -> str:
 )
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
-@click.option("--slack-url", envvar="INPUT_SLACKWEBHOOKURL", type=url)
 @click.pass_context
 def main(
     ctx: click.Context,
@@ -50,7 +47,6 @@ def main(
     publish_url: str,
     publish_token: str,
     publish_deployment: int,
-    slack_url: str,
 ) -> NoReturn:
     click.echo(
         f"== action's environment: semgrep/{sh.semgrep(version=True).strip()}, {sh.bento(version=True).strip()}, {sh.python(version=True).strip()}"
@@ -66,7 +62,6 @@ def main(
             token=publish_token,
             deployment_id=publish_deployment,
         ),
-        slack=Slack(ctx=ctx, webhook_url=slack_url),
     )
 
     obj.sapp.report_start()
@@ -89,6 +84,5 @@ def main(
     semgrep.scan_into_sarif(ctx)
 
     obj.sapp.report_results(results)
-    obj.slack.report_results(results)
 
     sys.exit(results.exit_code)

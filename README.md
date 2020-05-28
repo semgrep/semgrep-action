@@ -52,22 +52,6 @@ at the `.bento/semgrep.yml` path in your repo.
 If this path does not exist,
 Semgrep will run with a sample rule that searches for the `$X == $X` pattern.
 
-### Slack Notifications
-
-The Semgrep Action can notify you on Slack about findings.
-
-1. [Create a new incoming webhook](https://slack.com/apps/A0F7XDUAZ-incoming-webhooks)
-   on your Slack workspace,
-   and set the channel in which you'd like to receive notifications.
-2. [Add that URL as an encrypted secret](https://help.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
-   for your GitHub repo, naming it `SEMGREP_SLACK_WEBHOOK_URL`.
-3. Change `.github/workflows/semgrep.yml` to pass the secret as a parameter when running Bento:
-
-   ```yaml
-     with:
-       slackWebhookURL: ${{ secrets.SEMGREP_SLACK_WEBHOOK_URL }}
-   ```
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
