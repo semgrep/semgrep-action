@@ -2,14 +2,28 @@ import sys
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
+from typing import List
 from typing import Optional
 
 import click
 import requests
 from boltons.iterutils import chunked_iter
+from glom import glom
+from glom import T
 
 from .bento import Results
 from .utils import debug_echo
+
+
+@dataclass
+class Scan:
+    id: int = -1
+    config: str = "r/all"
+    ignore_patterns: List[str] = field(default_factory=list)
+
+    @property
+    def is_loaded(self) -> bool:
+        return self.id != -1
 
 
 @dataclass
@@ -18,7 +32,7 @@ class Sapp:
     url: str
     token: str
     deployment_id: int
-    scan_id: Optional[int] = None
+    scan: Scan = Scan()
     is_configured: bool = False
     session: requests.Session = field(init=False)
 
@@ -45,16 +59,24 @@ class Sapp:
         except requests.RequestException:
             click.echo(f"Semgrep App returned this error: {response.text}", err=True)
         else:
-            self.scan_id = response.json()["scan"]["id"]
+            payload = response.json()
+            self.scan = Scan(
+                id=glom(payload, T["scan"]["id"]),
+                config=glom(payload, T["scan"]["meta"].get("config")),
+                ignore_patterns=glom(
+                    payload, T["scan"]["meta"].get("ignored_files", [])
+                ),
+            )
+            debug_echo(f"== Our scan object is: {self.scan!r}")
 
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""
-        if self.scan_id is None:
+        if not self.scan.is_loaded:
             raise RuntimeError("sapp is configured so we should've gotten a scan_id")
 
         try:
             response = self.session.get(
-                f"{self.url}/api/agent/scan/{self.scan_id}/rules.yaml", timeout=30,
+                f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml", timeout=30,
             )
             debug_echo(f"== POST .../rules.yaml responded: {response!r}")
             response.raise_for_status()
@@ -71,7 +93,7 @@ class Sapp:
         (Path(".bento") / "semgrep.yml").write_text(self.fetch_rules_text())
 
     def report_results(self, results: Results) -> None:
-        if not self.is_configured or self.scan_id is None:
+        if not self.is_configured or not self.scan.is_loaded:
             debug_echo("== no semgrep app config, skipping report_results")
             return
         debug_echo(f"== reporting results to semgrep app at {self.url}")
@@ -83,7 +105,7 @@ class Sapp:
             )
         for chunk in chunked_iter(results.findings, 10_000):
             response = self.session.post(
-                f"{self.url}/api/agent/scan/{self.scan_id}/findings",
+                f"{self.url}/api/agent/scan/{self.scan.id}/findings",
                 json=chunk,
                 timeout=30,
             )
@@ -98,7 +120,7 @@ class Sapp:
         # mark as complete
         try:
             response = self.session.post(
-                f"{self.url}/api/agent/scan/{self.scan_id}/complete",
+                f"{self.url}/api/agent/scan/{self.scan.id}/complete",
                 json={"exit_code": results.exit_code, "stats": results.stats},
                 timeout=30,
             )
