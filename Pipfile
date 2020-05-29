@@ -13,6 +13,7 @@ sh = "*"
 boltons = "*"
 gitpython = "~=2.1"
 glom = "*"
+semgrep = "*"
 
 [requires]
 python_version = "3.8"
