@@ -22,7 +22,7 @@ from .utils import debug_echo
 class Meta:
     ctx: click.Context
 
-    def glom_event(self, spec: TType) -> Any:
+    def glom_event(self, spec: TType) -> Optional[str]:
         return glom(self.event, spec, default=None)
 
     @cachedproperty
