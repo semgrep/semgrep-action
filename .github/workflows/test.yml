@@ -10,28 +10,28 @@ jobs:
     name: Live runs of action
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - id: semgrep-app-config
-      name: with semgrep-app connection
-      uses: ./tests/local-image-action
-      with:
-        publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
-        publishDeployment: ${{ secrets.SEMGREP_APP_DEPLOYMENT }}
-    - id: semgrep-live-registry-id
-      name: with a semgrep.live Registry ID
-      uses: ./tests/local-image-action
-      with:
-        config: r/all
-    - id: semgrep-live-pack-id
-      name: with a semgrep.live pack ID
-      uses: ./tests/local-image-action
-      with:
-        config: p/r2c
-    - id: semgrep-live-id
-      name: with a semgrep.live Rule ID
-      uses: ./tests/local-image-action
-      with:
-        config: QKP
-    - id: default-config
-      name: with the implicit default config
-      uses: ./tests/local-image-action
+      - uses: actions/checkout@v1
+      - id: semgrep-app-config
+        name: with semgrep-app connection
+        uses: ./tests/local-image-action
+        with:
+          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
+          publishDeployment: ${{ secrets.SEMGREP_APP_DEPLOYMENT }}
+      - id: semgrep-live-registry-id
+        name: with a semgrep.live Registry ID
+        uses: ./tests/local-image-action
+        with:
+          config: r/all
+      - id: semgrep-live-pack-id
+        name: with a semgrep.live Pack ID
+        uses: ./tests/local-image-action
+        with:
+          config: p/r2c
+      - id: semgrep-live-id
+        name: with a semgrep.live Rule ID
+        uses: ./tests/local-image-action
+        with:
+          config: QKP
+      - id: default-config
+        name: with the implicit default config
+        uses: ./tests/local-image-action

@@ -73,8 +73,10 @@ def configure_bento(scan: "Scan") -> None:
         debug_echo(f"creating bentoignore at {bentoignore_path}")
         bentoignore_path.write_text((TEMPLATES_DIR / ".bentoignore").read_text())
 
-    bentoignore_path.write_text("\n# Ignores from semgrep app\n")
-    bentoignore_path.write_text("\n".join(scan.ignore_patterns))
+    with bentoignore_path.open("a") as bentoignore_file:
+        bentoignore_file.write("\n# Ignores from semgrep app\n")
+        bentoignore_file.write("\n".join(scan.ignore_patterns))
+        bentoignore_file.write("\n")
 
     bento_config_path = (Path(".bento") / "config.yml").resolve()
     if not bento_config_path.is_file():
