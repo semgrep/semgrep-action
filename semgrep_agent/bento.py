@@ -9,6 +9,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import click
 import requests
@@ -17,6 +18,9 @@ from sh.contrib import git
 
 from .meta import Meta
 from .utils import debug_echo
+
+if TYPE_CHECKING:
+    from .semgrep_app import Scan
 
 bento = sh.bento.bake(
     agree=True,
@@ -59,7 +63,7 @@ class Results:
         }
 
 
-def configure_bento() -> None:
+def configure_bento(scan: "Scan") -> None:
     TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
 
     Path(".bento").mkdir(exist_ok=True)
@@ -68,6 +72,9 @@ def configure_bento() -> None:
     if not bentoignore_path.is_file():
         debug_echo(f"creating bentoignore at {bentoignore_path}")
         bentoignore_path.write_text((TEMPLATES_DIR / ".bentoignore").read_text())
+
+    bentoignore_path.write_text("\n# Ignores from semgrep app\n")
+    bentoignore_path.write_text("\n".join(scan.ignore_patterns))
 
     bento_config_path = (Path(".bento") / "config.yml").resolve()
     if not bento_config_path.is_file():
@@ -96,7 +103,7 @@ def scan_pull_request(ctx: click.Context) -> sh.RunningCommand:
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [3/4] …adding the bento configuration…")
-    configure_bento()
+    configure_bento(ctx.obj.sapp.scan)
 
     debug_echo("== [4/4] …and seeing if there are any new findings!")
     human_run = bento.check(tool="semgrep", _env=env, _out=sys.stdout, _err=sys.stderr)
@@ -109,7 +116,7 @@ def scan_pull_request(ctx: click.Context) -> sh.RunningCommand:
 
 def scan_push(ctx: click.Context) -> sh.RunningCommand:
     debug_echo("== adding the bento configuration")
-    configure_bento()
+    configure_bento(ctx.obj.sapp.scan)
 
     if ctx.obj.config and ctx.obj.config.startswith("r/"):
         resp = requests.get(f"https://semgrep.live/c/{ctx.obj.config}", timeout=10)
