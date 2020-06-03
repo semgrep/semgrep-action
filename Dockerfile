@@ -1,4 +1,4 @@
-FROM returntocorp/semgrep:0.8.1@sha256:534d2090ce2b2562c9239189f56c00c42636b33ee187e9580f70d7d2c5c5b378 AS semgrep
+FROM returntocorp/semgrep:0.9.0@sha256:181c44fc98ba61b0af957dd4bb2d7eac3498af53774478fe640015273f5930a8 AS semgrep
 FROM python:3.8-alpine
 
 WORKDIR /app
@@ -14,6 +14,8 @@ RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &
     mkdir /bin/semgrep-package/
 
 COPY --from=semgrep /bin/semgrep-core /bin/semgrep-core
+COPY ./semgrep_agent /app/semgrep_agent
+ENV PYTHONPATH=/app
 
 CMD ["python", "-m", "semgrep_agent"]
 
