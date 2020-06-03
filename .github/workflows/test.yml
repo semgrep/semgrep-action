@@ -21,7 +21,12 @@ jobs:
       name: with a semgrep.live Registry ID
       uses: ./tests/local-image-action
       with:
-        config: r/r2c
+        config: r/all
+    - id: semgrep-live-pack-id
+      name: with a semgrep.live pack ID
+      uses: ./tests/local-image-action
+      with:
+        config: p/r2c
     - id: semgrep-live-id
       name: with a semgrep.live Rule ID
       uses: ./tests/local-image-action
