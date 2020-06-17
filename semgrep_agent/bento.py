@@ -123,7 +123,9 @@ def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
         os.environ["CI_MERGE_REQUEST_PROJECT_URL"],
         os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
     )
-    merge_base = git("merge-base", "--all", "HEAD", "FETCH_HEAD").stdout.decode()
+    merge_base = (
+        git("merge-base", "--all", "HEAD", "FETCH_HEAD").stdout.decode().strip()
+    )
     debug_echo(
         "== [1/4] going to go back to the commit you based your pull request on…"
     )
