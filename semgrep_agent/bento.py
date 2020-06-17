@@ -181,6 +181,8 @@ def scan(ctx: click.Context) -> Results:
         log_path = Path.home() / ".bento" / "last.log"
         if log_path.exists():
             click.echo(log_path.read_text(), err=True)
+        else:  # it's from a git command
+            click.echo(error.stderr)
         message = f"""
         == [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
 
