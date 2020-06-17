@@ -124,13 +124,13 @@ def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
         os.environ["CI_MERGE_REQUEST_PROJECT_URL"],
         os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
     )
-    merge_base = (
+    base_sha = (
         git("merge-base", "--all", head_sha, "FETCH_HEAD").stdout.decode().strip()
     )
     debug_echo(
         "== [1/4] going to go back to the commit you based your pull request on…"
     )
-    git.checkout(merge_base)
+    git.checkout(base_sha)
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [2/4] …now adding your pull request's changes back…")
