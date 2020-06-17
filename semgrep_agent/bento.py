@@ -174,12 +174,14 @@ def scan(ctx: click.Context) -> Results:
         else:
             results = scan_all(ctx)
     except sh.ErrorReturnCode as error:
-        click.echo((Path.home() / ".bento" / "last.log").read_text(), err=True)
+        log_path = Path.home() / ".bento" / "last.log"
+        if log_path.exists():
+            click.echo(log_path.read_text(), err=True)
         message = f"""
         == [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
 
         This is an internal error, please file an issue at https://github.com/returntocorp/semgrep/issues/new/choose
-        and include the log output from above.
+        and include any log output from above.
         """
         message = dedent(message).strip()
         click.echo(message, err=True)
