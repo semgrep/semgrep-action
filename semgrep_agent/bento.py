@@ -122,11 +122,11 @@ def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
     debug_echo(
         "== [1/4] going to go back to the commit you based your pull request on…"
     )
-    git.checkout(os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_SHA"])
+    git.checkout(os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"])
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [2/4] …now adding your pull request's changes back…")
-    git.checkout(os.environ["CI_MERGE_REQUEST_SOURCE_BRANCH_SHA"], "--", ".")
+    git.checkout(os.environ["CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"], "--", ".")
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [3/4] …adding the bento configuration…")
