@@ -118,13 +118,14 @@ def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
     env = os.environ.copy()
     if ctx.obj.config:
         env["BENTO_REGISTRY"] = ctx.obj.config
+    head_sha = git("rev-parse", "HEAD").stdout.strip()
 
     git.fetch(
         os.environ["CI_MERGE_REQUEST_PROJECT_URL"],
         os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
     )
     merge_base = (
-        git("merge-base", "--all", "HEAD", "FETCH_HEAD").stdout.decode().strip()
+        git("merge-base", "--all", head_sha, "FETCH_HEAD").stdout.decode().strip()
     )
     debug_echo(
         "== [1/4] going to go back to the commit you based your pull request on…"
@@ -133,7 +134,7 @@ def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [2/4] …now adding your pull request's changes back…")
-    git.checkout(os.environ["CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"], "--", ".")
+    git.checkout(head_sha, "--", ".")
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [3/4] …adding the bento configuration…")
