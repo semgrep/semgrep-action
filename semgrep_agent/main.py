@@ -10,7 +10,8 @@ import sh
 
 from . import bento
 from . import semgrep
-from .meta import Meta
+from .meta import detect_meta_environment
+from .meta import GitMeta
 from .semgrep_app import Sapp
 
 
@@ -22,7 +23,7 @@ def url(string: str) -> str:
 class CliObj:
     event_type: str
     config: str
-    meta: Meta
+    meta: GitMeta
     sapp: Sapp
 
 
@@ -51,6 +52,8 @@ def main(
     click.echo(
         f"== action's environment: semgrep/{sh.semgrep(version=True).strip()}, {sh.bento(version=True).strip()}, {sh.python(version=True).strip()}"
     )
+
+    Meta = detect_meta_environment()
 
     obj = ctx.obj = CliObj(
         event_type=get_event_type(),
