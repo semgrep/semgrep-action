@@ -1,9 +1,9 @@
-name: 'Semgrep Action'
-author: 'Return To Corporation'
-description: 'Easily detect and prevent bugs and anti-patterns in your codebase'
+name: "Semgrep Action"
+author: "Return To Corporation"
+description: "Easily detect and prevent bugs and anti-patterns in your codebase"
 runs:
-  using: 'docker'
-  image: 'docker://returntocorp/semgrep-action:v1'
+  using: "docker"
+  image: "docker://returntocorp/semgrep-action:v1"
 inputs:
   config:
     description: |
@@ -14,9 +14,6 @@ inputs:
   publishDeployment:
     description: |
       Deployment ID on semgrep app.
-  generateSarif:
-    description: |
-      Set to 1 if you want a semgrep.sarif file to be written with all semgrep findings.
 branding:
-  icon: 'align-left'
-  color: 'gray-dark'
+  icon: "align-left"
+  color: "gray-dark"
