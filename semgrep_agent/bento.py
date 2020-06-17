@@ -119,6 +119,7 @@ def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
     if ctx.obj.config:
         env["BENTO_REGISTRY"] = ctx.obj.config
 
+    git.fetch("origin", os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"])
     fork_point = git(
         "merge-base", "--fork-point", os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"]
     ).stdout.decode()
