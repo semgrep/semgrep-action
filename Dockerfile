@@ -29,5 +29,4 @@ CMD ["python", "-m", "semgrep_agent"]
 ENV BENTO_ACTION=true\
     SEMGREP_ACTION=true\
     SEMGREP_ACTION_VERSION=v1\
-    R2C_USE_REMOTE_DOCKER=1\
-    SEMGREP_IN_DOCKER=1
+    R2C_USE_REMOTE_DOCKER=1
