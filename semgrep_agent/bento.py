@@ -16,7 +16,7 @@ import requests
 import sh
 from sh.contrib import git
 
-from .meta import Meta
+from .meta import GitMeta
 from .utils import debug_echo
 
 if TYPE_CHECKING:
@@ -29,8 +29,6 @@ bento = sh.bento.bake(
     _tty_out=False,
 )
 
-ALLOWED_EVENT_TYPES = frozenset(["push", "pull_request"])
-
 
 @dataclass
 class Results:
@@ -40,7 +38,7 @@ class Results:
 
     @classmethod
     def from_sh_command(
-        cls, sh_command: sh.RunningCommand, meta: Meta, elapsed: float
+        cls, sh_command: sh.RunningCommand, meta: GitMeta, elapsed: float
     ) -> "Results":
         commit_date = meta.commit.committed_datetime.isoformat()
 
@@ -84,7 +82,7 @@ def configure_bento(scan: "Scan") -> None:
         bento_config_path.write_text((TEMPLATES_DIR / "config.yml").read_text())
 
 
-def scan_pull_request(ctx: click.Context) -> sh.RunningCommand:
+def scan_github_pull_request(ctx: click.Context) -> sh.RunningCommand:
     env = os.environ.copy()
     if ctx.obj.config:
         env["BENTO_REGISTRY"] = ctx.obj.config
@@ -116,7 +114,34 @@ def scan_pull_request(ctx: click.Context) -> sh.RunningCommand:
     return bento.check(tool="semgrep", _env=env, formatter="json")
 
 
-def scan_push(ctx: click.Context) -> sh.RunningCommand:
+def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
+    env = os.environ.copy()
+    if ctx.obj.config:
+        env["BENTO_REGISTRY"] = ctx.obj.config
+
+    debug_echo(
+        "== [1/4] going to go back to the commit you based your pull request on…"
+    )
+    git.checkout(os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_SHA"])
+    debug_echo(git.status("--branch", "--short").stdout.decode())
+
+    debug_echo("== [2/4] …now adding your pull request's changes back…")
+    git.checkout(os.environ["CI_MERGE_REQUEST_SOURCE_BRANCH_SHA"], "--", ".")
+    debug_echo(git.status("--branch", "--short").stdout.decode())
+
+    debug_echo("== [3/4] …adding the bento configuration…")
+    configure_bento(ctx.obj.sapp.scan)
+
+    debug_echo("== [4/4] …and seeing if there are any new findings!")
+    human_run = bento.check(tool="semgrep", _env=env, _out=sys.stdout, _err=sys.stderr)
+
+    if not ctx.obj.sapp.is_configured:
+        return human_run
+
+    return bento.check(tool="semgrep", _env=env, formatter="json")
+
+
+def scan_all(ctx: click.Context) -> sh.RunningCommand:
     debug_echo("== adding the bento configuration")
     configure_bento(ctx.obj.sapp.scan)
 
@@ -134,32 +159,20 @@ def scan_push(ctx: click.Context) -> sh.RunningCommand:
     return bento.check(tool="semgrep", all=True, formatter="json")
 
 
-def fail_on_unknown_event() -> None:
-    message = f"""
-        == [ERROR] the Semgrep action was triggered by an unsupported GitHub event.
-
-        This error is often caused by an unsupported value for `on:` in the action's configuration.
-        To resolve this issue, please confirm that the `on:` key only contains values from the following list: {list(ALLOWED_EVENT_TYPES)}.
-        If the problem persists, please file an issue at https://github.com/returntocorp/semgrep/issues/new/choose
-    """
-    message = dedent(message.strip())
-    click.echo(message, err=True)
-    sys.exit(2)
-
-
 def scan(ctx: click.Context) -> Results:
-    event_type = ctx.obj.event_type
-    debug_echo(f"== triggered by a {event_type}")
-
-    if event_type not in ALLOWED_EVENT_TYPES:
-        fail_on_unknown_event()
+    meta = ctx.obj.meta
+    debug_echo(f"== triggered by a {meta.environment} {meta.event_name} event")
 
     before = time.time()
     try:
-        if event_type == "pull_request":
-            results = scan_pull_request(ctx)
-        elif event_type == "push":
-            results = scan_push(ctx)
+        if meta.environment == "github-actions" and meta.event_name == "pull_request":
+            results = scan_github_pull_request(ctx)
+        elif (
+            meta.environment == "gitlab-ci" and meta.event_name == "merge_request_event"
+        ):
+            results = scan_gitlab_merge_request(ctx)
+        else:
+            results = scan_all(ctx)
     except sh.ErrorReturnCode as error:
         click.echo((Path.home() / ".bento" / "last.log").read_text(), err=True)
         message = f"""
@@ -173,4 +186,4 @@ def scan(ctx: click.Context) -> Results:
         sys.exit(error.exit_code)
     after = time.time()
 
-    return Results.from_sh_command(results, ctx.obj.meta, after - before)
+    return Results.from_sh_command(results, meta, after - before)
