@@ -9,7 +9,6 @@ import click
 import sh
 
 from . import bento
-from . import semgrep
 from .meta import detect_meta_environment
 from .meta import GitMeta
 from .semgrep_app import Sapp
@@ -84,7 +83,6 @@ def main(
             click.echo(message, err=True)
 
     results = bento.scan(ctx)
-    semgrep.scan_into_sarif(ctx)
 
     obj.sapp.report_results(results)
 
