@@ -119,14 +119,15 @@ def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
     if ctx.obj.config:
         env["BENTO_REGISTRY"] = ctx.obj.config
 
-    git.fetch("origin", os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"])
-    fork_point = git(
-        "merge-base", "--fork-point", os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"]
-    ).stdout.decode()
+    git.fetch(
+        os.environ["CI_MERGE_REQUEST_PROJECT_URL"],
+        os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
+    )
+    merge_base = git("merge-base", "--all", "HEAD", "FETCH_HEAD").stdout.decode()
     debug_echo(
         "== [1/4] going to go back to the commit you based your pull request on…"
     )
-    git.checkout(fork_point)
+    git.checkout(merge_base)
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [2/4] …now adding your pull request's changes back…")
