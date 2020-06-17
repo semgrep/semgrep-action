@@ -6,14 +6,13 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-bento-cli = "==0.13.0b3"
 requests = "*"
 click = "*"
 sh = "*"
 boltons = "*"
 gitpython = "~=2.1"
 glom = "*"
-semgrep = "*"
+pipx = "*"
 
 [requires]
 python_version = "3.8"

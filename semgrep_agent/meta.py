@@ -204,7 +204,7 @@ def detect_meta_environment() -> Type[GitMeta]:
         return GithubMeta
 
     # https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
-    elif os.getenv("CIRCLECI") == "true":  # nosem cause we like the URLs in comments
+    elif os.getenv("CIRCLECI") == "true":  # nosem
         return GitMeta
 
     # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
@@ -212,7 +212,7 @@ def detect_meta_environment() -> Type[GitMeta]:
         return GitMeta
 
     # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
-    elif os.getenv("GITLAB_CI") == "true":  #
+    elif os.getenv("GITLAB_CI") == "true":
         return GitlabMeta
 
     elif os.getenv("CI"):  # nosem
