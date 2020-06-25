@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import time
+import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
@@ -114,6 +115,14 @@ def scan_github_pull_request(ctx: click.Context) -> sh.RunningCommand:
     return bento.check(tool="semgrep", _env=env, formatter="json")
 
 
+def _get_gitlab_remote_url() -> str:
+    parts = urllib.parse.urlsplit(os.environ["CI_MERGE_REQUEST_PROJECT_URL"])
+    parts = parts._replace(
+        netloc=f"gitlab-ci-token:{os.environ['CI_JOB_TOKEN']}@{parts.netloc}"
+    )
+    return urllib.parse.urlunsplit(parts)
+
+
 def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
     env = os.environ.copy()
     if ctx.obj.config:
@@ -121,8 +130,7 @@ def scan_gitlab_merge_request(ctx: click.Context) -> sh.RunningCommand:
     head_sha = git("rev-parse", "HEAD").stdout.strip()
 
     git.fetch(
-        os.environ["CI_MERGE_REQUEST_PROJECT_URL"],
-        os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
+        _get_gitlab_remote_url(), os.environ["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
     )
     base_sha = (
         git("merge-base", "--all", head_sha, "FETCH_HEAD").stdout.decode().strip()
