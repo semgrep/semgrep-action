@@ -1,4 +1,5 @@
 import sys
+import tempfile
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -11,7 +12,7 @@ from boltons.iterutils import chunked_iter
 from glom import glom
 from glom import T
 
-from .bento import Results
+from .semgrep import Results
 from .utils import debug_echo
 
 
@@ -85,10 +86,13 @@ class Sapp:
         else:
             return response.text
 
-    def download_rules(self) -> None:
-        """Save the rules configured on semgrep app to .bento/semgrep.yml"""
-        Path(".bento").mkdir(exist_ok=True)
-        (Path(".bento") / "semgrep.yml").write_text(self.fetch_rules_text())
+    def download_rules(self) -> Path:
+        """Save the rules configured on semgrep app to a temporary file"""
+        # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
+        rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
+        rules_path = Path(rules_file.name)
+        rules_path.write_text(self.fetch_rules_text())
+        return rules_path
 
     def report_results(self, results: Results) -> None:
         if not self.is_configured or not self.scan.is_loaded:
@@ -97,14 +101,10 @@ class Sapp:
         debug_echo(f"== reporting results to semgrep app at {self.url}")
 
         # report findings
-        if results.findings is None:
-            raise RuntimeError(
-                "sapp is configured so we should've decided to run bento --json"
-            )
-        for chunk in chunked_iter(results.findings, 10_000):
+        for chunk in chunked_iter(results.findings.new, 10_000):
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan.id}/findings",
-                json=chunk,
+                json=[finding.to_dict() for finding in chunk],
                 timeout=30,
             )
             debug_echo(f"== POST .../findings responded: {response!r}")
@@ -119,7 +119,7 @@ class Sapp:
         try:
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan.id}/complete",
-                json={"exit_code": results.exit_code, "stats": results.stats},
+                json={"exit_code": -1, "stats": results.stats},
                 timeout=30,
             )
             debug_echo(f"== POST .../complete responded: {response!r}")

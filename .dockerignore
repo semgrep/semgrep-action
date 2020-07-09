@@ -198,6 +198,3 @@ dmypy.json
 .pytype/
 
 #### custom ####
-
-# bento
-**/.bento/cache
