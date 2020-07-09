@@ -1,0 +1,166 @@
+import io
+import json
+import os
+import sys
+import time
+import urllib.parse
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+from textwrap import dedent
+from typing import Any
+from typing import Dict
+from typing import Iterator
+from typing import List
+from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
+
+import click
+import requests
+import sh
+from boltons.iterutils import chunked_iter
+from sh.contrib import git
+
+from .findings import Finding
+from .findings import FindingSets
+from .meta import GitMeta
+from .targets import TargetFileManager
+from .utils import debug_echo
+
+if TYPE_CHECKING:
+    from .semgrep_app import Scan
+
+semgrep = sh.semgrep.bake(_ok_code={0, 1, 2}, _tty_out=False)
+
+# a typical old system has 128 * 1024 as their max command length
+# we assume an average ~250 characters for a path in the worst case
+PATHS_CHUNK_SIZE = 500
+
+
+def resolve_config_shorthand(config: str) -> str:
+    maybe_prefix = config[:2]
+    if maybe_prefix in {"p/", "r/"}:
+        return f"https://semgrep.live/c/{config}"
+    elif maybe_prefix == "s/":
+        return f"https://semgrep.live/c/{config[2:]}"
+    else:
+        return config
+
+
+@contextmanager
+def get_semgrep_config(ctx: click.Context) -> Iterator[List[Union[str, Path]]]:
+    if ctx.obj.sapp.is_configured:
+        local_config_path = Path(".tmp-semgrep.yml")
+        local_config_path.symlink_to(ctx.obj.sapp.download_rules())
+        yield ["--config", local_config_path]
+        local_config_path.unlink()
+    elif ctx.obj.config:
+        yield ["--config", resolve_config_shorthand(ctx.obj.config)]
+    else:
+        yield []
+
+
+def get_semgrepignore(scan: "Scan") -> io.StringIO:
+    semgrepignore = io.StringIO()
+    TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
+
+    if (semgrepignore_path := Path(".semgrepignore")).is_file():
+        debug_echo("using committed semgrepignore")
+        semgrepignore.write(semgrepignore_path.read_text())
+    else:
+        debug_echo("using default semgrepignore")
+        semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
+
+    semgrepignore.write("\n# Ignores from semgrep app\n")
+    semgrepignore.write("\n".join(scan.ignore_patterns))
+    semgrepignore.write("\n")
+
+    return semgrepignore
+
+
+@dataclass
+class Results:
+    findings: FindingSets
+    total_time: float
+
+    @property
+    def stats(self) -> Dict[str, Any]:
+        return {
+            "findings": len(self.findings.new),
+            "total_time": self.total_time,
+        }
+
+
+def invoke_semgrep(ctx: click.Context) -> FindingSets:
+    debug_echo("== adding semgrep configuration")
+
+    workdir = Path.cwd()
+    targets = TargetFileManager(
+        base_path=workdir,
+        base_commit=ctx.obj.meta.base_commit_ref,
+        paths=[workdir],
+        ignore_rules_file=get_semgrepignore(ctx.obj.sapp.scan),
+    )
+
+    debug_echo("== seeing if there are any findings")
+    findings = FindingSets()
+
+    with targets.baseline_paths() as paths, get_semgrep_config(ctx) as config_args:
+        debug_echo(f"== running on {len(paths)} baseline paths")
+        for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
+            args = ["--json", *config_args]
+            for path in chunk:
+                args.extend(["--include", path])
+            findings.baseline.update(
+                Finding.from_semgrep_result(result, ctx)
+                for result in json.loads(str(semgrep(*args)))["results"]
+            )
+        debug_echo(f"== found {len(findings.baseline)} baseline results")
+
+    with targets.current_paths() as paths, get_semgrep_config(ctx) as config_args:
+        debug_echo(f"== running on {len(paths)} current paths")
+        for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
+            args = ["--json", *config_args]
+            for path in chunk:
+                args.extend(["--include", path])
+            findings.current.update(
+                Finding.from_semgrep_result(result, ctx)
+                for result in json.loads(str(semgrep(*args)))["results"]
+            )
+        debug_echo(f"== found {len(findings.current)} current results")
+
+    if os.getenv("INPUT_GENERATESARIF"):
+        # FIXME: This will crash when running on thousands of files due to command length limit
+        sarif_path = Path("semgrep.sarif")
+        with targets.current_paths() as paths, sarif_path.open(
+            "w"
+        ) as sarif_file, get_semgrep_config(ctx) as config_args:
+            args = ["--sarif", *config_args]
+            for path in paths:
+                args.extend(["--include", path])
+            semgrep(*args, _out=sarif_file)
+
+    return findings
+
+
+def scan(ctx: click.Context) -> Results:
+    meta = ctx.obj.meta
+    debug_echo(f"== triggered by a {meta.environment} {meta.event_name} event")
+
+    before = time.time()
+    try:
+        findings = invoke_semgrep(ctx)
+    except sh.ErrorReturnCode as error:
+        message = f"""
+        == [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
+
+        This is an internal error, please file an issue at https://github.com/returntocorp/semgrep-action/issues/new/choose
+        and include any log output from above.
+        """
+        message = dedent(message).strip()
+        click.echo(message, err=True)
+        sys.exit(error.exit_code)
+    after = time.time()
+
+    return Results(findings, after - before)

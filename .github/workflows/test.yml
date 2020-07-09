@@ -31,7 +31,4 @@ jobs:
         name: with a semgrep.live Rule ID
         uses: ./tests/local-image-action
         with:
-          config: QKP
-      - id: default-config
-        name: with the implicit default config
-        uses: ./tests/local-image-action
+          config: s/QKP

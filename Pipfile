@@ -13,6 +13,7 @@ boltons = "*"
 gitpython = "~=2.1"
 glom = "*"
 pipx = "*"
+pymmh3 = "*"
 
 [requires]
 python_version = "3.8"

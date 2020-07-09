@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
 from typing import NoReturn
+from typing import Optional
 
 import click
 import sh
 from boltons import ecoutils
 
-from . import bento
+from . import formatter
+from . import semgrep
 from .meta import detect_meta_environment
 from .meta import GitMeta
 from .semgrep_app import Sapp
@@ -38,6 +40,13 @@ def get_event_type() -> str:
 @click.command()
 @click.option("--config", envvar="INPUT_CONFIG", type=str)
 @click.option(
+    "--baseline-ref",
+    envvar="BASELINE_REF",
+    type=str,
+    default=None,
+    show_default="detected from CI env",
+)
+@click.option(
     "--publish-url", envvar="INPUT_PUBLISHURL", type=url, default="https://semgrep.live"
 )
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
@@ -46,20 +55,26 @@ def get_event_type() -> str:
 def main(
     ctx: click.Context,
     config: str,
+    baseline_ref: str,
     publish_url: str,
     publish_token: str,
     publish_deployment: int,
 ) -> NoReturn:
     click.echo(
-        f"== action's environment: semgrep/{sh.semgrep(version=True).strip()}, {sh.bento(version=True).strip()}, {sh.python(version=True).strip()}"
+        f"== agent's environment: "
+        f"semgrep/{sh.semgrep(version=True).strip()}, "
+        f"{sh.python(version=True).strip()}"
     )
 
     Meta = detect_meta_environment()
+    meta_kwargs = {}
+    if baseline_ref:
+        meta_kwargs["cli_baseline_ref"] = baseline_ref
 
     obj = ctx.obj = CliObj(
         event_type=get_event_type(),
         config=config,
-        meta=Meta(ctx=ctx),
+        meta=Meta(ctx, **meta_kwargs),
         sapp=Sapp(
             ctx=ctx,
             url=publish_url,
@@ -72,22 +87,21 @@ def main(
 
     obj.sapp.report_start()
 
-    if not config and not (Path(".bento") / "semgrep.yml").is_file():
-        if obj.sapp.is_configured:
-            obj.sapp.download_rules()
-        else:
-            message = """
-                == [WARNING] you didn't configure what rules semgrep should scan for.
+    if not (obj.config or obj.sapp.is_configured or Path(".semgrep.yml").is_file()):
+        message = """
+            == [ERROR] you didn't configure what rules semgrep should scan for.
 
-                Please either set a config in the action's configuration according to
-                https://github.com/returntocorp/semgrep-action#configuration
-                or commit your own rules at the default path of .bento/semgrep.yml
-            """
-            message = dedent(message).strip()
-            click.echo(message, err=True)
+            Please either set a config in the CI configuration according to
+            https://github.com/returntocorp/semgrep-action#configuration
+            or commit your own rules at the default path of `.semgrep.yml`
+        """
+        message = dedent(message).strip()
+        click.echo(message, err=True)
+        sys.exit(1)
 
-    results = bento.scan(ctx)
+    results = semgrep.scan(ctx)
 
+    formatter.dump(results.findings.new)
     obj.sapp.report_results(results)
 
-    sys.exit(results.exit_code)
+    sys.exit(1 if results.findings.new else 0)

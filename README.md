@@ -47,7 +47,7 @@ You can set specify rules in one of the following ways:
 
 If `config` is unset,
 the default behavior is to look for rules
-at the `.bento/semgrep.yml` path in your repo.
+at the `.semgrep.yml` path in your repo.
 
 If this path does not exist,
 Semgrep will run with a sample rule that searches for the `$X == $X` pattern.
