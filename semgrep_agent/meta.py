@@ -110,6 +110,12 @@ class GithubMeta(GitMeta):
         return super().commit_sha  # type: ignore
 
     @cachedproperty
+    def base_commit_sha(self) -> Optional[str]:
+        if self.event_name == "pull_request":
+            return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
+        return None
+
+    @cachedproperty
     def commit_ref(self) -> Optional[str]:
         return os.getenv("GITHUB_REF")
 

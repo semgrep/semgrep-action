@@ -96,7 +96,7 @@ def scan_github_pull_request(ctx: click.Context) -> sh.RunningCommand:
     debug_echo(
         "== [1/4] going to go back to the commit you based your pull request on…"
     )
-    git.checkout(os.environ["GITHUB_BASE_REF"])
+    git.checkout(ctx.obj.meta.base_commit_sha)
     debug_echo(git.status("--branch", "--short").stdout.decode())
 
     debug_echo("== [2/4] …now adding your pull request's changes back…")
