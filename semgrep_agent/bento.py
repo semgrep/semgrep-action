@@ -163,6 +163,7 @@ def scan_all(ctx: click.Context) -> sh.RunningCommand:
 
     if ctx.obj.config and ctx.obj.config.startswith("r/"):
         resp = requests.get(f"https://semgrep.live/c/{ctx.obj.config}", timeout=10)
+        resp.raise_for_status()
         with Path(".bento/semgrep.yml").open("w") as fd:
             fd.write(resp.content.decode("utf-8"))
 
