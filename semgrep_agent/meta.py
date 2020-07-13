@@ -102,8 +102,11 @@ class GithubMeta(GitMeta):
 
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
-        if value := os.getenv("GITHUB_SHA"):
-            return value
+        if self.event_name == "pull_request":
+            # https://github.community/t/github-sha-not-the-same-as-the-triggering-commit/18286/2
+            return self.glom_event(T["pull_request"]["head"]["sha"])  # type: ignore
+        if self.event_name == "push":
+            return os.getenv("GITHUB_SHA")
         return super().commit_sha  # type: ignore
 
     @cachedproperty
