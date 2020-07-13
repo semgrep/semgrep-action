@@ -7,11 +7,13 @@ from typing import NoReturn
 
 import click
 import sh
+from boltons import ecoutils
 
 from . import bento
 from .meta import detect_meta_environment
 from .meta import GitMeta
 from .semgrep_app import Sapp
+from .utils import maybe_print_debug_info
 
 
 def url(string: str) -> str:
@@ -65,6 +67,8 @@ def main(
             deployment_id=publish_deployment,
         ),
     )
+
+    maybe_print_debug_info(obj.meta)
 
     obj.sapp.report_start()
 
