@@ -42,15 +42,33 @@ You can set specify rules in one of the following ways:
 
 - **semgrep.live registry ID**: `config: r/python.flask`  
   referring to a subset of the [semgrep.live registry](https://semgrep.live/r)
-- **semgrep.live rule ID**: `config: xYz`  
+- **semgrep.live pack ID**: `config: p/r2c`  
+  referring to a pack created on [semgrep.live's packs page](https://semgrep.live/packs)
+- **semgrep.live snippet ID**: `config: s/xYz` or `config: s/john:named-rule` 
   referring to a rule published from the [semgrep.live editor](https://semgrep.live)
 
 If `config` is unset,
 the default behavior is to look for rules
 at the `.semgrep.yml` path in your repo.
 
-If this path does not exist,
-Semgrep will run with a sample rule that searches for the `$X == $X` pattern.
+If none of these provide a configuration,
+the action will fail.
+
+### Ignoring Paths
+
+You can commit a `.semgrepignore` file
+to skip scanning specific paths,
+using the same syntax as `.gitignore`.
+
+If there's no `.semgrepignore` file in your repository,
+we will use a default ignore list that skips common test and dependency directories,
+including `tests/`, `node_modules/`, and `vendor/`.
+You can find the full list in our [`.semgrepignore` template file](https://github.com/returntocorp/semgrep-action/blob/v1/src/semgrep_agent/templates/.semgrepignore).
+To override these default ignore patterns,
+commit your own `.semgrepignore`.
+
+Note that `.semgrepignore` is picked up only by the action,
+and will not be honored when running `semgrep` manually.
 
 ## Contributing
 
