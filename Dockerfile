@@ -20,7 +20,7 @@ RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &
     apk del .build-deps &&\
     rm -rf /root/.cache/* /tmp/*
 
-COPY ./semgrep_agent /app/semgrep_agent
+COPY ./src/semgrep_agent /app/semgrep_agent
 ENV PATH=/root/.local/bin:${PATH} \
     PYTHONPATH=/app:${PYTHONPATH}
 
