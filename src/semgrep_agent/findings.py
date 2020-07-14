@@ -24,19 +24,26 @@ class Finding:
 
     check_id = attr.ib(type=str)
     path = attr.ib(type=str)
-    line = attr.ib(type=int, hash=None)
-    column = attr.ib(type=int, hash=None)
-    message = attr.ib(type=str, hash=None)
-    severity = attr.ib(type=int, hash=None)
+    line = attr.ib(type=int, hash=None, eq=False)
+    column = attr.ib(type=int, hash=None, eq=False)
+    message = attr.ib(type=str, hash=None, eq=False)
+    severity = attr.ib(type=int, hash=None, eq=False)
     syntactic_context = attr.ib(type=str, converter=textwrap.dedent)
-    semantic_context = None
-    end_line = attr.ib(type=Optional[int], default=None, hash=None, kw_only=True)
-    end_column = attr.ib(type=Optional[int], default=None, hash=None, kw_only=True)
+    end_line = attr.ib(
+        type=Optional[int], default=None, hash=None, eq=False, kw_only=True
+    )
+    end_column = attr.ib(
+        type=Optional[int], default=None, hash=None, eq=False, kw_only=True
+    )
     commit_date = attr.ib(
-        type=Optional[datetime], default=None, hash=None, kw_only=True
+        type=Optional[datetime], default=None, hash=None, eq=False, kw_only=True
     )
     metadata = attr.ib(
-        type=Optional[Mapping[str, Any]], default=None, hash=None, kw_only=True,
+        type=Optional[Mapping[str, Any]],
+        default=None,
+        hash=None,
+        eq=False,
+        kw_only=True,
     )
 
     def syntactic_identifier_int(self) -> int:
