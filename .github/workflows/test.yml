@@ -16,7 +16,7 @@ jobs:
         uses: ./tests/local-image-action
         with:
           publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
-          publishDeployment: ${{ secrets.SEMGREP_APP_DEPLOYMENT }}
+          publishDeployment: "1"
       - id: semgrep-live-registry-id
         name: with a semgrep.live Registry ID
         uses: ./tests/local-image-action
