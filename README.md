@@ -44,7 +44,7 @@ You can set specify rules in one of the following ways:
   referring to a subset of the [semgrep.live registry](https://semgrep.live/r)
 - **semgrep.live pack ID**: `config: p/r2c`  
   referring to a pack created on [semgrep.live's packs page](https://semgrep.live/packs)
-- **semgrep.live snippet ID**: `config: s/xYz` or `config: s/john:named-rule` 
+- **semgrep.live snippet ID**: `config: s/xYz` or `config: s/john:named-rule`
   referring to a rule published from the [semgrep.live editor](https://semgrep.live)
 
 If `config` is unset,
