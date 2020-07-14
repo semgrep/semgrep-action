@@ -2,6 +2,7 @@ import json
 import os
 import urllib.parse
 from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -27,7 +28,7 @@ class GitMeta:
 
     ctx: click.Context
     cli_baseline_ref: Optional[str] = None
-    environment: str = "git"
+    environment: str = field(default="git", init=False)
 
     @cachedproperty
     def event_name(self) -> str:
@@ -88,7 +89,7 @@ class GitMeta:
 class GithubMeta(GitMeta):
     """Gather metadata from GitHub Actions."""
 
-    environment = "github-actions"
+    environment: str = field(default="github-actions", init=False)
 
     def glom_event(self, spec: TType) -> Any:
         return glom(self.event, spec, default=None)
@@ -166,7 +167,7 @@ class GithubMeta(GitMeta):
 class GitlabMeta(GitMeta):
     """Gather metadata from GitLab 10.0+"""
 
-    environment = "gitlab-ci"
+    environment: str = field(default="gitlab-ci", init=False)
 
     @staticmethod
     def _get_remote_url() -> str:
