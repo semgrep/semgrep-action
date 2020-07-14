@@ -60,9 +60,9 @@ def main(
     publish_token: str,
     publish_deployment: int,
 ) -> NoReturn:
-    click.echo("=== setting up environment")
+    click.echo("=== detecting environment")
     click.echo(
-        f"| versions: "
+        f"| versions     - "
         f"semgrep {sh.semgrep(version=True).strip()} on "
         f"{sh.python(version=True).strip()}"
     )
@@ -84,15 +84,17 @@ def main(
         ),
     )
     click.echo(
-        f"| environment: "
+        f"| environment  - "
         f"running in {obj.meta.environment}, "
         f"triggering event is '{obj.meta.event_name}'"
     )
 
     if obj.sapp.is_configured:
-        click.echo(f"| semgrep.live: logged in as deployment #{obj.sapp.deployment_id}")
+        click.echo(
+            f"| semgrep.live - logged in as deployment #{obj.sapp.deployment_id}"
+        )
     else:
-        click.echo("| semgrep.live: not logged in")
+        click.echo("| semgrep.live - not logged in")
 
     maybe_print_debug_info(obj.meta)
 
