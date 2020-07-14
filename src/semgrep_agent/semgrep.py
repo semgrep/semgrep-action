@@ -113,21 +113,6 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
     debug_echo("=== seeing if there are any findings")
     findings = FindingSets()
 
-    with targets.baseline_paths() as paths, get_semgrep_config(ctx) as config_args:
-        if paths:
-            click.echo(
-                "=== looking for pre-existing issues in " + unit_len(paths, "file")
-            )
-            for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
-                args = ["--json", *config_args]
-                for path in chunk:
-                    args.extend(["--include", path])
-                findings.baseline.update(
-                    Finding.from_semgrep_result(result, ctx)
-                    for result in json.loads(str(semgrep(*args)))["results"]
-                )
-            click.echo(f"| {unit_len(findings.baseline, 'pre-existing issue')} found")
-
     with targets.current_paths() as paths, get_semgrep_config(ctx) as config_args:
         click.echo("=== looking for current issues in " + unit_len(paths, "file"))
         for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
@@ -139,6 +124,28 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
                 for result in json.loads(str(semgrep(*args)))["results"]
             )
             click.echo(f"| {unit_len(findings.current, 'current issue')} found")
+
+    if not findings.current:
+        click.echo(
+            "=== not looking at pre-existing issues since there are no current issues"
+        )
+    else:
+        with targets.baseline_paths() as paths, get_semgrep_config(ctx) as config_args:
+            if paths:
+                click.echo(
+                    "=== looking for pre-existing issues in " + unit_len(paths, "file")
+                )
+                for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
+                    args = ["--json", *config_args]
+                    for path in chunk:
+                        args.extend(["--include", path])
+                    findings.baseline.update(
+                        Finding.from_semgrep_result(result, ctx)
+                        for result in json.loads(str(semgrep(*args)))["results"]
+                    )
+                click.echo(
+                    f"| {unit_len(findings.baseline, 'pre-existing issue')} found"
+                )
 
     if os.getenv("INPUT_GENERATESARIF"):
         # FIXME: This will crash when running on thousands of files due to command length limit
