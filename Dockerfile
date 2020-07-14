@@ -1,4 +1,4 @@
-FROM returntocorp/semgrep:0.11.0@sha256:9f36defbdbe2e3ebca59d4988fac2bcc6d5d9d06dd78ae86bfc980c5e024840d AS semgrep
+FROM returntocorp/semgrep:0.14.0@sha256:d9c940e6ace97cb2422e897cfaefee445917d972215b72b98d63f38615ec8897 AS semgrep
 FROM python:3.8-alpine
 
 WORKDIR /app
@@ -6,7 +6,7 @@ COPY Pipfile* ./
 
 # if this is called BENTO_VERSION, click will think we're trying to set --version
 ENV INSTALLED_BENTO_VERSION=0.13.0b4\
-    INSTALLED_SEMGREP_VERSION=0.11.0
+    INSTALLED_SEMGREP_VERSION=0.14.0
 
 COPY --from=semgrep /bin/semgrep-core /tmp/semgrep-core
 
