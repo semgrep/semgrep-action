@@ -121,6 +121,7 @@ def main(
 
     results = semgrep.scan(ctx)
 
+    click.echo(f"=== reporting all new issues\n")
     formatter.dump(results.findings.new)
     obj.sapp.report_results(results)
 

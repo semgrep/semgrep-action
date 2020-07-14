@@ -142,10 +142,10 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
                     args = ["--json", *config_args]
                     for path in chunk:
                         args.extend(["--include", path])
-                    findings.baseline.update(
-                        Finding.from_semgrep_result(result, ctx)
-                        for result in json.loads(str(semgrep(*args)))["results"]
-                    )
+                    for result in json.loads(str(semgrep(*args)))["results"]:
+                        findings.baseline.discard(
+                            Finding.from_semgrep_result(result, ctx)
+                        )
                 click.echo(
                     f"| {unit_len(findings.baseline, 'pre-existing issue')} found"
                 )
