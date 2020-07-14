@@ -20,7 +20,7 @@ def debug_echo(text: str) -> None:
     if os.getenv("GITHUB_ACTIONS"):
         prefix = "::debug::"
     elif os.getenv("SEMGREP_AGENT_DEBUG"):
-        prefix = "== [DEBUG] "
+        prefix = "=== [DEBUG] "
     else:
         return
     text = "\n".join(prefix + line for line in text.splitlines())

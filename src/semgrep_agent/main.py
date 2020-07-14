@@ -60,9 +60,10 @@ def main(
     publish_token: str,
     publish_deployment: int,
 ) -> NoReturn:
+    click.echo("=== setting up environment")
     click.echo(
-        f"== agent's environment: "
-        f"semgrep/{sh.semgrep(version=True).strip()}, "
+        f"| versions: "
+        f"semgrep {sh.semgrep(version=True).strip()} on "
         f"{sh.python(version=True).strip()}"
     )
 
@@ -82,12 +83,29 @@ def main(
             deployment_id=publish_deployment,
         ),
     )
+    click.echo(
+        f"| environment: "
+        f"running in {obj.meta.environment}, "
+        f"triggering event is '{obj.meta.event_name}'"
+    )
+
+    if obj.sapp.is_configured:
+        click.echo(f"| semgrep.live: logged in as deployment #{obj.sapp.deployment_id}")
+    else:
+        click.echo("| semgrep.live: not logged in")
 
     maybe_print_debug_info(obj.meta)
 
     obj.sapp.report_start()
 
-    if not (obj.config or obj.sapp.is_configured or Path(".semgrep.yml").is_file()):
+    click.echo("=== setting up agent configuration")
+    if obj.sapp.is_configured:
+        click.echo("| using semgrep rules configured on the web UI")
+    elif obj.config:
+        click.echo(f"| using semgrep rules from {obj.config}")
+    elif Path(".semgrep.yml").is_file():
+        click.echo("| using semgrep rules from the committed .semgrep.yml")
+    else:
         message = """
             == [ERROR] you didn't configure what rules semgrep should scan for.
 
@@ -104,4 +122,6 @@ def main(
     formatter.dump(results.findings.new)
     obj.sapp.report_results(results)
 
-    sys.exit(1 if results.findings.new else 0)
+    exit_code = 1 if results.findings.new else 0
+    click.echo(f"=== exiting with {'failing' if exit_code == 1 else 'success'} status")
+    sys.exit(exit_code)
