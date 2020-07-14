@@ -29,6 +29,7 @@ class Finding:
     message = attr.ib(type=str, hash=None)
     severity = attr.ib(type=int, hash=None)
     syntactic_context = attr.ib(type=str, converter=textwrap.dedent)
+    semantic_context = None
     end_line = attr.ib(type=Optional[int], default=None, hash=None, kw_only=True)
     end_column = attr.ib(type=Optional[int], default=None, hash=None, kw_only=True)
     commit_date = attr.ib(
