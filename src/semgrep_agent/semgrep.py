@@ -132,10 +132,13 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
     else:
         with targets.baseline_paths() as paths, get_semgrep_config(ctx) as config_args:
             if paths:
+                paths_with_findings = {finding.path for finding in findings.current}
+                paths_to_check = set(str(path) for path in paths) & paths_with_findings
                 click.echo(
-                    "=== looking for pre-existing issues in " + unit_len(paths, "file")
+                    "=== looking for pre-existing issues in "
+                    + unit_len(paths_to_check, "file")
                 )
-                for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
+                for chunk in chunked_iter(paths_to_check, PATHS_CHUNK_SIZE):
                     args = ["--json", *config_args]
                     for path in chunk:
                         args.extend(["--include", path])
