@@ -45,16 +45,16 @@ class Sapp:
 
     def report_start(self) -> None:
         if not self.is_configured:
-            debug_echo("== no semgrep app config, skipping report_start")
+            debug_echo("=== no semgrep app config, skipping report_start")
             return
-        debug_echo(f"== reporting start to semgrep app at {self.url}")
+        debug_echo(f"=== reporting start to semgrep app at {self.url}")
 
         response = self.session.post(
             f"{self.url}/api/agent/deployment/{self.deployment_id}/scan",
             json={"meta": self.ctx.obj.meta.to_dict()},
             timeout=30,
         )
-        debug_echo(f"== POST .../scan responded: {response!r}")
+        debug_echo(f"=== POST .../scan responded: {response!r}")
         try:
             response.raise_for_status()
         except requests.RequestException:
@@ -66,7 +66,7 @@ class Sapp:
                 config=glom(body, T["scan"]["meta"].get("config")),
                 ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
             )
-            debug_echo(f"== Our scan object is: {self.scan!r}")
+            debug_echo(f"=== Our scan object is: {self.scan!r}")
 
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""
@@ -77,7 +77,7 @@ class Sapp:
             response = self.session.get(
                 f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml", timeout=30,
             )
-            debug_echo(f"== POST .../rules.yaml responded: {response!r}")
+            debug_echo(f"=== POST .../rules.yaml responded: {response!r}")
             response.raise_for_status()
         except requests.RequestException:
             click.echo(f"Semgrep App returned this error: {response.text}", err=True)
@@ -96,9 +96,9 @@ class Sapp:
 
     def report_results(self, results: Results) -> None:
         if not self.is_configured or not self.scan.is_loaded:
-            debug_echo("== no semgrep app config, skipping report_results")
+            debug_echo("=== no semgrep app config, skipping report_results")
             return
-        debug_echo(f"== reporting results to semgrep app at {self.url}")
+        debug_echo(f"=== reporting results to semgrep app at {self.url}")
 
         # report findings
         for chunk in chunked_iter(results.findings.new, 10_000):
@@ -107,7 +107,7 @@ class Sapp:
                 json=[finding.to_dict() for finding in chunk],
                 timeout=30,
             )
-            debug_echo(f"== POST .../findings responded: {response!r}")
+            debug_echo(f"=== POST .../findings responded: {response!r}")
             try:
                 response.raise_for_status()
             except requests.RequestException:
@@ -122,7 +122,7 @@ class Sapp:
                 json={"exit_code": -1, "stats": results.stats},
                 timeout=30,
             )
-            debug_echo(f"== POST .../complete responded: {response!r}")
+            debug_echo(f"=== POST .../complete responded: {response!r}")
             response.raise_for_status()
         except requests.RequestException:
             click.echo(f"Semgrep App returned this error: {response.text}", err=True)

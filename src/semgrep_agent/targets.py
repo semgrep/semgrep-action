@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import attr
 import click
 import sh
+from boltons.strutils import cardinalize
 from sh.contrib import git
 
 from .ignores import FileIgnore
@@ -158,8 +159,24 @@ class TargetFileManager:
                 for a in (self._status.added + self._status.modified)
                 # diff_path is a subpath of some element of input_paths
                 if any((a == path or path in a.parents) for path in paths)
-                and submodule_paths not in a.parents
             ]
+            changed_count = len(paths)
+            click.echo(
+                f"| looking at {changed_count} {cardinalize('changed file', changed_count)}"
+            )
+            paths = [
+                path
+                for path in paths
+                if all(
+                    submodule_path not in path.parents
+                    for submodule_path in submodule_paths
+                )
+            ]
+            if len(paths) != changed_count:
+                click.echo(
+                    "| skipping files in all submodules: "
+                    + ", ".join(str(path) for path in submodule_paths)
+                )
 
         # Filter out ignore rules, expand directories
         self._ignore_rules_file.seek(0)
@@ -174,6 +191,12 @@ class TargetFileManager:
             if elem.survives:
                 filtered.append(elem.path)
 
+        skipped_count = len(paths) - len(filtered)
+        if skipped_count:
+            click.echo(
+                f"| skipping {skipped_count} {cardinalize('file', skipped_count)} based on path ignore rules"
+            )
+
         relative_paths = [path.relative_to(self._base_path) for path in filtered]
 
         return relative_paths
@@ -187,7 +210,7 @@ class TargetFileManager:
         """
         output = git.status("--porcelain").stdout.decode().strip()
         if output:
-            raise RuntimeError(
+            raise RuntimeError(  # TODO we can probably be more lenient
                 "Found untracked or staged files. Diff-aware runs require a clean git state."
             )
 

@@ -20,6 +20,7 @@ import click
 import requests
 import sh
 from boltons.iterutils import chunked_iter
+from boltons.strutils import unit_len
 from sh.contrib import git
 
 from .findings import Finding
@@ -56,6 +57,7 @@ def get_semgrep_config(ctx: click.Context) -> Iterator[List[Union[str, Path]]]:
         yield ["--config", local_config_path]
         local_config_path.unlink()
     elif ctx.obj.config:
+        rules_url = resolve_config_shorthand(ctx.obj.config)
         yield ["--config", resolve_config_shorthand(ctx.obj.config)]
     else:
         yield []
@@ -65,16 +67,21 @@ def get_semgrepignore(scan: "Scan") -> io.StringIO:
     semgrepignore = io.StringIO()
     TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
 
-    if (semgrepignore_path := Path(".semgrepignore")).is_file():
-        debug_echo("using committed semgrepignore")
+    semgrepignore_path = Path(".semgrepignore")
+    if semgrepignore_path.is_file():
+        click.echo("| using path ignore rules from .semgrepignore")
         semgrepignore.write(semgrepignore_path.read_text())
     else:
-        debug_echo("using default semgrepignore")
+        click.echo(
+            "| using default path ignore rules of common test and dependency directories"
+        )
         semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
 
-    semgrepignore.write("\n# Ignores from semgrep app\n")
-    semgrepignore.write("\n".join(scan.ignore_patterns))
-    semgrepignore.write("\n")
+    if scan_patterns := scan.ignore_patterns:
+        click.echo("| adding further path ignore rules configured on the web UI")
+        semgrepignore.write("\n# Ignores from semgrep app\n")
+        semgrepignore.write("\n".join(scan_patterns))
+        semgrepignore.write("\n")
 
     return semgrepignore
 
@@ -93,7 +100,7 @@ class Results:
 
 
 def invoke_semgrep(ctx: click.Context) -> FindingSets:
-    debug_echo("== adding semgrep configuration")
+    debug_echo("=== adding semgrep configuration")
 
     workdir = Path.cwd()
     targets = TargetFileManager(
@@ -103,23 +110,26 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
         ignore_rules_file=get_semgrepignore(ctx.obj.sapp.scan),
     )
 
-    debug_echo("== seeing if there are any findings")
+    debug_echo("=== seeing if there are any findings")
     findings = FindingSets()
 
     with targets.baseline_paths() as paths, get_semgrep_config(ctx) as config_args:
-        debug_echo(f"== running on {len(paths)} baseline paths")
-        for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
-            args = ["--json", *config_args]
-            for path in chunk:
-                args.extend(["--include", path])
-            findings.baseline.update(
-                Finding.from_semgrep_result(result, ctx)
-                for result in json.loads(str(semgrep(*args)))["results"]
+        if paths:
+            click.echo(
+                "=== looking for pre-existing issues in " + unit_len(paths, "file")
             )
-        debug_echo(f"== found {len(findings.baseline)} baseline results")
+            for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
+                args = ["--json", *config_args]
+                for path in chunk:
+                    args.extend(["--include", path])
+                findings.baseline.update(
+                    Finding.from_semgrep_result(result, ctx)
+                    for result in json.loads(str(semgrep(*args)))["results"]
+                )
+            click.echo(f"| {unit_len(findings.baseline, 'pre-existing issue')} found")
 
     with targets.current_paths() as paths, get_semgrep_config(ctx) as config_args:
-        debug_echo(f"== running on {len(paths)} current paths")
+        click.echo("=== looking for current issues in " + unit_len(paths, "file"))
         for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
             args = ["--json", *config_args]
             for path in chunk:
@@ -128,10 +138,11 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
                 Finding.from_semgrep_result(result, ctx)
                 for result in json.loads(str(semgrep(*args)))["results"]
             )
-        debug_echo(f"== found {len(findings.current)} current results")
+            click.echo(f"| {unit_len(findings.current, 'current issue')} found")
 
     if os.getenv("INPUT_GENERATESARIF"):
         # FIXME: This will crash when running on thousands of files due to command length limit
+        click.echo("=== re-running scan to generate a SARIF report")
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths, sarif_path.open(
             "w"
@@ -146,7 +157,6 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
 
 def scan(ctx: click.Context) -> Results:
     meta = ctx.obj.meta
-    debug_echo(f"== triggered by a {meta.environment} {meta.event_name} event")
 
     before = time.time()
     try:
