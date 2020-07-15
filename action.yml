@@ -17,6 +17,9 @@ inputs:
   generateSarif:
     description: |
       Set to 1 if you want a semgrep.sarif file to be written with all semgrep findings.
+  allowFailure:
+    description: |
+      Set to 1 if you want the job to exit with a successful status even if there are new findings.
 branding:
   icon: "align-left"
   color: "gray-dark"

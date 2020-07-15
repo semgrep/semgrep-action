@@ -51,6 +51,7 @@ def get_event_type() -> str:
 )
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
+@click.option("--allow-failure", envvar="INPUT_ALLOWFAILURE", type=bool)
 @click.pass_context
 def main(
     ctx: click.Context,
@@ -59,6 +60,7 @@ def main(
     publish_url: str,
     publish_token: str,
     publish_deployment: int,
+    allow_failure: bool,
 ) -> NoReturn:
     click.echo("=== detecting environment")
     click.echo(
@@ -125,5 +127,10 @@ def main(
     obj.sapp.report_results(results)
 
     exit_code = 1 if results.findings.new else 0
+    if exit_code == 1 and allow_failure:
+        click.echo(
+            f"=== configured to allow failures, so exiting with success status despite findings"
+        )
+        sys.exit(exit_code)
     click.echo(f"=== exiting with {'failing' if exit_code == 1 else 'success'} status")
     sys.exit(exit_code)

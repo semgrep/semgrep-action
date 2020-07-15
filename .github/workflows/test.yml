@@ -21,14 +21,28 @@ jobs:
         name: with a semgrep.live Registry ID
         uses: ./tests/local-image-action
         with:
-          config: r/all
+          config: https://semgrep.live/r/all
+      - id: semgrep-live-snippet-id
+        name: with a semgrep.live Snippet ID
+        uses: ./tests/local-image-action
+        with:
+          config: https://semgrep.live/underyx:never-match
       - id: semgrep-live-pack-id
         name: with a semgrep.live Pack ID
         uses: ./tests/local-image-action
         with:
-          config: p/r2c
-      - id: semgrep-live-id
-        name: with a semgrep.live Rule ID
+          config: https://semgrep.live/p/r2c
+      - id: semgrep-sarif-report
+        name: with SARIF report
         uses: ./tests/local-image-action
         with:
-          config: s/QKP
+          config: https://semgrep.live/p/r2c
+          generateSarif: "1"
+      - name: Clean up SARIF file
+        run: rm -f semgrep.sarif
+      - id: allow-failure
+        name: with allowing failure
+        uses: ./tests/local-image-action
+        with:
+          config: https://semgrep.live/underyx:number-1
+          allowFailure: "1"
