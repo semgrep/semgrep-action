@@ -101,10 +101,10 @@ def main(
     obj.sapp.report_start()
 
     click.echo("=== setting up agent configuration")
-    if obj.sapp.is_configured:
-        click.echo("| using semgrep rules configured on the web UI")
-    elif obj.config:
+    if obj.config:
         click.echo(f"| using semgrep rules from {obj.config}")
+    elif obj.sapp.is_configured:
+        click.echo("| using semgrep rules configured on the web UI")
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml")
     else:

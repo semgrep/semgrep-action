@@ -51,14 +51,14 @@ def resolve_config_shorthand(config: str) -> str:
 
 @contextmanager
 def get_semgrep_config(ctx: click.Context) -> Iterator[List[Union[str, Path]]]:
-    if ctx.obj.sapp.is_configured:
+    if ctx.obj.config:
+        rules_url = resolve_config_shorthand(ctx.obj.config)
+        yield ["--config", resolve_config_shorthand(ctx.obj.config)]
+    elif ctx.obj.sapp.is_configured:
         local_config_path = Path(".tmp-semgrep.yml")
         local_config_path.symlink_to(ctx.obj.sapp.download_rules())
         yield ["--config", local_config_path]
         local_config_path.unlink()
-    elif ctx.obj.config:
-        rules_url = resolve_config_shorthand(ctx.obj.config)
-        yield ["--config", resolve_config_shorthand(ctx.obj.config)]
     else:
         yield []
 
