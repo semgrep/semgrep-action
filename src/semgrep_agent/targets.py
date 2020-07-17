@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import attr
 import click
 import sh
-from boltons.strutils import cardinalize
+from boltons.strutils import unit_len
 from sh.contrib import git
 
 from .ignores import FileIgnore
@@ -161,9 +161,7 @@ class TargetFileManager:
                 if any((a == path or path in a.parents) for path in paths)
             ]
             changed_count = len(paths)
-            click.echo(
-                f"| looking at {changed_count} {cardinalize('changed file', changed_count)}"
-            )
+            click.echo(f"| looking at {unit_len(paths, 'changed path')}")
             paths = [
                 path
                 for path in paths
@@ -174,7 +172,7 @@ class TargetFileManager:
             ]
             if len(paths) != changed_count:
                 click.echo(
-                    "| skipping files in all submodules: "
+                    f"| skipping files in {unit_len(submodule_paths, 'submodule')}: "
                     + ", ".join(str(path) for path in submodule_paths)
                 )
 
@@ -186,15 +184,19 @@ class TargetFileManager:
             base_path=self._base_path, patterns=patterns, target_paths=paths
         )
 
+        walked_entries = list(file_ignore.entries())
+        click.echo(
+            f"| found {unit_len(walked_entries, 'file')} in the paths to be scanned"
+        )
         filtered: List[Path] = []
-        for elem in file_ignore.entries():
+        for elem in walked_entries:
             if elem.survives:
                 filtered.append(elem.path)
 
-        skipped_count = len(paths) - len(filtered)
+        skipped_count = len(walked_entries) - len(filtered)
         if skipped_count:
             click.echo(
-                f"| skipping {skipped_count} {cardinalize('file', skipped_count)} based on path ignore rules"
+                f"| skipping {unit_len(range(skipped_count), 'file')} based on path ignore rules"
             )
 
         relative_paths = [path.relative_to(self._base_path) for path in filtered]
