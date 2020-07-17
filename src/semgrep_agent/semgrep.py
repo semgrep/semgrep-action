@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
+from textwrap import indent
 from typing import Any
 from typing import Dict
 from typing import Iterator
@@ -190,12 +191,21 @@ def scan(ctx: click.Context) -> Results:
         findings = invoke_semgrep(ctx)
     except sh.ErrorReturnCode as error:
         message = f"""
-        == [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
+        === failed command's STDOUT:
+
+{indent(error.stdout.decode(), 8 * ' ')}
+
+        === failed command's STDERR:
+
+{indent(error.stderr.decode(), 8 * ' ')}
+
+        === [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
 
         This is an internal error, please file an issue at https://github.com/returntocorp/semgrep-action/issues/new/choose
         and include any log output from above.
         """
         message = dedent(message).strip()
+        click.echo("", err=True)
         click.echo(message, err=True)
         sys.exit(error.exit_code)
     after = time.time()
