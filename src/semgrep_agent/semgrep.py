@@ -13,6 +13,7 @@ from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import Optional
+from typing import TextIO
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -63,7 +64,7 @@ def get_semgrep_config(ctx: click.Context) -> Iterator[List[Union[str, Path]]]:
         yield []
 
 
-def get_semgrepignore(scan: "Scan") -> io.StringIO:
+def get_semgrepignore(scan: "Scan") -> TextIO:
     semgrepignore = io.StringIO()
     TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
 
@@ -97,6 +98,21 @@ class Results:
             "findings": len(self.findings.new),
             "total_time": self.total_time,
         }
+
+
+def rewrite_sarif_file(sarif_path: Path) -> None:
+    """Fix SARIF errors in semgrep output and pretty format the file."""
+
+    with sarif_path.open() as sarif_file:
+        sarif_results = json.load(sarif_file)
+
+    rules_by_id = {
+        rule["id"]: rule for rule in sarif_results["runs"][0]["tool"]["driver"]["rules"]
+    }
+    sarif_results["runs"][0]["tool"]["driver"]["rules"] = list(rules_by_id.values())
+
+    with sarif_path.open("w") as sarif_file:
+        json.dump(sarif_results, sarif_file, indent=2, sort_keys=True)
 
 
 def invoke_semgrep(ctx: click.Context) -> FindingSets:
@@ -161,6 +177,7 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
             for path in paths:
                 args.extend(["--include", path])
             semgrep(*args, _out=sarif_file)
+        rewrite_sarif_file(sarif_path)
 
     return findings
 
