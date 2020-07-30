@@ -12,9 +12,7 @@ RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &
     apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
     pip install --no-cache-dir pipenv==2020.5.28 &&\
     pipenv install --system &&\
-    wget -O /tmp/semgrep.tar.gz https://github.com/returntocorp/semgrep/archive/v${INSTALLED_SEMGREP_VERSION}.tar.gz &&\
-    tar xf /tmp/semgrep.tar.gz -C /tmp &&\
-    PRECOMPILED_LOCATION=/tmp/semgrep-core pipx install /tmp/semgrep-${INSTALLED_SEMGREP_VERSION}/semgrep &&\
+    PRECOMPILED_LOCATION=/tmp/semgrep-core pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
     pip uninstall -y pipenv &&\
     apk del .build-deps &&\
     rm -rf /root/.cache/* /tmp/*
