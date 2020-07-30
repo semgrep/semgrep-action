@@ -1,10 +1,10 @@
-FROM returntocorp/semgrep:0.15.0@sha256:5c6e0c10a458df885aeb1b9cecaf6ef3213002e742e03d8f217cc8bcfe025a11 AS semgrep
+FROM returntocorp/semgrep:0.17.0@sha256:cdfa923acc3593c426489bcdf6472c748d4c2e065b8028c8bdbfcb9c7dca0065 AS semgrep
 FROM python:3.8-alpine
 
 WORKDIR /app
 COPY Pipfile* ./
 
-ENV INSTALLED_SEMGREP_VERSION=0.15.0
+ENV INSTALLED_SEMGREP_VERSION=0.17.0
 
 COPY --from=semgrep /usr/local/bin/semgrep-core /tmp/semgrep-core
 
