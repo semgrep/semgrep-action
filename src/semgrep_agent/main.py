@@ -47,7 +47,7 @@ def get_event_type() -> str:
     show_default="detected from CI env",
 )
 @click.option(
-    "--publish-url", envvar="INPUT_PUBLISHURL", type=url, default="https://semgrep.live"
+    "--publish-url", envvar="INPUT_PUBLISHURL", type=url, default="https://semgrep.dev"
 )
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
@@ -90,11 +90,9 @@ def main(
     )
 
     if obj.sapp.is_configured:
-        click.echo(
-            f"| semgrep.live - logged in as deployment #{obj.sapp.deployment_id}"
-        )
+        click.echo(f"| semgrep.dev - logged in as deployment #{obj.sapp.deployment_id}")
     else:
-        click.echo("| semgrep.live - not logged in")
+        click.echo("| semgrep.dev - not logged in")
 
     maybe_print_debug_info(obj.meta)
 
