@@ -6,7 +6,7 @@ COPY Pipfile* ./
 
 # if this is called BENTO_VERSION, click will think we're trying to set --version
 ENV INSTALLED_BENTO_VERSION=0.13.0b4\
-    INSTALLED_SEMGREP_VERSION=0.11.0
+    INSTALLED_SEMGREP_VERSION=0.19.1
 
 COPY --from=semgrep /bin/semgrep-core /tmp/semgrep-core
 
