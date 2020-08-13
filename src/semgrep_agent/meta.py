@@ -1,6 +1,8 @@
 import json
 import os
+import urllib.parse
 from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -9,12 +11,13 @@ from typing import Type
 from typing import Union
 
 import click
-import git
+import git as gitpython
 import sh
 from boltons.cacheutils import cachedproperty
 from glom import glom
 from glom import T
 from glom.core import TType
+from sh.contrib import git
 
 from .utils import debug_echo
 
@@ -24,31 +27,40 @@ class GitMeta:
     """Gather metadata only from local filesystem."""
 
     ctx: click.Context
-    environment = "git"
+    cli_baseline_ref: Optional[str] = None
+    environment: str = field(default="git", init=False)
 
     @cachedproperty
     def event_name(self) -> str:
         return "unknown"
 
     @cachedproperty
-    def repo(self) -> git.Repo:  # type: ignore
-        repo = git.Repo()
+    def repo(self) -> gitpython.Repo:  # type: ignore
+        repo = gitpython.Repo()
         debug_echo(f"found repo: {repo!r}")
         return repo
+
+    @cachedproperty
+    def repo_name(self) -> str:
+        return Path.cwd().name
 
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
         return self.repo.head.commit.hexsha  # type: ignore
 
     @cachedproperty
-    def commit(self) -> git.Commit:  # type: ignore
+    def base_commit_ref(self) -> Optional[str]:
+        return self.cli_baseline_ref
+
+    @cachedproperty
+    def commit(self) -> gitpython.Commit:  # type: ignore
         commit = self.repo.commit(self.commit_sha)
         debug_echo(f"found commit: {commit!r}")
         return commit
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "repository": None,
+            "repository": self.repo_name,
             "ci_job_url": None,
             "environment": self.environment,
             "commit": self.commit_sha,
@@ -69,7 +81,6 @@ class GitMeta:
             "pull_request_id": None,
             "pull_request_title": None,
             "semgrep_version": sh.semgrep(version=True).strip(),
-            "bento_version": sh.bento(version=True).strip(),
             "python_version": sh.python(version=True).strip(),
         }
 
@@ -78,7 +89,7 @@ class GitMeta:
 class GithubMeta(GitMeta):
     """Gather metadata from GitHub Actions."""
 
-    environment = "github-actions"
+    environment: str = field(default="github-actions", init=False)
 
     def glom_event(self, spec: TType) -> Any:
         return glom(self.event, spec, default=None)
@@ -92,7 +103,7 @@ class GithubMeta(GitMeta):
 
     @cachedproperty
     def repo_name(self) -> Optional[str]:
-        return os.getenv("GITHUB_REPOSITORY")
+        return os.getenv("GITHUB_REPOSITORY", "[unknown]")
 
     @cachedproperty
     def repo_url(self) -> Optional[str]:
@@ -102,9 +113,18 @@ class GithubMeta(GitMeta):
 
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
-        if value := os.getenv("GITHUB_SHA"):
-            return value
+        if self.event_name == "pull_request":
+            # https://github.community/t/github-sha-not-the-same-as-the-triggering-commit/18286/2
+            return self.glom_event(T["pull_request"]["head"]["sha"])  # type: ignore
+        if self.event_name == "push":
+            return os.getenv("GITHUB_SHA")
         return super().commit_sha  # type: ignore
+
+    @cachedproperty
+    def base_commit_ref(self) -> Optional[str]:
+        if self.event_name == "pull_request":
+            return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
+        return None
 
     @cachedproperty
     def commit_ref(self) -> Optional[str]:
@@ -127,7 +147,6 @@ class GithubMeta(GitMeta):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
-            "repository": self.repo_name,
             "branch": self.commit_ref,
             "ci_job_url": self.ci_job_url,
             "commit_author_username": self.glom_event(T["sender"]["login"]),
@@ -148,11 +167,19 @@ class GithubMeta(GitMeta):
 class GitlabMeta(GitMeta):
     """Gather metadata from GitLab 10.0+"""
 
-    environment = "gitlab-ci"
+    environment: str = field(default="gitlab-ci", init=False)
+
+    @staticmethod
+    def _get_remote_url() -> str:
+        parts = urllib.parse.urlsplit(os.environ["CI_MERGE_REQUEST_PROJECT_URL"])
+        parts = parts._replace(
+            netloc=f"gitlab-ci-token:{os.environ['CI_JOB_TOKEN']}@{parts.netloc}"
+        )
+        return urllib.parse.urlunsplit(parts)
 
     @cachedproperty
-    def repo_name(self) -> Optional[str]:
-        return os.getenv("CI_PROJECT_PATH")
+    def repo_name(self) -> str:
+        return os.getenv("CI_PROJECT_PATH", "[unknown]")
 
     @cachedproperty
     def repo_url(self) -> Optional[str]:
@@ -165,6 +192,19 @@ class GitlabMeta(GitMeta):
     @cachedproperty
     def commit_ref(self) -> Optional[str]:
         return os.getenv("CI_COMMIT_REF_NAME")
+
+    @cachedproperty
+    def base_commit_ref(self) -> Optional[str]:
+        target_branch = os.getenv("CI_MERGE_REQUEST_TARGET_BRANCH_NAME")
+        if not target_branch:
+            return None
+
+        head_sha = git("rev-parse", "HEAD").stdout.strip()
+        git.fetch(self._get_remote_url(), target_branch)
+        base_sha = (
+            git("merge-base", "--all", head_sha, "FETCH_HEAD").stdout.decode().strip()
+        )
+        return base_sha
 
     @cachedproperty
     def ci_actor(self) -> Optional[str]:
@@ -189,7 +229,6 @@ class GitlabMeta(GitMeta):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
-            "repository": self.repo_name,
             "ci_job_url": self.ci_job_url,
             "on": self.event_name,
             "branch": self.commit_ref,
