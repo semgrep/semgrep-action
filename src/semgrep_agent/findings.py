@@ -50,7 +50,7 @@ class Finding:
         """
             Returns if this finding indicates it should block CI
         """
-        return self.metadata.get("action", "block") == "block"
+        return str(self.metadata.get("action", "block")) == "block"
 
     def syntactic_identifier_int(self) -> int:
         # Use murmur3 hash to minimize collisions
