@@ -122,6 +122,15 @@ def main(
     formatter.dump(results.findings.new)
     obj.sapp.report_results(results)
 
-    exit_code = 1 if results.findings.new else 0
+    exit_code = get_error_code(results)
     click.echo(f"=== exiting with {'failing' if exit_code == 1 else 'success'} status")
     sys.exit(exit_code)
+
+
+def get_error_code(results: semgrep.Results) -> int:
+    """
+        What error code to exit with given a set of results returned by semgrep
+    """
+    if any(finding.is_blocking() in finding in results.findings.new):
+        return 1
+    return 0

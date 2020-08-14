@@ -46,6 +46,12 @@ class Finding:
         kw_only=True,
     )
 
+    def is_blocking(self) -> bool:
+        """
+            Returns if this finding indicates it should block CI
+        """
+        return self.metadata.get("action", "block") is "block"
+
     def syntactic_identifier_int(self) -> int:
         # Use murmur3 hash to minimize collisions
         str_id = str((self.check_id, self.path, self.syntactic_context))
