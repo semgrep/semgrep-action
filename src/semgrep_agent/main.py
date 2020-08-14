@@ -131,6 +131,6 @@ def get_error_code(results: semgrep.Results) -> int:
     """
         What error code to exit with given a set of results returned by semgrep
     """
-    if any(finding.is_blocking() in finding in results.findings.new):
+    if any(finding.is_blocking() for finding in results.findings.new):
         return 1
     return 0
