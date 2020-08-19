@@ -133,9 +133,9 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
     with targets.current_paths() as paths, get_semgrep_config(ctx) as config_args:
         click.echo("=== looking for current issues in " + unit_len(paths, "file"))
         for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
-            args = ["--json", *config_args]
+            args = ["--skip-unknown-extensions", "--json", *config_args]
             for path in chunk:
-                args.extend(["--include", path])
+                args.append(path)
             findings.current.update(
                 Finding.from_semgrep_result(result, ctx)
                 for result in json.loads(str(semgrep(*args)))["results"]
