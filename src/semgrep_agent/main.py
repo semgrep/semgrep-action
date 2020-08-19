@@ -119,18 +119,14 @@ def main(
 
     results = semgrep.scan(ctx)
 
-    formatter.dump(results.findings.new)
+    new_findings = results.findings.new
+    blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
+    formatter.dump(blocking_findings)
+    click.echo(
+        f"{len(new_findings) - len(blocking_findings)} notify only finding(s) hidden in output"
+    )
     obj.sapp.report_results(results)
 
-    exit_code = get_error_code(results)
+    exit_code = 1 if len(blocking_findings) > 0 else 0
     click.echo(f"=== exiting with {'failing' if exit_code == 1 else 'success'} status")
     sys.exit(exit_code)
-
-
-def get_error_code(results: semgrep.Results) -> int:
-    """
-        What error code to exit with given a set of results returned by semgrep
-    """
-    if any(finding.is_blocking() for finding in results.findings.new):
-        return 1
-    return 0
