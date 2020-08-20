@@ -38,13 +38,13 @@ class Finding:
     commit_date = attr.ib(
         type=Optional[datetime], default=None, hash=None, eq=False, kw_only=True
     )
-    metadata = attr.ib(
-        type=Optional[Mapping[str, Any]],
-        default=None,
-        hash=None,
-        eq=False,
-        kw_only=True,
-    )
+    metadata = attr.ib(type=Mapping[str, Any], hash=None, eq=False, kw_only=True)
+
+    def is_blocking(self) -> bool:
+        """
+            Returns if this finding indicates it should block CI
+        """
+        return "block" in self.metadata.get("dev.semgrep.actions", ["block"])
 
     def syntactic_identifier_int(self) -> int:
         # Use murmur3 hash to minimize collisions
