@@ -44,7 +44,7 @@ class Finding:
         """
             Returns if this finding indicates it should block CI
         """
-        return str(self.metadata.get("dev.semgrep.actions", "block")) == "block"
+        return "block" in self.metadata.get("dev.semgrep.actions", ["block"])
 
     def syntactic_identifier_int(self) -> int:
         # Use murmur3 hash to minimize collisions
