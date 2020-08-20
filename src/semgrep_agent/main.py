@@ -9,6 +9,7 @@ from typing import Optional
 import click
 import sh
 from boltons import ecoutils
+from boltons.strutils import unit_len
 
 from . import formatter
 from . import semgrep
@@ -62,7 +63,7 @@ def main(
 ) -> NoReturn:
     click.echo("=== detecting environment")
     click.echo(
-        f"| versions     - "
+        f"| versions    - "
         f"semgrep {sh.semgrep(version=True).strip()} on "
         f"{sh.python(version=True).strip()}"
     )
@@ -84,7 +85,7 @@ def main(
         ),
     )
     click.echo(
-        f"| environment  - "
+        f"| environment - "
         f"running in {obj.meta.environment}, "
         f"triggering event is '{obj.meta.event_name}'"
     )
@@ -118,15 +119,21 @@ def main(
         sys.exit(1)
 
     results = semgrep.scan(ctx)
-
     new_findings = results.findings.new
+
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
     formatter.dump(blocking_findings)
-    click.echo(
-        f"{len(new_findings) - len(blocking_findings)} notify only finding(s) hidden in output"
-    )
+
+    non_blocking_findings = {
+        finding for finding in new_findings if not finding.is_blocking()
+    }
+    if non_blocking_findings:
+        click.echo(
+            f"| {unit_len(non_blocking_findings, 'non-blocking finding')} hidden in output"
+        )
+
     obj.sapp.report_results(results)
 
-    exit_code = 1 if len(blocking_findings) > 0 else 0
+    exit_code = 1 if blocking_findings else 0
     click.echo(f"=== exiting with {'failing' if exit_code == 1 else 'success'} status")
     sys.exit(exit_code)
