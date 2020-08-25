@@ -4,7 +4,7 @@ FROM python:3.8-alpine
 WORKDIR /app
 COPY Pipfile* ./
 
-ENV INSTALLED_SEMGREP_VERSION=0.20.0
+ENV INSTALLED_SEMGREP_VERSION=0.21.0
 
 COPY --from=semgrep /usr/local/bin/semgrep-core /tmp/semgrep-core
 
