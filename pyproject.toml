@@ -20,6 +20,9 @@ pymmh3 = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 
+[tool.poetry.scripts]
+semgrep-agent = "semgrep_agent.__main__:main"
+
 [build-system]
 requires = ["poetry>=1.1"]
 build-backend = "poetry.masonry.api"
