@@ -141,7 +141,6 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
             args = ["--skip-unknown-extensions", "--json", *config_args]
             for path in chunk:
                 args.append(path)
-            print(args)
             findings.current.update(
                 Finding.from_semgrep_result(result, ctx)
                 for result in json.loads(str(semgrep(*args)))["results"]
