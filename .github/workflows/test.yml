@@ -22,11 +22,11 @@ jobs:
         uses: ./tests/local-image-action
         with:
           config: r/all
-      - id: semgrep-live-pack-id
-        name: with a semgrep.live Pack ID
+      - id: semgrep-live-ruleset-id
+        name: with a semgrep.live Ruleset ID
         uses: ./tests/local-image-action
         with:
-          config: p/r2c
+          config: p/r2c-CI
       - id: semgrep-live-id
         name: with a semgrep.live Rule ID
         uses: ./tests/local-image-action
