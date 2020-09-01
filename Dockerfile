@@ -1,5 +1,5 @@
 FROM returntocorp/semgrep:0.22.0@sha256:f9c9f9712557599b54658d0ccde32b70f36c26caaf5c64591eabad857b205caa AS semgrep
-FROM python:3.8-alpine
+FROM python:3.7-alpine
 
 WORKDIR /app
 COPY poetry.lock ./
@@ -12,7 +12,7 @@ COPY --from=semgrep /usr/local/bin/semgrep-core /tmp/semgrep-core
 
 RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &&\
     apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
-    pip install --no-cache-dir poetry==1.1.0b2 &&\
+    pip install --no-cache-dir poetry==1.0.10 &&\
     # Need to install semgrep before everything else so we dont try to install from source
     PRECOMPILED_LOCATION=/tmp/semgrep-core pip install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
     poetry config virtualenvs.create false &&\
