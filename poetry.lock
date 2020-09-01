@@ -110,6 +110,24 @@ version = "2.10"
 
 [[package]]
 category = "main"
+description = "An implementation of JSON Schema validation for Python"
+name = "jsonschema"
+optional = false
+python-versions = "*"
+version = "3.2.0"
+
+[package.dependencies]
+attrs = ">=17.4.0"
+pyrsistent = ">=0.14.0"
+setuptools = "*"
+six = ">=1.11.0"
+
+[package.extras]
+format = ["idna", "jsonpointer (>1.13)", "rfc3987", "strict-rfc3339", "webcolors"]
+format_nongpl = ["idna", "jsonpointer (>1.13)", "webcolors", "rfc3986-validator (>0.1.0)", "rfc3339-validator"]
+
+[[package]]
+category = "main"
 description = "Core utilities for Python packages"
 name = "packaging"
 optional = false
@@ -138,6 +156,17 @@ version = "2.4.7"
 
 [[package]]
 category = "main"
+description = "Persistent/Functional/Immutable data structures"
+name = "pyrsistent"
+optional = false
+python-versions = "*"
+version = "0.16.0"
+
+[package.dependencies]
+six = "*"
+
+[[package]]
+category = "main"
 description = "Python HTTP for Humans."
 name = "requests"
 optional = false
@@ -163,7 +192,9 @@ python-versions = "*"
 version = "0.16.10"
 
 [package.dependencies]
-"ruamel.yaml.clib" = {version = ">=0.1.2", markers = "platform_python_implementation == \"CPython\" and python_version < \"3.9\""}
+[package.dependencies."ruamel.yaml.clib"]
+python = "<3.9"
+version = ">=0.1.2"
 
 [package.extras]
 docs = ["ryd"]
@@ -172,6 +203,7 @@ jinja2 = ["ruamel.yaml.jinja2 (>=0.2)"]
 [[package]]
 category = "main"
 description = "C version of reader, parser and emitter for ruamel.yaml derived from libyaml"
+marker = "platform_python_implementation == \"CPython\" and python_version < \"3.9\""
 name = "ruamel.yaml.clib"
 optional = false
 python-versions = "*"
@@ -188,6 +220,7 @@ version = "0.21.0"
 [package.dependencies]
 attrs = ">=19.3.0"
 colorama = ">=0.4.3"
+jsonschema = ">=3.2.0,<3.3.0"
 packaging = ">=20.4"
 requests = ">=2.22.0"
 "ruamel.yaml" = "0.16.10"
@@ -199,7 +232,7 @@ description = "Python subprocess replacement"
 name = "sh"
 optional = false
 python-versions = "*"
-version = "1.13.1"
+version = "1.14.0"
 
 [[package]]
 category = "main"
@@ -254,7 +287,7 @@ socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 
 [metadata]
 content-hash = "84c9650360dc36f5d8755c567577de4792b2067ecc5295811e3574cbc7cd81f6"
-lock-version = "1.1"
+lock-version = "1.0"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -302,6 +335,10 @@ idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},
 ]
+jsonschema = [
+    {file = "jsonschema-3.2.0-py2.py3-none-any.whl", hash = "sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163"},
+    {file = "jsonschema-3.2.0.tar.gz", hash = "sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a"},
+]
 packaging = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
@@ -312,6 +349,9 @@ pymmh3 = [
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
+]
+pyrsistent = [
+    {file = "pyrsistent-0.16.0.tar.gz", hash = "sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3"},
 ]
 requests = [
     {file = "requests-2.24.0-py2.py3-none-any.whl", hash = "sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898"},
@@ -348,8 +388,8 @@ semgrep = [
     {file = "semgrep-0.21.0.tar.gz", hash = "sha256:4ac29c41cfeb2ca3966d40f195812c33e44fb3160919d65d0560aa589188fc7f"},
 ]
 sh = [
-    {file = "sh-1.13.1-py2.py3-none-any.whl", hash = "sha256:6f792e45b45d039b423081558904981e8ab49572b0c38009fcc65feaab06bcda"},
-    {file = "sh-1.13.1.tar.gz", hash = "sha256:97a3d2205e3c6a842d87ebbc9ae93acae5a352b1bc4609b428d0fd5bb9e286a3"},
+    {file = "sh-1.14.0-py2.py3-none-any.whl", hash = "sha256:4219d338349581a07cd1358c1d7de0fa57bb5d44e547cc87b0da7d5349705030"},
+    {file = "sh-1.14.0.tar.gz", hash = "sha256:05c7e520cdf70f70a7228a03b589da9f96c6e0d06fc487ab21fc62b26a592e59"},
 ]
 six = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
