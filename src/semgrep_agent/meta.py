@@ -96,7 +96,8 @@ class GithubMeta(GitMeta):
 
     @cachedproperty
     def event(self) -> Dict[str, Any]:
-        if value := os.getenv("GITHUB_EVENT_PATH"):
+        value = os.getenv("GITHUB_EVENT_PATH")
+        if value:
             debug_echo(f"found github event data at {value}")
             return json.loads(Path(value).read_text())  # type: ignore
         return {}
@@ -136,7 +137,8 @@ class GithubMeta(GitMeta):
 
     @cachedproperty
     def ci_job_url(self) -> Optional[str]:
-        if self.repo_url and (value := os.getenv("GITHUB_RUN_ID")):
+        value = os.getenv("GITHUB_RUN_ID")
+        if self.repo_url and value:
             return f"{self.repo_url}/actions/runs/{value}"
         return None
 
