@@ -156,9 +156,9 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
                     + unit_len(paths_to_check, "file")
                 )
                 for chunk in chunked_iter(paths_to_check, PATHS_CHUNK_SIZE):
-                    args = ["--json", *config_args]
+                    args = ["--skip-unknown-extensions", "--json", *config_args]
                     for path in chunk:
-                        args.extend(["--include", path])
+                        args.append(path)
                     findings.baseline.update(
                         Finding.from_semgrep_result(result, ctx)
                         for result in json.loads(str(semgrep(*args)))["results"]
