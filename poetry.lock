@@ -235,7 +235,7 @@ description = "Lightweight static analysis for many languages. Find bug variants
 name = "semgrep"
 optional = false
 python-versions = ">=3.6"
-version = "0.21.0"
+version = "0.22.0"
 
 [package.dependencies]
 attrs = ">=19.3.0"
@@ -319,7 +319,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "7f8581581623ca0845d4ea6166633c07de30e2049d52448895a7fe8da79b0672"
+content-hash = "e86abe02d7b0929886aff631f02da48af6ed730dc943023e35914d96d52d595b"
 lock-version = "1.0"
 python-versions = "^3.7"
 
@@ -420,9 +420,9 @@ requests = [
     {file = "ruamel.yaml.clib-0.2.0.tar.gz", hash = "sha256:b66832ea8077d9b3f6e311c4a53d06273db5dc2db6e8a908550f3c14d67e718c"},
 ]
 semgrep = [
-    {file = "semgrep-0.21.0-cp36.cp37.cp38.py36.py37.py38-none-macosx_10_14_x86_64.whl", hash = "sha256:22e1f2e267528c350a257897625a76e71b298a5d838bd5ffa2672f1c6751ac6c"},
-    {file = "semgrep-0.21.0-cp36.cp37.cp38.py36.py37.py38-none-manylinux1_x86_64.whl", hash = "sha256:148c702a0e37a7897aa1f29637ff8160ee42e654fca7e12eb3c59eab46d9d265"},
-    {file = "semgrep-0.21.0.tar.gz", hash = "sha256:4ac29c41cfeb2ca3966d40f195812c33e44fb3160919d65d0560aa589188fc7f"},
+    {file = "semgrep-0.22.0-cp36.cp37.cp38.py36.py37.py38-none-macosx_10_14_x86_64.whl", hash = "sha256:c2bf7443fb6fc25c312f815308bbaf85fc5999b6b1c9c8b0448dfb1f9940ef96"},
+    {file = "semgrep-0.22.0-cp36.cp37.cp38.py36.py37.py38-none-manylinux1_x86_64.whl", hash = "sha256:1bf4d340155917c9fcc10072f268ef3546083a5aede727fb0c0c6f9f0e9b9612"},
+    {file = "semgrep-0.22.0.tar.gz", hash = "sha256:f2b60fde47e681c49655ee1c4a05976c6fad2ab729f517002643d92d7737ac24"},
 ]
 sh = [
     {file = "sh-1.14.0-py2.py3-none-any.whl", hash = "sha256:4219d338349581a07cd1358c1d7de0fa57bb5d44e547cc87b0da7d5349705030"},
