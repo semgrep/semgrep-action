@@ -95,4 +95,4 @@ def dump(findings: Set[Finding]) -> None:
             lines.append("")
 
     for line in lines:
-        click.secho(line)
+        click.secho(line, err=True)

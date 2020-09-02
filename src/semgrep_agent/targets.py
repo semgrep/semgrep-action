@@ -161,7 +161,7 @@ class TargetFileManager:
                 if any((a == path or path in a.parents) for path in paths)
             ]
             changed_count = len(paths)
-            click.echo(f"| looking at {unit_len(paths, 'changed path')}")
+            click.echo(f"| looking at {unit_len(paths, 'changed path')}", err=True)
             paths = [
                 path
                 for path in paths
@@ -173,7 +173,8 @@ class TargetFileManager:
             if len(paths) != changed_count:
                 click.echo(
                     f"| skipping files in {unit_len(submodule_paths, 'submodule')}: "
-                    + ", ".join(str(path) for path in submodule_paths)
+                    + ", ".join(str(path) for path in submodule_paths),
+                    err=True,
                 )
 
         # Filter out ignore rules, expand directories
@@ -186,7 +187,8 @@ class TargetFileManager:
 
         walked_entries = list(file_ignore.entries())
         click.echo(
-            f"| found {unit_len(walked_entries, 'file')} in the paths to be scanned"
+            f"| found {unit_len(walked_entries, 'file')} in the paths to be scanned",
+            err=True,
         )
         filtered: List[Path] = []
         for elem in walked_entries:
@@ -196,7 +198,8 @@ class TargetFileManager:
         skipped_count = len(walked_entries) - len(filtered)
         if skipped_count:
             click.echo(
-                f"| skipping {unit_len(range(skipped_count), 'file')} based on path ignore rules"
+                f"| skipping {unit_len(range(skipped_count), 'file')} based on path ignore rules",
+                err=True,
             )
 
         relative_paths = [path.relative_to(self._base_path) for path in filtered]

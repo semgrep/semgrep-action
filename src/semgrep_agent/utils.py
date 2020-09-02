@@ -24,7 +24,7 @@ def debug_echo(text: str) -> None:
     else:
         return
     text = "\n".join(prefix + line for line in text.splitlines())
-    click.echo(text)
+    click.echo(text, err=True)
 
 
 def maybe_print_debug_info(meta: "GitMeta") -> None:
