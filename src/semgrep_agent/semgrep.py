@@ -71,16 +71,19 @@ def get_semgrepignore(scan: "Scan") -> TextIO:
 
     semgrepignore_path = Path(".semgrepignore")
     if semgrepignore_path.is_file():
-        click.echo("| using path ignore rules from .semgrepignore")
+        click.echo("| using path ignore rules from .semgrepignore", err=True)
         semgrepignore.write(semgrepignore_path.read_text())
     else:
         click.echo(
-            "| using default path ignore rules of common test and dependency directories"
+            "| using default path ignore rules of common test and dependency directories",
+            err=True,
         )
         semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
 
     if scan_patterns := scan.ignore_patterns:
-        click.echo("| adding further path ignore rules configured on the web UI")
+        click.echo(
+            "| adding further path ignore rules configured on the web UI", err=True
+        )
         semgrepignore.write("\n# Ignores from semgrep app\n")
         semgrepignore.write("\n".join(scan_patterns))
         semgrepignore.write("\n")
@@ -131,7 +134,9 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
     findings = FindingSets()
 
     with targets.current_paths() as paths, get_semgrep_config(ctx) as config_args:
-        click.echo("=== looking for current issues in " + unit_len(paths, "file"))
+        click.echo(
+            "=== looking for current issues in " + unit_len(paths, "file"), err=True
+        )
         for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
             args = ["--skip-unknown-extensions", "--json", *config_args]
             for path in chunk:
@@ -140,11 +145,14 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
                 Finding.from_semgrep_result(result, ctx)
                 for result in json.loads(str(semgrep(*args)))["results"]
             )
-            click.echo(f"| {unit_len(findings.current, 'current issue')} found")
+            click.echo(
+                f"| {unit_len(findings.current, 'current issue')} found", err=True
+            )
 
     if not findings.current:
         click.echo(
-            "=== not looking at pre-existing issues since there are no current issues"
+            "=== not looking at pre-existing issues since there are no current issues",
+            err=True,
         )
     else:
         with targets.baseline_paths() as paths, get_semgrep_config(ctx) as config_args:
@@ -153,7 +161,8 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
                 paths_to_check = set(str(path) for path in paths) & paths_with_findings
                 click.echo(
                     "=== looking for pre-existing issues in "
-                    + unit_len(paths_to_check, "file")
+                    + unit_len(paths_to_check, "file"),
+                    err=True,
                 )
                 for chunk in chunked_iter(paths_to_check, PATHS_CHUNK_SIZE):
                     args = ["--skip-unknown-extensions", "--json", *config_args]
@@ -164,12 +173,13 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
                         for result in json.loads(str(semgrep(*args)))["results"]
                     )
                 click.echo(
-                    f"| {unit_len(findings.baseline, 'pre-existing issue')} found"
+                    f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
+                    err=True,
                 )
 
     if os.getenv("INPUT_GENERATESARIF"):
         # FIXME: This will crash when running on thousands of files due to command length limit
-        click.echo("=== re-running scan to generate a SARIF report")
+        click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths, sarif_path.open(
             "w"

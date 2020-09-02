@@ -61,11 +61,12 @@ def main(
     publish_token: str,
     publish_deployment: int,
 ) -> NoReturn:
-    click.echo("=== detecting environment")
+    click.echo("=== detecting environment", err=True)
     click.echo(
         f"| versions    - "
         f"semgrep {sh.semgrep(version=True).strip()} on "
-        f"{sh.python(version=True).strip()}"
+        f"{sh.python(version=True).strip()}",
+        err=True,
     )
 
     Meta = detect_meta_environment()
@@ -87,25 +88,29 @@ def main(
     click.echo(
         f"| environment - "
         f"running in {obj.meta.environment}, "
-        f"triggering event is '{obj.meta.event_name}'"
+        f"triggering event is '{obj.meta.event_name}'",
+        err=True,
     )
 
     if obj.sapp.is_configured:
-        click.echo(f"| semgrep.dev - logged in as deployment #{obj.sapp.deployment_id}")
+        click.echo(
+            f"| semgrep.dev - logged in as deployment #{obj.sapp.deployment_id}",
+            err=True,
+        )
     else:
-        click.echo("| semgrep.dev - not logged in")
+        click.echo("| semgrep.dev - not logged in", err=True)
 
     maybe_print_debug_info(obj.meta)
 
     obj.sapp.report_start()
 
-    click.echo("=== setting up agent configuration")
+    click.echo("=== setting up agent configuration", err=True)
     if obj.config:
-        click.echo(f"| using semgrep rules from {obj.config}")
+        click.echo(f"| using semgrep rules from {obj.config}", err=True)
     elif obj.sapp.is_configured:
-        click.echo("| using semgrep rules configured on the web UI")
+        click.echo("| using semgrep rules configured on the web UI", err=True)
     elif Path(".semgrep.yml").is_file():
-        click.echo("| using semgrep rules from the committed .semgrep.yml")
+        click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
     else:
         message = """
             == [ERROR] you didn't configure what rules semgrep should scan for.
@@ -129,11 +134,15 @@ def main(
     }
     if non_blocking_findings:
         click.echo(
-            f"| {unit_len(non_blocking_findings, 'non-blocking finding')} hidden in output"
+            f"| {unit_len(non_blocking_findings, 'non-blocking finding')} hidden in output",
+            err=True,
         )
 
     obj.sapp.report_results(results)
 
     exit_code = 1 if blocking_findings else 0
-    click.echo(f"=== exiting with {'failing' if exit_code == 1 else 'success'} status")
+    click.echo(
+        f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
+        err=True,
+    )
     sys.exit(exit_code)
