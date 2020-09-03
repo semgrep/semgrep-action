@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 from dataclasses import dataclass
@@ -52,6 +53,7 @@ def get_event_type() -> str:
 )
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
+@click.option("--json", "json_output", hidden=True, is_flag=True)
 @click.pass_context
 def main(
     ctx: click.Context,
@@ -60,6 +62,7 @@ def main(
     publish_url: str,
     publish_token: str,
     publish_deployment: int,
+    json_output: bool,
 ) -> NoReturn:
     click.echo("=== detecting environment", err=True)
     click.echo(
@@ -127,7 +130,14 @@ def main(
     new_findings = results.findings.new
 
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
-    formatter.dump(blocking_findings)
+
+    if json_output:
+        # Output all new findings as json
+        output = [f.to_dict() for f in new_findings]
+        click.echo(json.dumps(output))
+    else:
+        # Print out blocking findings
+        formatter.dump(blocking_findings)
 
     non_blocking_findings = {
         finding for finding in new_findings if not finding.is_blocking()
