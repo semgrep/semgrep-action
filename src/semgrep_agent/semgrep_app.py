@@ -11,7 +11,6 @@ import requests
 from boltons.iterutils import chunked_iter
 from glom import glom
 from glom import T
-
 from semgrep_agent.semgrep import Results
 from semgrep_agent.utils import debug_echo
 
