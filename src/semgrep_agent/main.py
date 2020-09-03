@@ -11,12 +11,12 @@ import sh
 from boltons import ecoutils
 from boltons.strutils import unit_len
 
-from . import formatter
-from . import semgrep
-from .meta import detect_meta_environment
-from .meta import GitMeta
-from .semgrep_app import Sapp
-from .utils import maybe_print_debug_info
+from semgrep_agent import formatter
+from semgrep_agent import semgrep
+from semgrep_agent.meta import detect_meta_environment
+from semgrep_agent.meta import GitMeta
+from semgrep_agent.semgrep_app import Sapp
+from semgrep_agent.utils import maybe_print_debug_info
 
 
 def url(string: str) -> str:
