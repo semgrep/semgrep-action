@@ -14,6 +14,7 @@ from typing import TextIO
 
 import attr
 import click
+
 from semgrep_agent.utils import debug_echo
 
 CONTROL_REGEX = re.compile(r"(?!<\\):")  # Matches unescaped colons

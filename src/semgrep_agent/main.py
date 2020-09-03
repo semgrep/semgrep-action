@@ -10,6 +10,7 @@ import click
 import sh
 from boltons import ecoutils
 from boltons.strutils import unit_len
+
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.meta import detect_meta_environment
