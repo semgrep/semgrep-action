@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "semgrep-agent"
+version = "0.1.0b1"
+description = ""
+authors = ["Return To Corporation <support@r2c.dev>"]
+license = "Proprietary"
+packages = [
+	{ include = "semgrep_agent", from = "src" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+requests = "^2.24.0"
+click = "^7.1.2"
+sh = "^1.13.1"
+boltons = "^20.2.1"
+gitpython = "^2.1.15"
+glom = "^20.8.0"
+pymmh3 = "^0.0.5"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+semgrep-agent = "semgrep_agent.__main__:main"
+
+[build-system]
+requires = ["poetry>=1.0.10"]
+build-backend = "poetry.masonry.api"

@@ -80,7 +80,8 @@ def get_semgrepignore(scan: "Scan") -> TextIO:
         )
         semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
 
-    if scan_patterns := scan.ignore_patterns:
+    scan_patterns = scan.ignore_patterns
+    if scan_patterns:
         click.echo(
             "| adding further path ignore rules configured on the web UI", err=True
         )

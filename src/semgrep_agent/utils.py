@@ -47,7 +47,8 @@ def get_git_repo(path: Optional[Path] = None) -> Optional[gitpython.Repo]:  # ty
 
 def zsplit(s: str) -> List[str]:
     """Split a string on null characters."""
-    if s := s.strip("\0"):
+    s = s.strip("\0")
+    if s:
         return s.split("\0")
     else:
         return []
