@@ -5,7 +5,7 @@
 Install the correct version of poetry:
 
 ```
-pip3 install poetry==poetry==1.0.10
+pip3 install poetry==1.0.10
 ```
 
 Install dependencies with poetry

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "semgrep-agent"
-version = "0.1.0b0"
+version = "0.1.0b1"
 description = ""
 authors = ["Return To Corporation <support@r2c.dev>"]
 license = "Proprietary"
@@ -24,5 +24,5 @@ pymmh3 = "^0.0.5"
 semgrep-agent = "semgrep_agent.__main__:main"
 
 [build-system]
-requires = ["poetry>=1.1"]
+requires = ["poetry>=1.0.10"]
 build-backend = "poetry.masonry.api"
