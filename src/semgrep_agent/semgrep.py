@@ -25,14 +25,14 @@ from boltons.iterutils import chunked_iter
 from boltons.strutils import unit_len
 from sh.contrib import git
 
-from .findings import Finding
-from .findings import FindingSets
-from .meta import GitMeta
-from .targets import TargetFileManager
-from .utils import debug_echo
+from semgrep_agent.findings import Finding
+from semgrep_agent.findings import FindingSets
+from semgrep_agent.meta import GitMeta
+from semgrep_agent.targets import TargetFileManager
+from semgrep_agent.utils import debug_echo
 
 if TYPE_CHECKING:
-    from .semgrep_app import Scan
+    from semgrep_agent.semgrep_app import Scan
 
 semgrep = sh.semgrep.bake(_ok_code={0, 1, 2}, _tty_out=False)
 

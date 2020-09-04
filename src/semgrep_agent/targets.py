@@ -15,11 +15,11 @@ import sh
 from boltons.strutils import unit_len
 from sh.contrib import git
 
-from .ignores import FileIgnore
-from .ignores import Parser
-from .utils import debug_echo
-from .utils import get_git_repo
-from .utils import zsplit
+from semgrep_agent.ignores import FileIgnore
+from semgrep_agent.ignores import Parser
+from semgrep_agent.utils import debug_echo
+from semgrep_agent.utils import get_git_repo
+from semgrep_agent.utils import zsplit
 
 
 if TYPE_CHECKING:

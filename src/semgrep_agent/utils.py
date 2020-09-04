@@ -12,7 +12,7 @@ from boltons import ecoutils
 from sh.contrib import git
 
 if TYPE_CHECKING:
-    from .meta import GitMeta
+    from semgrep_agent.meta import GitMeta
 
 
 def debug_echo(text: str) -> None:

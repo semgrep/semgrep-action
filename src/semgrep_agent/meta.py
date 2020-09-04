@@ -19,7 +19,7 @@ from glom import T
 from glom.core import TType
 from sh.contrib import git
 
-from .utils import debug_echo
+from semgrep_agent.utils import debug_echo
 
 
 @dataclass

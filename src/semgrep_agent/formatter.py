@@ -11,7 +11,7 @@ from typing import TextIO
 
 import click
 
-from .findings import Finding
+from semgrep_agent.findings import Finding
 
 PRINT_WIDTH = 80
 BOLD = "\033[1m"
