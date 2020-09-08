@@ -56,19 +56,7 @@ the action will fail.
 
 ### Ignoring Paths
 
-You can commit a `.semgrepignore` file
-to skip scanning specific paths,
-using the same syntax as `.gitignore`.
-
-If there's no `.semgrepignore` file in your repository,
-we will use a default ignore list that skips common test and dependency directories,
-including `tests/`, `node_modules/`, and `vendor/`.
-You can find the full list in our [`.semgrepignore` template file](https://github.com/returntocorp/semgrep-action/blob/v1/src/semgrep_agent/templates/.semgrepignore).
-To override these default ignore patterns,
-commit your own `.semgrepignore`.
-
-Note that `.semgrepignore` is picked up only by the action,
-and will not be honored when running `semgrep` manually.
+Use semgrep rule paths field to ignore files
 
 ## Contributing
 

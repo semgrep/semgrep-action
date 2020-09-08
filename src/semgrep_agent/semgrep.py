@@ -65,33 +65,6 @@ def get_semgrep_config(ctx: click.Context) -> Iterator[List[Union[str, Path]]]:
         yield []
 
 
-def get_semgrepignore(scan: "Scan") -> TextIO:
-    semgrepignore = io.StringIO()
-    TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
-
-    semgrepignore_path = Path(".semgrepignore")
-    if semgrepignore_path.is_file():
-        click.echo("| using path ignore rules from .semgrepignore", err=True)
-        semgrepignore.write(semgrepignore_path.read_text())
-    else:
-        click.echo(
-            "| using default path ignore rules of common test and dependency directories",
-            err=True,
-        )
-        semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
-
-    scan_patterns = scan.ignore_patterns
-    if scan_patterns:
-        click.echo(
-            "| adding further path ignore rules configured on the web UI", err=True
-        )
-        semgrepignore.write("\n# Ignores from semgrep app\n")
-        semgrepignore.write("\n".join(scan_patterns))
-        semgrepignore.write("\n")
-
-    return semgrepignore
-
-
 @dataclass
 class Results:
     findings: FindingSets
@@ -125,10 +98,7 @@ def invoke_semgrep(ctx: click.Context) -> FindingSets:
 
     workdir = Path.cwd()
     targets = TargetFileManager(
-        base_path=workdir,
-        base_commit=ctx.obj.meta.base_commit_ref,
-        paths=[workdir],
-        ignore_rules_file=get_semgrepignore(ctx.obj.sapp.scan),
+        base_path=workdir, base_commit=ctx.obj.meta.base_commit_ref, paths=[workdir],
     )
 
     debug_echo("=== seeing if there are any findings")

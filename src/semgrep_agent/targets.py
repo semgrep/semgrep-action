@@ -15,8 +15,6 @@ import sh
 from boltons.strutils import unit_len
 from sh.contrib import git
 
-from semgrep_agent.ignores import FileIgnore
-from semgrep_agent.ignores import Parser
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import zsplit
@@ -50,7 +48,6 @@ class TargetFileManager:
         Handles all logic related to knowing what files to run on.
 
         This includes:
-            - understanding files are ignores based on semgrepignore rules
             - traversing project directories
             - pruning traversal
             - listing staged files
@@ -66,7 +63,6 @@ class TargetFileManager:
 
     _base_path = attr.ib(type=Path)
     _paths = attr.ib(type=List[Path])
-    _ignore_rules_file = attr.ib(type=TextIO)
     _base_commit = attr.ib(type=str, default=None)
     _status = attr.ib(type=GitStatus, init=False)
     _target_paths = attr.ib(type=List[Path], init=False)
@@ -177,32 +173,7 @@ class TargetFileManager:
                     err=True,
                 )
 
-        # Filter out ignore rules, expand directories
-        self._ignore_rules_file.seek(0)
-        patterns = Parser(self._base_path).parse(self._ignore_rules_file)
-
-        file_ignore = FileIgnore(
-            base_path=self._base_path, patterns=patterns, target_paths=paths
-        )
-
-        walked_entries = list(file_ignore.entries())
-        click.echo(
-            f"| found {unit_len(walked_entries, 'file')} in the paths to be scanned",
-            err=True,
-        )
-        filtered: List[Path] = []
-        for elem in walked_entries:
-            if elem.survives:
-                filtered.append(elem.path)
-
-        skipped_count = len(walked_entries) - len(filtered)
-        if skipped_count:
-            click.echo(
-                f"| skipping {unit_len(range(skipped_count), 'file')} based on path ignore rules",
-                err=True,
-            )
-
-        relative_paths = [path.relative_to(self._base_path) for path in filtered]
+        relative_paths = [path.relative_to(self._base_path) for path in paths]
 
         return relative_paths
 
