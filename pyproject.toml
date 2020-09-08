@@ -17,6 +17,7 @@ boltons = "^20.2.1"
 gitpython = "^2.1.15"
 glom = "^20.8.0"
 pymmh3 = "^0.0.5"
+attrs = "~=19.3.0"
 
 [tool.poetry.dev-dependencies]
 
