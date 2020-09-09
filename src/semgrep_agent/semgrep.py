@@ -52,19 +52,6 @@ def resolve_config_shorthand(config: str) -> str:
         return config
 
 
-@contextmanager
-def get_semgrep_config(ctx: click.Context) -> Iterator[List[Union[str, Path]]]:
-    if ctx.obj.config:
-        yield ["--config", resolve_config_shorthand(ctx.obj.config)]
-    elif ctx.obj.sapp.is_configured:
-        local_config_path = Path(".tmp-semgrep.yml")
-        local_config_path.symlink_to(ctx.obj.sapp.download_rules())
-        yield ["--config", local_config_path]
-        local_config_path.unlink()
-    else:
-        yield []
-
-
 def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
     semgrepignore = io.StringIO()
     TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()

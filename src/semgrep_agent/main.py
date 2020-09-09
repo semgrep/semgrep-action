@@ -76,9 +76,6 @@ def main(
     if baseline_ref:
         meta_kwargs["cli_baseline_ref"] = baseline_ref
     meta = Meta(config, **meta_kwargs)
-
-    sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
-
     click.echo(
         f"| environment - "
         f"running in {meta.environment}, "
@@ -86,6 +83,10 @@ def main(
         err=True,
     )
 
+    # Setup URL/Token
+    sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
+    maybe_print_debug_info(meta)
+    sapp.report_start(meta)
     if sapp.is_configured:
         click.echo(
             f"| semgrep.dev - logged in as deployment #{sapp.deployment_id}", err=True,
@@ -93,19 +94,19 @@ def main(
     else:
         click.echo("| semgrep.dev - not logged in", err=True)
 
-    maybe_print_debug_info(meta)
-
-    sapp.report_start(meta)
-
+    # Setup Config
     click.echo("=== setting up agent configuration", err=True)
     if config:
+        config = semgrep.resolve_config_shorthand(config)
         click.echo(f"| using semgrep rules from {config}", err=True)
     elif sapp.is_configured:
+        local_config_path = Path(".tmp-semgrep.yml")
+        local_config_path.symlink_to(sapp.download_rules())
+        config = str(local_config_path)
         click.echo("| using semgrep rules configured on the web UI", err=True)
-        # TODO setup config
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
-        # TODO config = .semgrep.yml
+        config = ".semgrep.yml"
     else:
         message = """
             == [ERROR] you didn't configure what rules semgrep should scan for.
