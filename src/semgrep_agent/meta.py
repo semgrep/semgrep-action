@@ -10,7 +10,6 @@ from typing import Optional
 from typing import Type
 from typing import Union
 
-import click
 import git as gitpython
 import sh
 from boltons.cacheutils import cachedproperty
@@ -26,7 +25,7 @@ from semgrep_agent.utils import debug_echo
 class GitMeta:
     """Gather metadata only from local filesystem."""
 
-    ctx: click.Context
+    config: str
     cli_baseline_ref: Optional[str] = None
     environment: str = field(default="git", init=False)
 
@@ -72,7 +71,7 @@ class GitMeta:
             "commit_author_image_url": None,
             "commit_authored_timestamp": self.commit.authored_datetime.isoformat(),
             "commit_title": self.commit.summary,
-            "config": self.ctx.obj.config,
+            "config": self.config,
             "on": self.event_name,
             "branch": None,
             "pull_request_timestamp": None,

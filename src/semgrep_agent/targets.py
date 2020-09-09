@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterator
 from typing import List
 from typing import NamedTuple
+from typing import Optional
 from typing import TextIO
 from typing import TYPE_CHECKING
 
@@ -67,7 +68,7 @@ class TargetFileManager:
     _base_path = attr.ib(type=Path)
     _paths = attr.ib(type=List[Path])
     _ignore_rules_file = attr.ib(type=TextIO)
-    _base_commit = attr.ib(type=str, default=None)
+    _base_commit = attr.ib(type=Optional[str], default=None)
     _status = attr.ib(type=GitStatus, init=False)
     _target_paths = attr.ib(type=List[Path], init=False)
 

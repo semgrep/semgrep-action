@@ -12,6 +12,7 @@ from boltons.iterutils import chunked_iter
 from glom import glom
 from glom import T
 
+from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
 from semgrep_agent.utils import debug_echo
 
@@ -29,7 +30,6 @@ class Scan:
 
 @dataclass
 class Sapp:
-    ctx: click.Context
     url: str
     token: str
     deployment_id: int
@@ -38,12 +38,14 @@ class Sapp:
     session: requests.Session = field(init=False)
 
     def __post_init__(self) -> None:
+        # Get deployment from token
+        #
         if self.token and self.deployment_id:
             self.is_configured = True
         self.session = requests.Session()
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
-    def report_start(self) -> None:
+    def report_start(self, meta: GitMeta) -> None:
         if not self.is_configured:
             debug_echo("=== no semgrep app config, skipping report_start")
             return
@@ -51,7 +53,7 @@ class Sapp:
 
         response = self.session.post(
             f"{self.url}/api/agent/deployment/{self.deployment_id}/scan",
-            json={"meta": self.ctx.obj.meta.to_dict()},
+            json={"meta": meta.to_dict()},
             timeout=30,
         )
         debug_echo(f"=== POST .../scan responded: {response!r}")
