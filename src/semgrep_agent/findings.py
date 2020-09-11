@@ -73,7 +73,7 @@ class Finding:
 
     @classmethod
     def from_semgrep_result(
-        cls, result: Dict[str, Any], ctx: click.Context
+        cls, result: Dict[str, Any], committed_datetime: Optional[datetime]
     ) -> "Finding":
         return cls(
             check_id=result["check_id"],
@@ -85,9 +85,7 @@ class Finding:
             message=result["extra"]["message"],
             severity=cls.semgrep_severity_to_int(result["extra"]["severity"]),
             syntactic_context=result["extra"]["lines"],
-            commit_date=ctx.obj.meta.commit.committed_datetime
-            if ctx.obj.meta.commit
-            else None,
+            commit_date=committed_datetime,
             metadata=result["extra"]["metadata"],
         )
 
