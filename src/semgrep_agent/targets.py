@@ -215,6 +215,8 @@ class TargetFileManager:
             :raises RuntimeError: If the git repo is not in a clean state
         """
         output = git.status("--porcelain").stdout.decode().strip()
+        click.echo("Status output:", err=True)
+        click.echo(output, err=True)
         print(output)
         if output:
             raise RuntimeError(  # TODO we can probably be more lenient
