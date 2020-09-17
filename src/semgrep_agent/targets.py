@@ -215,6 +215,7 @@ class TargetFileManager:
             :raises RuntimeError: If the git repo is not in a clean state
         """
         output = git.status("--porcelain").stdout.decode().strip()
+        print(output)
         if output:
             raise RuntimeError(  # TODO we can probably be more lenient
                 "Found untracked or staged files. Diff-aware runs require a clean git state."
