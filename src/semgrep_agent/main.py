@@ -126,7 +126,7 @@ def main(
         meta.base_commit_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
     )
-    new_findings = results.findings.new
+    new_findings = results.findings.expensive_new()
 
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
 
