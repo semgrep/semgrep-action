@@ -6,10 +6,11 @@ from dataclasses import field
 from datetime import datetime
 from typing import Any
 from typing import Dict
-from typing import Mapping
 from typing import List
+from typing import Mapping
 from typing import Optional
 from typing import Set
+from typing import Tuple
 
 import attr
 import pymmh3
@@ -81,15 +82,13 @@ class Finding:
     @classmethod
     def from_semgrep_result(
         cls, result: Dict[str, Any], committed_datetime: Optional[datetime]
-    ) -> (FindingKey, "Finding"):
+    ) -> Tuple[FindingKey, "Finding"]:
         check_id = result["check_id"]
         path = result["path"]
         syntactic_context = result["extra"]["lines"]
 
         key = FindingKey(
-            check_id=check_id,
-            path=path,
-            syntactic_context=syntactic_context,
+            check_id=check_id, path=path, syntactic_context=syntactic_context,
         )
         finding = cls(
             check_id=check_id,
@@ -124,7 +123,7 @@ class FindingSets:
         return self.current_set() - self.baseline_set()
 
     @staticmethod
-    def _map_to_set(mapping: Mapping[FindingKey, List[Finding]]):
+    def _map_to_set(mapping: Mapping[FindingKey, List[Finding]]) -> Set[Finding]:
         return set(
             attr.evolve(f, index=ix)
             for ff in mapping.values()

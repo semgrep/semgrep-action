@@ -23,10 +23,12 @@ import click
 import requests
 import sh
 from boltons.iterutils import chunked_iter
-from boltons.strutils import cardinalize, unit_len
+from boltons.strutils import cardinalize
+from boltons.strutils import unit_len
 from sh.contrib import git
 
-from semgrep_agent.findings import Finding, FindingKey
+from semgrep_agent.findings import Finding
+from semgrep_agent.findings import FindingKey
 from semgrep_agent.findings import FindingSets
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
@@ -84,7 +86,7 @@ class Results(object):
     total_time = attr.ib(type=float)
     new = attr.ib(type=set, init=False)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         object.__setattr__(self, "new", self.findings.expensive_new())
 
     @property
@@ -111,8 +113,9 @@ def rewrite_sarif_file(sarif_path: Path) -> None:
 
 
 def _update_finding_set(
-    result: Dict[str, Any], committed_datetime: Optional[datetime],
-    findingsMap: Dict[FindingKey, List[Finding]]
+    result: Dict[str, Any],
+    committed_datetime: Optional[datetime],
+    findingsMap: Dict[FindingKey, List[Finding]],
 ) -> None:
     key, finding = Finding.from_semgrep_result(result, committed_datetime)
     forKey = findingsMap.get(key, [])
@@ -165,7 +168,9 @@ def invoke_semgrep(
     else:
         with targets.baseline_paths() as paths:
             if paths:
-                paths_with_findings = {finding.path for finding in findingSet.current_map.keys()}
+                paths_with_findings = {
+                    finding.path for finding in findingSet.current_map.keys()
+                }
                 paths_to_check = set(str(path) for path in paths) & paths_with_findings
                 click.echo(
                     "=== looking for pre-existing issues in "
@@ -178,7 +183,9 @@ def invoke_semgrep(
                         args.append(path)
                     count = 0
                     for result in json.loads(str(semgrep(*args)))["results"]:
-                        _update_finding_set(result, committed_datetime, findingSet.baseline_map)
+                        _update_finding_set(
+                            result, committed_datetime, findingSet.baseline_map
+                        )
                         count += 1
                 click.echo(
                     f"| {count} {cardinalize('pre-existing issue', count)} found",
