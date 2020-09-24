@@ -87,6 +87,7 @@ class Results(object):
     new = attr.ib(type=set, init=False)
 
     def __attrs_post_init__(self) -> None:
+        # Since class is frozen we must use object.__setattr__ (per attrs documentation)
         object.__setattr__(self, "new", self.findings.expensive_new())
 
     @property

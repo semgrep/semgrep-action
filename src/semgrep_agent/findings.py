@@ -125,9 +125,9 @@ class FindingSets:
     @staticmethod
     def _map_to_set(mapping: Mapping[FindingKey, List[Finding]]) -> Set[Finding]:
         return set(
-            attr.evolve(f, index=ix)
-            for ff in mapping.values()
-            for ix, f in enumerate(ff)
+            attr.evolve(finding, index=index)
+            for findings_for_key in mapping.values()
+            for index, finding in enumerate(findings_for_key)
         )
 
     def current_set(self) -> Set[Finding]:
