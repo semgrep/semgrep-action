@@ -19,6 +19,7 @@ from typing import TextIO
 from typing import TYPE_CHECKING
 from typing import Union
 
+import attr
 import click
 import requests
 import sh
@@ -136,10 +137,11 @@ def invoke_semgrep(
             args = ["--skip-unknown-extensions", "--json", *config_args]
             for path in chunk:
                 args.append(path)
-            findings.current.update(
-                Finding.from_semgrep_result(result, committed_datetime)
-                for result in json.loads(str(semgrep(*args)))["results"]
-            )
+            for result in json.loads(str(semgrep(*args)))["results"]:
+                finding = Finding.from_semgrep_result(result, committed_datetime)
+                while finding in findings.current:
+                    finding = attr.evolve(finding, index=finding.index + 1)
+                findings.current.add(finding)
             click.echo(
                 f"| {unit_len(findings.current, 'current issue')} found", err=True
             )
@@ -163,10 +165,13 @@ def invoke_semgrep(
                     args = ["--skip-unknown-extensions", "--json", *config_args]
                     for path in chunk:
                         args.append(path)
-                    findings.baseline.update(
-                        Finding.from_semgrep_result(result, committed_datetime)
-                        for result in json.loads(str(semgrep(*args)))["results"]
-                    )
+                    for result in json.loads(str(semgrep(*args)))["results"]:
+                        finding = Finding.from_semgrep_result(
+                            result, committed_datetime
+                        )
+                        while finding in findings.baseline:
+                            finding = attr.evolve(finding, index=finding.index + 1)
+                        findings.baseline.add(finding)
                 click.echo(
                     f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
                     err=True,
