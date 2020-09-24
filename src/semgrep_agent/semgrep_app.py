@@ -12,6 +12,7 @@ from boltons.iterutils import chunked_iter
 from glom import glom
 from glom import T
 
+from semgrep_agent import constants
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
 from semgrep_agent.utils import debug_echo
@@ -106,7 +107,10 @@ class Sapp:
         for chunk in chunked_iter(results.new, 10_000):
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan.id}/findings",
-                json=[finding.to_dict() for finding in chunk],
+                json=[
+                    finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
+                    for finding in chunk
+                ],
                 timeout=30,
             )
             debug_echo(f"=== POST .../findings responded: {response!r}")
