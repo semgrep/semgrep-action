@@ -15,6 +15,7 @@ from typing import TextIO
 import attr
 import click
 
+from semgrep_agent.utils import ActionFailure
 from semgrep_agent.utils import debug_echo
 
 CONTROL_REGEX = re.compile(r"(?!<\\):")  # Matches unescaped colons
@@ -163,7 +164,7 @@ class Parser:
     - "Character range" patterns (lines including a collection of characters inside brackets) are not supported.
     - An ":include ..." directive is added, which allows another file to be included in the ignore pattern list;
       typically this included file would be the project .gitignore. No attempt at cycle detection is made.
-    - Any line beginning with a colon, but not ":include ", will raise a ValueError.
+    - Any line beginning with a colon, but not ":include ", will raise a ActionFailure.
     - "\:" is added to escape leading colons.
 
     Unsupported patterns are silently removed from the pattern list (this is done so that gitignore files may be
@@ -228,7 +229,9 @@ class Parser:
                 )
                 return []
         elif CONTROL_REGEX.match(line):
-            raise ValueError(f"Unknown ignore directive: '{line}'")
+            raise ActionFailure(
+                f"Unknown ignore directive in Semgrep ignore file at {self.base_path}: '{line}'"
+            )
         else:
             return (line for _ in range(1))
 

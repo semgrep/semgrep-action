@@ -15,6 +15,15 @@ if TYPE_CHECKING:
     from semgrep_agent.meta import GitMeta
 
 
+class ActionFailure(Exception):
+    """
+    Indicates that Semgrep failed and should abort, but prevents a stack trace
+    """
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 def debug_echo(text: str) -> None:
     """Print debug messages with context-specific debug formatting."""
     if os.getenv("GITHUB_ACTIONS"):

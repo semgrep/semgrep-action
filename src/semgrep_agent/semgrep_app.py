@@ -15,6 +15,7 @@ from glom import T
 from semgrep_agent import constants
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
+from semgrep_agent.utils import ActionFailure
 from semgrep_agent.utils import debug_echo
 
 
@@ -61,7 +62,9 @@ class Sapp:
         try:
             response.raise_for_status()
         except requests.RequestException:
-            click.echo(f"Semgrep App returned this error: {response.text}", err=True)
+            raise ActionFailure(
+                f"API server at {self.url} returned this error: {response.text}"
+            )
         else:
             body = response.json()
             self.scan = Scan(
@@ -74,18 +77,23 @@ class Sapp:
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""
         if not self.scan.is_loaded:
-            raise RuntimeError("sapp is configured so we should've gotten a scan_id")
+            raise ActionFailure(
+                f"The API server at {self.url} is not working properly. "
+                f"Please contact {constants.SUPPORT_EMAIL} for assistance."
+            )
+
+        response = self.session.get(
+            f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml", timeout=30,
+        )
+        debug_echo(f"=== POST .../rules.yaml responded: {response!r}")
 
         try:
-            response = self.session.get(
-                f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml", timeout=30,
-            )
-            debug_echo(f"=== POST .../rules.yaml responded: {response!r}")
             response.raise_for_status()
         except requests.RequestException:
-            click.echo(f"Semgrep App returned this error: {response.text}", err=True)
-            click.echo("Failed to get configured rules", err=True)
-            sys.exit(1)
+            raise ActionFailure(
+                f"API server at {self.url} returned this error: {response.text}\n"
+                "Failed to get configured rules"
+            )
         else:
             return response.text
 
@@ -103,6 +111,8 @@ class Sapp:
             return
         debug_echo(f"=== reporting results to semgrep app at {self.url}")
 
+        response: Optional["requests.Response"] = None
+
         # report findings
         for chunk in chunked_iter(results.new, 10_000):
             response = self.session.post(
@@ -117,18 +127,19 @@ class Sapp:
             try:
                 response.raise_for_status()
             except requests.RequestException:
-                click.echo(
-                    f"Semgrep App returned this error: {response.text}", err=True
-                )
+                raise ActionFailure(f"API server returned this error: {response.text}")
 
         # mark as complete
+        response = self.session.post(
+            f"{self.url}/api/agent/scan/{self.scan.id}/complete",
+            json={"exit_code": -1, "stats": results.stats},
+            timeout=30,
+        )
+        debug_echo(f"=== POST .../complete responded: {response!r}")
+
         try:
-            response = self.session.post(
-                f"{self.url}/api/agent/scan/{self.scan.id}/complete",
-                json={"exit_code": -1, "stats": results.stats},
-                timeout=30,
-            )
-            debug_echo(f"=== POST .../complete responded: {response!r}")
             response.raise_for_status()
         except requests.RequestException:
-            click.echo(f"Semgrep App returned this error: {response.text}", err=True)
+            raise ActionFailure(
+                f"API server at {self.url} returned this error: {response.text}"
+            )
