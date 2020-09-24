@@ -106,9 +106,9 @@ class Finding:
         )
         return key, finding
 
-    def to_dict(self) -> Mapping[str, Any]:
+    def to_dict(self, omit: Set[str]) -> Mapping[str, Any]:
         d = attr.asdict(self)
-        d = {k: v for k, v in d.items() if v is not None}
+        d = {k: v for k, v in d.items() if v is not None and k not in omit}
         d["syntactic_id"] = self.syntactic_identifier_str()
         d["commit_date"] = d["commit_date"].isoformat()
         return d
