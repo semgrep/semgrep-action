@@ -29,6 +29,7 @@ class Finding:
     message = attr.ib(type=str, hash=None, eq=False)
     severity = attr.ib(type=int, hash=None, eq=False)
     syntactic_context = attr.ib(type=str, converter=textwrap.dedent)
+    index = attr.ib(type=int, default=0)
     end_line = attr.ib(
         type=Optional[int], default=None, hash=None, eq=False, kw_only=True
     )
@@ -42,13 +43,13 @@ class Finding:
 
     def is_blocking(self) -> bool:
         """
-            Returns if this finding indicates it should block CI
+        Returns if this finding indicates it should block CI
         """
         return "block" in self.metadata.get("dev.semgrep.actions", ["block"])
 
     def syntactic_identifier_int(self) -> int:
         # Use murmur3 hash to minimize collisions
-        str_id = str((self.check_id, self.path, self.syntactic_context))
+        str_id = str((self.check_id, self.path, self.syntactic_context, self.index))
         return pymmh3.hash128(str_id)
 
     def syntactic_identifier_str(self) -> str:
