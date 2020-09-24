@@ -5,7 +5,6 @@ import sys
 import time
 import urllib.parse
 from contextlib import contextmanager
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
@@ -19,14 +18,17 @@ from typing import TextIO
 from typing import TYPE_CHECKING
 from typing import Union
 
+import attr
 import click
 import requests
 import sh
 from boltons.iterutils import chunked_iter
+from boltons.strutils import cardinalize
 from boltons.strutils import unit_len
 from sh.contrib import git
 
 from semgrep_agent.findings import Finding
+from semgrep_agent.findings import FindingKey
 from semgrep_agent.findings import FindingSets
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
@@ -78,15 +80,20 @@ def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
     return semgrepignore
 
 
-@dataclass
-class Results:
-    findings: FindingSets
-    total_time: float
+@attr.s(frozen=True)
+class Results(object):
+    findings = attr.ib(type=FindingSets)
+    total_time = attr.ib(type=float)
+    new = attr.ib(type=set, init=False)
+
+    def __attrs_post_init__(self) -> None:
+        # Since class is frozen we must use object.__setattr__ (per attrs documentation)
+        object.__setattr__(self, "new", self.findings.expensive_new())
 
     @property
     def stats(self) -> Dict[str, Any]:
         return {
-            "findings": len(self.findings.new),
+            "findings": len(self.new),
             "total_time": self.total_time,
         }
 
@@ -104,6 +111,17 @@ def rewrite_sarif_file(sarif_path: Path) -> None:
 
     with sarif_path.open("w") as sarif_file:
         json.dump(sarif_results, sarif_file, indent=2, sort_keys=True)
+
+
+def _update_finding_set(
+    result: Dict[str, Any],
+    committed_datetime: Optional[datetime],
+    findingsMap: Dict[FindingKey, List[Finding]],
+) -> None:
+    key, finding = Finding.from_semgrep_result(result, committed_datetime)
+    forKey = findingsMap.get(key, [])
+    forKey.append(finding)
+    findingsMap[key] = forKey
 
 
 def invoke_semgrep(
@@ -125,7 +143,7 @@ def invoke_semgrep(
     config_args = ["--config", config_specifier]
 
     debug_echo("=== seeing if there are any findings")
-    findings = FindingSets()
+    findingSet = FindingSets()
 
     with targets.current_paths() as paths:
         click.echo(
@@ -135,15 +153,15 @@ def invoke_semgrep(
             args = ["--skip-unknown-extensions", "--json", *config_args]
             for path in chunk:
                 args.append(path)
-            findings.current.update(
-                Finding.from_semgrep_result(result, committed_datetime)
-                for result in json.loads(str(semgrep(*args)))["results"]
-            )
+            count = 0
+            for result in json.loads(str(semgrep(*args)))["results"]:
+                _update_finding_set(result, committed_datetime, findingSet.current_map)
+                count += 1
             click.echo(
-                f"| {unit_len(findings.current, 'current issue')} found", err=True
+                f"| {count} {cardinalize('current issue', count)} found", err=True
             )
 
-    if not findings.current:
+    if not findingSet.current_map:
         click.echo(
             "=== not looking at pre-existing issues since there are no current issues",
             err=True,
@@ -151,7 +169,9 @@ def invoke_semgrep(
     else:
         with targets.baseline_paths() as paths:
             if paths:
-                paths_with_findings = {finding.path for finding in findings.current}
+                paths_with_findings = {
+                    finding.path for finding in findingSet.current_map.keys()
+                }
                 paths_to_check = set(str(path) for path in paths) & paths_with_findings
                 click.echo(
                     "=== looking for pre-existing issues in "
@@ -162,12 +182,14 @@ def invoke_semgrep(
                     args = ["--skip-unknown-extensions", "--json", *config_args]
                     for path in chunk:
                         args.append(path)
-                    findings.baseline.update(
-                        Finding.from_semgrep_result(result, committed_datetime)
-                        for result in json.loads(str(semgrep(*args)))["results"]
-                    )
+                    count = 0
+                    for result in json.loads(str(semgrep(*args)))["results"]:
+                        _update_finding_set(
+                            result, committed_datetime, findingSet.baseline_map
+                        )
+                        count += 1
                 click.echo(
-                    f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
+                    f"| {count} {cardinalize('pre-existing issue', count)} found",
                     err=True,
                 )
 
@@ -182,7 +204,7 @@ def invoke_semgrep(
             semgrep(*args, _out=sarif_file)
         rewrite_sarif_file(sarif_path)
 
-    return findings
+    return findingSet
 
 
 def scan(

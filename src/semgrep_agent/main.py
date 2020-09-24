@@ -125,20 +125,19 @@ def main(
         meta.base_commit_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
     )
-    new_findings = results.findings.new
 
-    blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
+    blocking_findings = {finding for finding in results.new if finding.is_blocking()}
 
     if json_output:
         # Output all new findings as json
-        output = [f.to_dict() for f in new_findings]
+        output = [f.to_dict() for f in results.new]
         click.echo(json.dumps(output))
     else:
         # Print out blocking findings
         formatter.dump(blocking_findings)
 
     non_blocking_findings = {
-        finding for finding in new_findings if not finding.is_blocking()
+        finding for finding in results.new if not finding.is_blocking()
     }
     if non_blocking_findings:
         click.echo(

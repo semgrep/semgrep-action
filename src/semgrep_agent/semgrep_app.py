@@ -103,7 +103,7 @@ class Sapp:
         debug_echo(f"=== reporting results to semgrep app at {self.url}")
 
         # report findings
-        for chunk in chunked_iter(results.findings.new, 10_000):
+        for chunk in chunked_iter(results.new, 10_000):
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan.id}/findings",
                 json=[finding.to_dict() for finding in chunk],
