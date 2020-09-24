@@ -19,7 +19,7 @@ import pymmh3
 @attr.s(frozen=True)
 class FindingKey:
     check_id = attr.ib(type=str)
-    path = attr.ib(type=int)
+    path = attr.ib(type=str)
     syntactic_context = attr.ib(type=str)
 
 
@@ -37,6 +37,7 @@ class Finding:
     severity = attr.ib(type=int, hash=None, eq=False)
     index = attr.ib(type=int, hash=None, eq=False)
     syntactic_context = attr.ib(type=str, converter=textwrap.dedent)
+    metadata = attr.ib(type=Mapping[str, Any], hash=None, eq=False, kw_only=True)
     end_line = attr.ib(
         type=Optional[int], default=None, hash=None, eq=False, kw_only=True
     )
@@ -46,7 +47,6 @@ class Finding:
     commit_date = attr.ib(
         type=Optional[datetime], default=None, hash=None, eq=False, kw_only=True
     )
-    metadata = attr.ib(type=Mapping[str, Any], hash=None, eq=False, kw_only=True)
 
     def is_blocking(self) -> bool:
         """
@@ -116,11 +116,27 @@ class Finding:
 
 @dataclass(frozen=True)
 class FindingSets:
-    baseline_map: Dict[FindingKey, List[Finding]] = field(default_factory=dict)
-    current_map: Dict[FindingKey, List[Finding]] = field(default_factory=dict)
+    """
+    Accumulates findings to calculate which findings are new from this commit
+
+    Usage:
+    Add current and baseline findings using update_current and update_baseline.
+    New findings will calculate findings in current that don't show up in the baseline.
+
+    Findings have distinct hashes based on (rule id, path, syntactic context, index in file)
+    """
+
+    # When accumulating findings, we don't yet know indices of findings, so we
+    # keep track of a list of findings per (rule id, path, syntactic context) tuple.
+    # We then later get the findings with proper indices when calculating new findings
+    # in FindingSets.expensive_new().
+    _baseline_map: Dict[FindingKey, List[Finding]] = field(default_factory=dict)
+    _current_map: Dict[FindingKey, List[Finding]] = field(default_factory=dict)
 
     def expensive_new(self) -> Set[Finding]:
-        return self.current_set() - self.baseline_set()
+        return self._map_to_set(self._current_map) - self._map_to_set(
+            self._baseline_map
+        )
 
     @staticmethod
     def _map_to_set(mapping: Mapping[FindingKey, List[Finding]]) -> Set[Finding]:
@@ -130,8 +146,29 @@ class FindingSets:
             for index, finding in enumerate(findings_for_key)
         )
 
-    def current_set(self) -> Set[Finding]:
-        return self._map_to_set(self.current_map)
+    @staticmethod
+    def _update_findings_map(
+        result: Dict[str, Any],
+        committed_datetime: Optional[datetime],
+        findings_map: Dict[FindingKey, List[Finding]],
+    ) -> None:
+        key, finding = Finding.from_semgrep_result(result, committed_datetime)
+        for_key = findings_map.get(key, [])
+        for_key.append(finding)
+        findings_map[key] = for_key
 
-    def baseline_set(self) -> Set[Finding]:
-        return self._map_to_set(self.baseline_map)
+    def update_baseline(
+        self, result: Dict[str, Any], committed_datetime: Optional[datetime]
+    ) -> None:
+        self._update_findings_map(result, committed_datetime, self._baseline_map)
+
+    def update_current(
+        self, result: Dict[str, Any], committed_datetime: Optional[datetime]
+    ) -> None:
+        self._update_findings_map(result, committed_datetime, self._current_map)
+
+    def has_current_issues(self) -> bool:
+        return len(self._current_map) > 0
+
+    def paths_with_current_findings(self) -> Set[str]:
+        return {key.path for key in self._current_map.keys()}

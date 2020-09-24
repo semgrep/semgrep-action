@@ -113,17 +113,6 @@ def rewrite_sarif_file(sarif_path: Path) -> None:
         json.dump(sarif_results, sarif_file, indent=2, sort_keys=True)
 
 
-def _update_finding_set(
-    result: Dict[str, Any],
-    committed_datetime: Optional[datetime],
-    findingsMap: Dict[FindingKey, List[Finding]],
-) -> None:
-    key, finding = Finding.from_semgrep_result(result, committed_datetime)
-    forKey = findingsMap.get(key, [])
-    forKey.append(finding)
-    findingsMap[key] = forKey
-
-
 def invoke_semgrep(
     config_specifier: str,
     committed_datetime: Optional[datetime],
@@ -143,7 +132,7 @@ def invoke_semgrep(
     config_args = ["--config", config_specifier]
 
     debug_echo("=== seeing if there are any findings")
-    findingSet = FindingSets()
+    finding_set = FindingSets()
 
     with targets.current_paths() as paths:
         click.echo(
@@ -155,13 +144,13 @@ def invoke_semgrep(
                 args.append(path)
             count = 0
             for result in json.loads(str(semgrep(*args)))["results"]:
-                _update_finding_set(result, committed_datetime, findingSet.current_map)
+                finding_set.update_current(result, committed_datetime)
                 count += 1
             click.echo(
                 f"| {count} {cardinalize('current issue', count)} found", err=True
             )
 
-    if not findingSet.current_map:
+    if not finding_set.has_current_issues():
         click.echo(
             "=== not looking at pre-existing issues since there are no current issues",
             err=True,
@@ -169,9 +158,7 @@ def invoke_semgrep(
     else:
         with targets.baseline_paths() as paths:
             if paths:
-                paths_with_findings = {
-                    finding.path for finding in findingSet.current_map.keys()
-                }
+                paths_with_findings = finding_set.paths_with_current_findings()
                 paths_to_check = set(str(path) for path in paths) & paths_with_findings
                 click.echo(
                     "=== looking for pre-existing issues in "
@@ -184,9 +171,7 @@ def invoke_semgrep(
                         args.append(path)
                     count = 0
                     for result in json.loads(str(semgrep(*args)))["results"]:
-                        _update_finding_set(
-                            result, committed_datetime, findingSet.baseline_map
-                        )
+                        finding_set.update_baseline(result, committed_datetime)
                         count += 1
                 click.echo(
                     f"| {count} {cardinalize('pre-existing issue', count)} found",
@@ -204,7 +189,7 @@ def invoke_semgrep(
             semgrep(*args, _out=sarif_file)
         rewrite_sarif_file(sarif_path)
 
-    return findingSet
+    return finding_set
 
 
 def scan(
