@@ -5,7 +5,7 @@ WORKDIR /app
 COPY poetry.lock ./
 COPY pyproject.toml ./
 
-ENV INSTALLED_SEMGREP_VERSION=0.24.0
+ENV INSTALLED_SEMGREP_VERSION=0.25.0
 
 COPY --from=semgrep /usr/local/bin/semgrep-core /tmp/semgrep-core
 
