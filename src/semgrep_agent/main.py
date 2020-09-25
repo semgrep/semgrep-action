@@ -106,6 +106,11 @@ def main(
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
         config = ".semgrep.yml"
+    elif Path(".semgrep").is_dir():
+        click.echo(
+            "| using semgrep rules from the committed .semgrep/ directory", err=True
+        )
+        config = ".semgrep/"
     else:
         message = """
             == [ERROR] you didn't configure what rules semgrep should scan for.
