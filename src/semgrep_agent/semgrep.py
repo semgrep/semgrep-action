@@ -136,11 +136,11 @@ def invoke_semgrep(
             args = ["--skip-unknown-extensions", "--json", *config_args]
             for path in chunk:
                 args.append(path)
-            for result in json.loads(str(semgrep(*args)))["results"]:
-                finding = Finding.from_semgrep_result(result, committed_datetime)
-                while finding in findings.current:
-                    finding = attr.evolve(finding, index=finding.index + 1)
-                findings.current.add(finding)
+            semgrep_results = json.loads(str(semgrep(*args)))["results"]
+            findings.current.update_findings(
+                Finding.from_semgrep_result(result, committed_datetime)
+                for result in semgrep_results
+            )
             click.echo(
                 f"| {unit_len(findings.current, 'current issue')} found", err=True
             )
@@ -164,13 +164,11 @@ def invoke_semgrep(
                     args = ["--skip-unknown-extensions", "--json", *config_args]
                     for path in chunk:
                         args.append(path)
-                    for result in json.loads(str(semgrep(*args)))["results"]:
-                        finding = Finding.from_semgrep_result(
-                            result, committed_datetime
-                        )
-                        while finding in findings.baseline:
-                            finding = attr.evolve(finding, index=finding.index + 1)
-                        findings.baseline.add(finding)
+                    semgrep_results = json.loads(str(semgrep(*args)))["results"]
+                    findings.baseline.update_findings(
+                        Finding.from_semgrep_result(result, committed_datetime)
+                        for result in semgrep_results
+                    )
                 click.echo(
                     f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
                     err=True,

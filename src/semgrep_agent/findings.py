@@ -1,11 +1,12 @@
 import binascii
-import hashlib
 import textwrap
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
 from typing import Any
+from typing import Collection
 from typing import Dict
+from typing import Iterable
 from typing import Mapping
 from typing import NamedTuple
 from typing import Optional
@@ -98,10 +99,44 @@ class Finding:
         return d
 
 
+class FindingSet(Set[Finding]):
+    """
+    A set type which is aware
+    that two findings are not to be considered the same
+    even if they have the same line of code.
+
+    It amends findings that have identical code during insertion
+    to set a unique zero-indexed "index" value on them.
+    """
+
+    def add_finding(self, finding: Finding) -> None:
+        """
+        Add finding, even if the same (rule, path, code) existed.
+
+        This is used over regular `.add` to increment the finding's index
+        if it already exists in the set, thereby retaining multiple copies
+        of the same (rule_id, path, line_of_code) tuple.
+        """
+        while finding in self:
+            finding = attr.evolve(finding, index=finding.index + 1)
+        self.add(finding)
+
+    def update_findings(self, findings: Iterable[Finding]) -> None:
+        """
+        Add findings, even if the same (rule, path, code) exist.
+
+        This is used over regular `.update` to increment the findings' indexes
+        if they already exists in the set, thereby retaining multiple copies
+        of the same (path, rule_id, line_of_code) tuples.
+        """
+        for finding in findings:
+            self.add_finding(finding)
+
+
 @dataclass(frozen=True)
 class FindingSets:
-    baseline: Set[Finding] = field(default_factory=set)
-    current: Set[Finding] = field(default_factory=set)
+    baseline: FindingSet = field(default_factory=FindingSet)
+    current: FindingSet = field(default_factory=FindingSet)
 
     @property
     def new(self) -> Set[Finding]:
