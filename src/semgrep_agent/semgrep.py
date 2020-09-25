@@ -37,7 +37,8 @@ from semgrep_agent.utils import debug_echo
 if TYPE_CHECKING:
     from semgrep_agent.semgrep_app import Scan
 
-semgrep = sh.semgrep.bake(_ok_code={0, 1, 2}, _tty_out=False)
+ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
+semgrep = sh.semgrep.bake(_ok_code={0, 1, 2}, _tty_out=False, _env=ua_environ)
 
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
