@@ -114,7 +114,7 @@ class Sapp:
         response: Optional["requests.Response"] = None
 
         # report findings
-        for chunk in chunked_iter(results.new, 10_000):
+        for chunk in chunked_iter(results.findings.new, 10_000):
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan.id}/findings",
                 json=[

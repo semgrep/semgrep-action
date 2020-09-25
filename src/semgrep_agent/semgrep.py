@@ -5,6 +5,7 @@ import sys
 import time
 import urllib.parse
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
@@ -18,17 +19,14 @@ from typing import TextIO
 from typing import TYPE_CHECKING
 from typing import Union
 
-import attr
 import click
 import requests
 import sh
 from boltons.iterutils import chunked_iter
-from boltons.strutils import cardinalize
 from boltons.strutils import unit_len
 from sh.contrib import git
 
 from semgrep_agent.findings import Finding
-from semgrep_agent.findings import FindingKey
 from semgrep_agent.findings import FindingSets
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
@@ -81,20 +79,15 @@ def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
     return semgrepignore
 
 
-@attr.s(frozen=True)
-class Results(object):
-    findings = attr.ib(type=FindingSets)
-    total_time = attr.ib(type=float)
-    new = attr.ib(type=set, init=False)
-
-    def __attrs_post_init__(self) -> None:
-        # Since class is frozen we must use object.__setattr__ (per attrs documentation)
-        object.__setattr__(self, "new", self.findings.expensive_new())
+@dataclass
+class Results:
+    findings: FindingSets
+    total_time: float
 
     @property
     def stats(self) -> Dict[str, Any]:
         return {
-            "findings": len(self.new),
+            "findings": len(self.findings.new),
             "total_time": self.total_time,
         }
 
@@ -133,7 +126,7 @@ def invoke_semgrep(
     config_args = ["--config", config_specifier]
 
     debug_echo("=== seeing if there are any findings")
-    finding_set = FindingSets()
+    findings = FindingSets()
 
     with targets.current_paths() as paths:
         click.echo(
@@ -143,15 +136,15 @@ def invoke_semgrep(
             args = ["--skip-unknown-extensions", "--json", *config_args]
             for path in chunk:
                 args.append(path)
-            count = 0
-            for result in json.loads(str(semgrep(*args)))["results"]:
-                finding_set.update_current(result, committed_datetime)
-                count += 1
+            findings.current.update(
+                Finding.from_semgrep_result(result, committed_datetime)
+                for result in json.loads(str(semgrep(*args)))["results"]
+            )
             click.echo(
-                f"| {count} {cardinalize('current issue', count)} found", err=True
+                f"| {unit_len(findings.current, 'current issue')} found", err=True
             )
 
-    if not finding_set.has_current_issues():
+    if not findings.current:
         click.echo(
             "=== not looking at pre-existing issues since there are no current issues",
             err=True,
@@ -159,7 +152,7 @@ def invoke_semgrep(
     else:
         with targets.baseline_paths() as paths:
             if paths:
-                paths_with_findings = finding_set.paths_with_current_findings()
+                paths_with_findings = {finding.path for finding in findings.current}
                 paths_to_check = set(str(path) for path in paths) & paths_with_findings
                 click.echo(
                     "=== looking for pre-existing issues in "
@@ -170,12 +163,12 @@ def invoke_semgrep(
                     args = ["--skip-unknown-extensions", "--json", *config_args]
                     for path in chunk:
                         args.append(path)
-                    count = 0
-                    for result in json.loads(str(semgrep(*args)))["results"]:
-                        finding_set.update_baseline(result, committed_datetime)
-                        count += 1
+                    findings.baseline.update(
+                        Finding.from_semgrep_result(result, committed_datetime)
+                        for result in json.loads(str(semgrep(*args)))["results"]
+                    )
                 click.echo(
-                    f"| {count} {cardinalize('pre-existing issue', count)} found",
+                    f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
                     err=True,
                 )
 
@@ -190,7 +183,7 @@ def invoke_semgrep(
             semgrep(*args, _out=sarif_file)
         rewrite_sarif_file(sarif_path)
 
-    return finding_set
+    return findings
 
 
 def scan(
