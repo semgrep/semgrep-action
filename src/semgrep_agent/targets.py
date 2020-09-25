@@ -18,6 +18,7 @@ from sh.contrib import git
 
 from semgrep_agent.ignores import FileIgnore
 from semgrep_agent.ignores import Parser
+from semgrep_agent.utils import ActionFailure
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import zsplit
@@ -90,7 +91,7 @@ class TargetFileManager:
         try:
             repo.rev_parse(self._base_commit)
         except gitdb.exc.BadName:
-            raise RuntimeError(f"Unknown git ref '{self._base_commit}'")
+            raise ActionFailure(f"Unknown git ref '{self._base_commit}'")
 
         # Output of git command will be relative to git project root
         status_output = zsplit(
@@ -209,14 +210,14 @@ class TargetFileManager:
 
     def _abort_if_dirty(self) -> None:
         """
-            Raises RuntimeError if paths are untracked or staged.
+            Raises ActionFailure if paths are untracked or staged.
 
             :param removed (list): Removed paths
-            :raises RuntimeError: If the git repo is not in a clean state
+            :raises ActionFailure: If the git repo is not in a clean state
         """
         output = git.status("--porcelain").stdout.decode().strip()
         if output:
-            raise RuntimeError(  # TODO we can probably be more lenient
+            raise ActionFailure(  # TODO we can probably be more lenient
                 "Found untracked or staged files. Diff-aware runs require a clean git state."
             )
 
@@ -225,8 +226,8 @@ class TargetFileManager:
         """
         Runs a block of code on files from the current branch HEAD.
 
-        :raises RuntimeError: If git cannot detect a HEAD commit
-        :raises RuntimeError: If unmerged files are detected
+        :raises ActionFailure: If git cannot detect a HEAD commit
+        :raises ActionFailure: If unmerged files are detected
         """
         repo = get_git_repo()
 
@@ -261,7 +262,9 @@ class TargetFileManager:
                         "Restoring git index failed due to total repository deletion; skipping checkout"
                     )
                 else:
-                    raise error
+                    raise ActionFailure(
+                        f"Fatal error restoring Git state; please restore your repository state manually:\n{output}"
+                    )
 
             if self._status.removed:
                 # Need to check if file exists since it is possible file was deleted
@@ -278,7 +281,7 @@ class TargetFileManager:
             - in any path include filters specified.
 
         :return: A list of paths
-        :raises RuntimeError: If git cannot detect a HEAD commit or unmerged files exist
+        :raises ActionFailure: If git cannot detect a HEAD commit or unmerged files exist
         """
         if self._base_commit is None:
             yield []
@@ -296,6 +299,6 @@ class TargetFileManager:
             - in any path include filters specified.
 
         :return: A list of paths
-        :raises RuntimeError: If git cannot detect a HEAD commit or unmerged files exist
+        :raises ActionFailure: If git cannot detect a HEAD commit or unmerged files exist
         """
         yield self._target_paths

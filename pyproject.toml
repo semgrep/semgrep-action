@@ -22,7 +22,7 @@ attrs = "~=19.3.0"
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
-semgrep-agent = "semgrep_agent.__main__:main"
+semgrep-agent = "semgrep_agent.__main__:error_guard"
 
 [build-system]
 requires = ["poetry>=1.0.10"]
