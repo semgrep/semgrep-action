@@ -12,6 +12,7 @@ import sh
 from boltons import ecoutils
 from boltons.strutils import unit_len
 
+from semgrep_agent import constants
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.meta import detect_meta_environment
@@ -136,7 +137,9 @@ def main(
 
     if json_output:
         # Output all new findings as json
-        output = [f.to_dict() for f in new_findings]
+        output = [
+            f.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS) for f in new_findings
+        ]
         click.echo(json.dumps(output))
     else:
         # Print out blocking findings
