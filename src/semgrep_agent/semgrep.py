@@ -29,7 +29,6 @@ from sh.contrib import git
 
 from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
-from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 

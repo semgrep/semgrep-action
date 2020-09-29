@@ -123,7 +123,10 @@ class GithubMeta(GitMeta):
     @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
         if self.event_name == "pull_request":
-            return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
+            pr_base = self.glom_event(T["pull_request"]["base"]["sha"])
+            # The pull request "base" that GitHub sends us is not necessarily the merge base,
+            # so we need to get the merge-base from Git
+            return git("merge-base", pr_base, "HEAD").stdout.decode().strip()
         return None
 
     @cachedproperty
