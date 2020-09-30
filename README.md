@@ -49,8 +49,8 @@ You can set specify rules in one of the following ways:
 
 If `config` is unset,
 the default behavior is to look for rules
-in the `.semgrep.yml` file in your repo, 
-or load the rules from the `.semgrep` folder in your repo. 
+in the `.semgrep.yml` file in your repo,
+or load the rules from the `.semgrep` folder in your repo.
 
 If none of these provide a configuration,
 the action will fail.
