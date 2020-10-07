@@ -268,8 +268,10 @@ class TargetFileManager:
 
             if self._status.removed:
                 # Need to check if file exists since it is possible file was deleted
-                # in both the base and head
-                git.rm("-f", *(str(r) for r in self._status.removed if r.exists()))
+                # in both the base and head. Only call if there are files to delete
+                to_remove = [r for r in self._status.removed if r.exists()]
+                if to_remove:
+                    git.rm("-f", *(str(r) for r in to_remove))
 
     @contextmanager
     def baseline_paths(self) -> Iterator[List[Path]]:
