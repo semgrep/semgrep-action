@@ -1,6 +1,6 @@
 # Semgrep Privacy Policy
 
-Semgrep collects usage data to help us improve the product. We send two types of data to r2c servers: scan data and findings data.
+Semgrep collects usage data to provide useful results and to help us improve the product. We send two types of data to r2c servers: scan data and findings data.
 
 ## Scan data
 
