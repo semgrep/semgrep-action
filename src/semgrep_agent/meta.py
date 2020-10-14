@@ -44,6 +44,11 @@ class GitMeta:
         return Path.cwd().name
 
     @cachedproperty
+    def repo_remote_origin(self) -> str:
+        remotes = [remote.url for remote in self.repo.remotes]
+        return remotes[0] if len(remotes) else ''
+
+    @cachedproperty
     def commit_sha(self) -> Optional[str]:
         return self.repo.head.commit.hexsha  # type: ignore
 

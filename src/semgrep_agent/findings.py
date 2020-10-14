@@ -41,6 +41,9 @@ class Finding:
         type=Optional[datetime], default=None, hash=None, eq=False, kw_only=True
     )
     metadata = attr.ib(type=Mapping[str, Any], hash=None, eq=False, kw_only=True)
+    from_policy_id = attr.ib(type=str, hash=None, eq=False, kw_only=True)
+    from_ruleset_id = attr.ib(type=str, hash=None, eq=False, kw_only=True)
+
 
     def is_blocking(self) -> bool:
         """
@@ -89,6 +92,8 @@ class Finding:
             syntactic_context=result["extra"]["lines"],
             commit_date=committed_datetime,
             metadata=result["extra"]["metadata"],
+            from_policy_id=result["extra"]["metadata"].get("policy_id"),
+            from_ruleset_id=result["extra"]["metadata"].get("ruleset_id"),
         )
 
     def to_dict(self, omit: Set[str]) -> Mapping[str, Any]:

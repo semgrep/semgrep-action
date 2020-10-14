@@ -143,7 +143,7 @@ def main(
         click.echo(json.dumps(output))
     else:
         # Print out blocking findings
-        formatter.dump(blocking_findings)
+        formatter.dump(blocking_findings, sapp, meta)
 
     non_blocking_findings = {
         finding for finding in new_findings if not finding.is_blocking()
