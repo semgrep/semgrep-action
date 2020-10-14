@@ -45,8 +45,6 @@ class Finding:
     from_policy_name = attr.ib(type=str, hash=None, eq=False, kw_only=True)
     from_ruleset_id = attr.ib(type=str, hash=None, eq=False, kw_only=True)
 
-
-
     def is_blocking(self) -> bool:
         """
         Returns if this finding indicates it should block CI
@@ -94,9 +92,15 @@ class Finding:
             syntactic_context=result["extra"]["lines"],
             commit_date=committed_datetime,
             metadata=result["extra"]["metadata"],
-            from_policy_id=result["extra"]["metadata"].get("dev.semgrep.provenance", {}).get("policy_id"),
-            from_policy_name=result["extra"]["metadata"].get("dev.semgrep.provenance", {}).get("policy_name"),
-            from_ruleset_id=result["extra"]["metadata"].get("dev.semgrep.provenance", {}).get("ruleset_id"),
+            from_policy_id=result["extra"]["metadata"]
+            .get("dev.semgrep.provenance", {})
+            .get("policy_id"),
+            from_policy_name=result["extra"]["metadata"]
+            .get("dev.semgrep.provenance", {})
+            .get("policy_name"),
+            from_ruleset_id=result["extra"]["metadata"]
+            .get("dev.semgrep.provenance", {})
+            .get("ruleset_id"),
         )
 
     def to_dict(self, omit: Set[str]) -> Mapping[str, Any]:

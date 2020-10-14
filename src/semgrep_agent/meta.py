@@ -6,6 +6,7 @@ from dataclasses import field
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Type
 from typing import Union
@@ -45,8 +46,8 @@ class GitMeta:
 
     @cachedproperty
     def repo_remote_origin(self) -> str:
-        remotes = [remote.url for remote in self.repo.remotes]
-        return remotes[0] if len(remotes) else ''
+        remotes: List[str] = [remote.url for remote in self.repo.remotes]
+        return remotes[0] if len(remotes) else ""
 
     @cachedproperty
     def commit_sha(self) -> Optional[str]:

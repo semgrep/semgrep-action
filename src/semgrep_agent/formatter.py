@@ -1,25 +1,31 @@
 import itertools
-import psutil
+import re
 import shutil
 import sys
 import textwrap
 from typing import Collection
 from typing import Iterable
 from typing import List
-from typing import Optional, Pattern
+from typing import Optional
+from typing import Pattern
 from typing import Set
 from typing import TextIO
-import re
+
 import click
-from click.termui import secho, style
-from semgrep_agent.semgrep_app import Sapp
+import psutil
+from click.termui import secho
+from click.termui import style
+
 from semgrep_agent.meta import GitMeta
+from semgrep_agent.semgrep_app import Sapp
+
 
 class Colors:
     LINK = "bright_blue"
     ERROR = "red"
     WARNING = "yellow"
     SUCCESS = "green"
+
 
 from semgrep_agent.findings import Finding
 
@@ -133,13 +139,14 @@ def render_link(
     return text
 
 
-def build_action_url(v: Finding, c: Sapp, meta: GitMeta):
+def build_action_url(v: Finding, c: Sapp, meta: GitMeta) -> str:
     projectName = meta.repo_remote_origin
-    return f'http://localhost:3000/finding/{c.deployment_id}/{v.from_policy_id}?ruleId={v.check_id}&path={v.path}&lineNum={v.line}&rulesetName={v.from_ruleset_id}&projectName={projectName}&policyName={v.from_policy_name}'
+    return f"http://localhost:3000/finding/{c.deployment_id}/{v.from_policy_id}?ruleId={v.check_id}&path={v.path}&lineNum={v.line}&rulesetName={v.from_ruleset_id}&projectName={projectName}&policyName={v.from_policy_name}"
+
 
 def dump(findings: Set[Finding], config: Sapp, meta: GitMeta) -> None:
     if not findings:
-        return
+        return None
 
     lines = []
     violations = by_path(findings)
@@ -158,10 +165,10 @@ def dump(findings: Set[Finding], config: Sapp, meta: GitMeta) -> None:
     for path, vv in itertools.groupby(ordered, path_of):
         for v in sorted(vv, key=lambda v: (v.line, v.column, v.message)):
             target_url = build_action_url(v, config, meta)
-            target_text = '(more info)'
+            target_text = "(more info)"
 
             hyperlink = render_link(target_text, target_url)
-            lines.append(_print_error_message(v) + ' ' + hyperlink)
+            lines.append(_print_error_message(v) + " " + hyperlink)
             lines.append(_print_path(path, v.line, v.column))
 
             lines += _print_violation(v, max_message_len)
