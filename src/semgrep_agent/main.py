@@ -55,6 +55,7 @@ def get_event_type() -> str:
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
 @click.option("--json", "json_output", hidden=True, is_flag=True)
+# @click.option("--comment-token", envvar="INPUT_COMMENTTOKEN", type=str)
 def main(
     config: str,
     baseline_ref: str,
@@ -62,6 +63,7 @@ def main(
     publish_token: str,
     publish_deployment: int,
     json_output: bool,
+    # comment_token: str,
 ) -> NoReturn:
     click.echo("=== detecting environment", err=True)
     click.echo(
@@ -155,6 +157,20 @@ def main(
         )
 
     sapp.report_results(results)
+    # send comments to github here?
+    # github_session = requests.Session()
+    # github_session.headers["Authorization"] = f"Bearer {comment_token}"
+    # github_session.post(
+    #     f"https://api.github.com/repos/TestSemgrep/Inline_PR_comments/pulls/1/comments",
+    #     json={
+    #         "body": "Testing comments",
+    #         "commit_id": "6d907ea0e4929facdca59253fae92e511e71991f",
+    #         "path": "bad_things.py",
+    #         "line": 1,
+    #         "side": "RIGHT"
+    #     },
+    #     timeout=30,
+    # )
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
