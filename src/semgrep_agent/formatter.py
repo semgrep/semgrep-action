@@ -135,7 +135,7 @@ def render_link(
 
 def build_action_url(v: Finding, c: Sapp, meta: GitMeta):
     projectName = meta.repo_remote_origin
-    return f'http://localhost:3000/finding/{c.deployment_id}/{v.from_policy_id}?ruleId={v.check_id}&path={v.path}&lineNum={v.line}&rulesetName={v.from_ruleset_id}&projectName={projectName}'
+    return f'http://localhost:3000/finding/{c.deployment_id}/{v.from_policy_id}?ruleId={v.check_id}&path={v.path}&lineNum={v.line}&rulesetName={v.from_ruleset_id}&projectName={projectName}&policyName={v.from_policy_name}'
 
 def dump(findings: Set[Finding], config: Sapp, meta: GitMeta) -> None:
     if not findings:
