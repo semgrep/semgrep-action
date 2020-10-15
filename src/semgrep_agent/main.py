@@ -1,6 +1,5 @@
 import json
 import os
-import requests
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,6 +8,7 @@ from typing import NoReturn
 from typing import Optional
 
 import click
+import requests
 import sh
 from boltons import ecoutils
 from boltons.strutils import unit_len
@@ -158,19 +158,21 @@ def main(
         )
 
     sapp.report_results(results)
-    #send comments to github here?
+    # send comments to github here?
     if os.getenv("GITHUB_ACTIONS") == "true":
         github_session = requests.Session()
         try:
-            github_session.headers["Authorization"] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
+            github_session.headers[
+                "Authorization"
+            ] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
             url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
             for finding in new_findings:
-                    location_msg = f"{finding.path}:{finding.line}"
+                location_msg = f"{finding.path}:{finding.line}"
                 if finding.end_line:
                     location = {
                         "start_line": finding.line,
                         "line": finding.end_line,
-                        "start_side": "RIGHT"
+                        "start_side": "RIGHT",
                     }
                     location_msg += f"-{finding.end_line}"
                 else:
@@ -189,7 +191,7 @@ def main(
                         "commit_id": meta.commit_sha,
                         "path": finding.path,
                         **location,
-                        "side": "RIGHT"
+                        "side": "RIGHT",
                     },
                     timeout=30,
                 )
