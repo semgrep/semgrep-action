@@ -173,7 +173,7 @@ def main(
                     severity_msg = "Warning :orange_circle:"
                 else:
                     severity_msg = "Info :yellow_circle:"
-                body = f"## Semgrep Report\n**Severity:** {severity_msg}\n**Message:** {finding.message}"
+                body = f"## semgrep-action\n**Severity:** {severity_msg}\n**Message:** {finding.message}"
                 resp = github_session.post(
                     url,
                     json={
