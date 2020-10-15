@@ -167,16 +167,6 @@ def main(
             ] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
             url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
             for finding in new_findings:
-                location_msg = f"{finding.path}:{finding.line}"
-                if finding.end_line:
-                    location = {
-                        "start_line": finding.line,
-                        "line": finding.end_line,
-                        "start_side": "RIGHT",
-                    }
-                    location_msg += f"-{finding.end_line}"
-                else:
-                    location = {"line": finding.line}
                 if finding.severity == 2:
                     severity_msg = ":x: Error :x:"
                 elif finding.severity == 1:
@@ -184,21 +174,24 @@ def main(
                 else:
                     severity_msg = ":information_source: Info :information_source:"
                 click.echo(finding.message)
-                body = f"#### Semgrep Report\n{severity_msg}"
-                click.echo({
-                    "body": body,
-                    "commit_id": meta.commit_sha,
-                    "path": finding.path,
-                    **location,
-                    "side": "RIGHT",
-                })
+                body = f"#### Semgrep Report\n{severity_msg}\n"
+                body += f"`{finding.path}:{finding.line}`\nThe message will be here."
+                click.echo(
+                    {
+                        "body": body,
+                        "commit_id": meta.commit_sha,
+                        "path": finding.path,
+                        "line": finding.line,
+                        "side": "RIGHT",
+                    }
+                )
                 resp = github_session.post(
                     url,
                     json={
                         "body": body,
                         "commit_id": meta.commit_sha,
                         "path": finding.path,
-                        **location,
+                        "line": finding.line,
                         "side": "RIGHT",
                     },
                     timeout=30,
