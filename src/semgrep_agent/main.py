@@ -52,7 +52,7 @@ def get_event_type() -> str:
 @click.option(
     "--publish-url", envvar="INPUT_PUBLISHURL", type=url, default="https://semgrep.dev"
 )
-@click.option("--testing-publish-token", envvar="INPUT_TESTINGPUBLISHTOKEN", type=str)
+@click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
 @click.option("--json", "json_output", hidden=True, is_flag=True)
 # @click.option("--comment-token", envvar="INPUT_COMMENTTOKEN", type=str)
@@ -60,7 +60,7 @@ def main(
     config: str,
     baseline_ref: str,
     publish_url: str,
-    testing_publish_token: str,
+    publish_token: str,
     publish_deployment: int,
     json_output: bool,
     # comment_token: str,
@@ -87,7 +87,7 @@ def main(
     )
 
     # Setup URL/Token
-    sapp = Sapp(url=publish_url, token=testing_publish_token, deployment_id=publish_deployment)
+    sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
     maybe_print_debug_info(meta)
     sapp.report_start(meta)
     if sapp.is_configured:
@@ -177,6 +177,8 @@ def main(
                 click.echo(f"Sent request for finding at path {finding.path}")
         except Exception as e:
             click.echo(f"Error getting github token/sending request: {e.msg}")
+    else:
+        click.echo("not github environment")
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
