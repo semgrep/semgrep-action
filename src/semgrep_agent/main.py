@@ -157,20 +157,26 @@ def main(
         )
 
     sapp.report_results(results)
-    # send comments to github here?
-    # github_session = requests.Session()
-    # github_session.headers["Authorization"] = f"Bearer {comment_token}"
-    # github_session.post(
-    #     f"https://api.github.com/repos/TestSemgrep/Inline_PR_comments/pulls/1/comments",
-    #     json={
-    #         "body": "Testing comments",
-    #         "commit_id": "6d907ea0e4929facdca59253fae92e511e71991f",
-    #         "path": "bad_things.py",
-    #         "line": 1,
-    #         "side": "RIGHT"
-    #     },
-    #     timeout=30,
-    # )
+    #send comments to github here?
+    if os.getenv("GITHUB_ACTIONS") == "true":
+        github_session = requests.Session()
+        try:
+            github_session.headers["Authorization"] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
+            for finding in findings:
+                github_session.post(
+                    f"https://api.github.com/repos/TestSemgrep/Inline_PR_comments/pulls/2/comments",
+                    json={
+                        "body": "Testing comments",
+                        "commit_id": meta.commit_sha,
+                        "path": finding.path,
+                        "line": finding.line,
+                        "side": "RIGHT"
+                    },
+                    timeout=30,
+                )
+                click.echo(f"Sent request for finding at path {finding.path}")
+        except Exception as e:
+            click.echo(f"Error getting github token/sending request: {e.msg}")
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
