@@ -168,21 +168,12 @@ def main(
             url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
             for finding in new_findings:
                 if finding.severity == 2:
-                    severity_msg = ":red_circle: Error"
+                    severity_msg = "Error :red_circle:"
                 elif finding.severity == 1:
-                    severity_msg = ":orange_circle: Warning"
+                    severity_msg = "Warning :orange_circle:"
                 else:
-                    severity_msg = ":yellow_circle: Info"
-                body = f"## Semgrep Report\n{severity_msg}\n{finding.message}"
-                click.echo(
-                    {
-                        "body": body,
-                        "commit_id": meta.commit_sha,
-                        "path": finding.path,
-                        "line": finding.line,
-                        "side": "RIGHT",
-                    }
-                )
+                    severity_msg = "Info :yellow_circle:"
+                body = f"## Semgrep Report\n**Severity:** {severity_msg}\n**Message:** {finding.message}"
                 resp = github_session.post(
                     url,
                     json={
