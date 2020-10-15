@@ -1,5 +1,6 @@
 import json
 import os
+import requests
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -158,14 +159,14 @@ def main(
 
     sapp.report_results(results)
     #send comments to github here?
-    click.echo(meta.repo_name)
+    click.echo(meta.to_dict()["pull_request_id"])
     if os.getenv("GITHUB_ACTIONS") == "true":
         github_session = requests.Session()
         try:
             github_session.headers["Authorization"] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
             for finding in findings:
                 github_session.post(
-                    f"https://api.github.com/repos/TestSemgrep/Inline_PR_comments/pulls/2/comments",
+                    f"https://api.github.com/repos/TestSemgrep/{meta.repo_name}/pulls/2/comments",
                     json={
                         "body": "Testing comments",
                         "commit_id": meta.commit_sha,
