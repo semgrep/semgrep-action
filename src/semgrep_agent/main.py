@@ -183,7 +183,7 @@ def main(
                     severity_msg = ":warning: Warning :warning"
                 else:
                     severity_msg = ":information_source: Info :information_source:"
-                body = f"#### Semgrep Report\n{severity_msg}\n`{location_msg}`\n{finding.message}"
+                body = f"#### Semgrep Report\\n{severity_msg}\\n`{location_msg}`\\n{finding.message}"
                 resp = github_session.post(
                     url,
                     json={
