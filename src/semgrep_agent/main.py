@@ -184,11 +184,18 @@ def main(
                 else:
                     severity_msg = ":information_source: Info :information_source:"
                 click.echo(finding.message)
-                #body = f"#### Semgrep Report\n{severity_msg}\n`{location_msg}`\nThe message will be here."
+                body = f"#### Semgrep Report\n{severity_msg}"
+                click.echo({
+                    "body": body,
+                    "commit_id": meta.commit_sha,
+                    "path": finding.path,
+                    **location,
+                    "side": "RIGHT",
+                })
                 resp = github_session.post(
                     url,
                     json={
-                        "body": "Semgrep Report",
+                        "body": body,
                         "commit_id": meta.commit_sha,
                         "path": finding.path,
                         **location,
