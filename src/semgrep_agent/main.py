@@ -165,7 +165,7 @@ def main(
             github_session.headers["Authorization"] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
             for finding in new_findings:
                 resp = github_session.post(
-                    f"https://api.github.com/repos/TestSemgrep/{meta.repo_name}/pulls/{meta.to_dict()["pull_request_id"]}/comments",
+                    f"https://api.github.com/repos/TestSemgrep/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments",
                     json={
                         "body": "Testing comments",
                         "commit_id": meta.commit_sha,
