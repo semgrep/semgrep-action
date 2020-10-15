@@ -194,7 +194,7 @@ def main(
                     timeout=30,
                 )
         except Exception as e:
-            click.echo(f"Error getting github token/sending request: {e.msg}")
+            click.echo(f"Error getting github token/sending request: {e}")
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
