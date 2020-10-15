@@ -182,7 +182,7 @@ def main(
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
-        f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
+        f"=== exiting with {'failing' if exit_code == 1 else 'success'} status SEE IF CHANGED",
         err=True,
     )
     sys.exit(exit_code)
