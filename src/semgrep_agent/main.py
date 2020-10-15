@@ -165,25 +165,36 @@ def main(
             github_session.headers["Authorization"] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
             url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
             for finding in new_findings:
+                if finding.end_line:
+                    location = {
+                        "start_line": finding.line,
+                        "line": finding.end_line,
+                        "start_side": "RIGHT"
+                    }
+                    location_msg = f"{finding.path}:{finding.start_line}-{finding.line}"
+                else:
+                    location = {"line": finding.line}
+                    location_msg = f"{finding.path}:{finding.line}"
+                if finding.severity == 2:
+                    severity_msg = ":x: Error :x:"
+                elif finding.severity == 1:
+                    severity_msg = ":warning: Warning :warning"
+                else:
+                    severity_msg = ":information_source: Info :information_source:"
+                body = f"#### Semgrep Report\n{severity_msg}\n`{location_msg}`\n{finding.message}"
                 resp = github_session.post(
                     url,
                     json={
-                        "body": "Testing comments",
+                        "body": body,
                         "commit_id": meta.commit_sha,
                         "path": finding.path,
-                        "line": finding.line,
+                        **location,
                         "side": "RIGHT"
                     },
                     timeout=30,
                 )
-                click.echo(f"Sent request for finding at path {finding.path}")
-                click.echo(f"Request sent to {url}")
-                click.echo(f"Response is {resp}")
-                click.echo(resp.get_json())
         except Exception as e:
             click.echo(f"Error getting github token/sending request: {e.msg}")
-    else:
-        click.echo("not github environment")
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
