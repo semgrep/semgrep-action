@@ -184,7 +184,7 @@ def main(
                 else:
                     severity_msg = ":information_source: Info :information_source:"
                 click.echo(finding.message)
-                body = f"#### Semgrep Report\\n{severity_msg}\\n`{location_msg}`\\nThe message will be here."
+                body = f"#### Semgrep Report"
                 resp = github_session.post(
                     url,
                     json={
