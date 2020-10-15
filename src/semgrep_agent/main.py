@@ -157,10 +157,8 @@ def main(
         )
 
     sapp.report_results(results)
-    debug_echo("=== CHANGED")
-    click.echo("CHANGED", err=True)
-    sys.exit(1)
     #send comments to github here?
+    click.echo(meta.repo_name)
     if os.getenv("GITHUB_ACTIONS") == "true":
         github_session = requests.Session()
         try:
@@ -185,7 +183,7 @@ def main(
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
-        f"=== exiting with {'failing' if exit_code == 1 else 'success'} status SEE IF CHANGED",
+        f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
         err=True,
     )
     sys.exit(exit_code)
