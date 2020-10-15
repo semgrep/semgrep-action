@@ -180,10 +180,11 @@ def main(
                 if finding.severity == 2:
                     severity_msg = ":x: Error :x:"
                 elif finding.severity == 1:
-                    severity_msg = ":warning: Warning :warning"
+                    severity_msg = ":warning: Warning :warning:"
                 else:
                     severity_msg = ":information_source: Info :information_source:"
-                body = f"#### Semgrep Report\\n{severity_msg}\\n`{location_msg}`\\n{finding.message}"
+                click.echo(finding.message)
+                body = f"#### Semgrep Report\\n{severity_msg}\\n`{location_msg}`\\nThe message will be here."
                 resp = github_session.post(
                     url,
                     json={
