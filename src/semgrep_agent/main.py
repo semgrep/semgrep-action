@@ -163,9 +163,10 @@ def main(
         github_session = requests.Session()
         try:
             github_session.headers["Authorization"] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
+            url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
             for finding in new_findings:
                 resp = github_session.post(
-                    f"https://api.github.com/repos/TestSemgrep/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments",
+                    url,
                     json={
                         "body": "Testing comments",
                         "commit_id": meta.commit_sha,
@@ -176,7 +177,9 @@ def main(
                     timeout=30,
                 )
                 click.echo(f"Sent request for finding at path {finding.path}")
+                click.echo(f"Request sent to {url}")
                 click.echo(f"Response is {resp}")
+                click.echo(resp.get_json())
         except Exception as e:
             click.echo(f"Error getting github token/sending request: {e.msg}")
     else:
