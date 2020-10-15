@@ -165,16 +165,16 @@ def main(
             github_session.headers["Authorization"] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
             url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
             for finding in new_findings:
+                    location_msg = f"{finding.path}:{finding.line}"
                 if finding.end_line:
                     location = {
                         "start_line": finding.line,
                         "line": finding.end_line,
                         "start_side": "RIGHT"
                     }
-                    location_msg = f"{finding.path}:{finding.start_line}-{finding.line}"
+                    location_msg += f"-{finding.end_line}"
                 else:
                     location = {"line": finding.line}
-                    location_msg = f"{finding.path}:{finding.line}"
                 if finding.severity == 2:
                     severity_msg = ":x: Error :x:"
                 elif finding.severity == 1:
@@ -193,6 +193,7 @@ def main(
                     },
                     timeout=30,
                 )
+                click.echo(resp)
         except Exception as e:
             click.echo(f"Error getting github token/sending request: {e}")
 
