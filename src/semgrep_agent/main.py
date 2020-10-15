@@ -157,6 +157,9 @@ def main(
         )
 
     sapp.report_results(results)
+    debug_echo("=== CHANGED")
+    click.echo("CHANGED", err=True)
+    sys.exit(1)
     #send comments to github here?
     if os.getenv("GITHUB_ACTIONS") == "true":
         github_session = requests.Session()
