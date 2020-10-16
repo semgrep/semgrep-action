@@ -6,6 +6,7 @@ from pathlib import Path
 from textwrap import dedent
 from typing import NoReturn
 from typing import Optional
+from typing import Set
 
 import click
 import requests
@@ -16,6 +17,7 @@ from boltons.strutils import unit_len
 from semgrep_agent import constants
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
+from semgrep_agent.findings import Finding
 from semgrep_agent.meta import detect_meta_environment
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep_app import Sapp
@@ -39,6 +41,40 @@ def get_event_type() -> str:
         return os.environ["GITHUB_EVENT_NAME"]
 
     return "push"
+
+
+def get_severity_message(severity: int) -> str:
+    if severity == 2:
+        return "Error :red_circle:"
+    elif severity == 1:
+        return "Warning :orange_circle:"
+    else:
+        return "Info :yellow_circle:"
+
+
+def send_inline_github_pr_comments(new_findings: Set[Finding], meta: GitMeta) -> None:
+    github_session = requests.Session()
+    try:
+        github_session.headers["Authorization"] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
+        url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
+        for finding in new_findings:
+            body = f"## semgrep-action\n**Severity:** {get_severity_message(finding.severity)}\n"
+            body += f"**Rule id:** {finding.check_id}\n**Message:** {finding.message}\n"
+            body += f"<sub>[Report an issue with this rule.]({constants.RULE_BUG_REPORT + finding.check_id})</sub>"
+            resp = github_session.post(
+                url,
+                json={
+                    "body": body,
+                    "commit_id": meta.commit_sha,
+                    "path": finding.path,
+                    "line": finding.line,
+                    "side": "RIGHT",
+                },
+                timeout=30,
+            )
+            click.echo(resp)
+    except Exception as e:
+        click.echo(f"Error sending inline comment request: {e}")
 
 
 @click.command()
@@ -158,38 +194,14 @@ def main(
         )
 
     sapp.report_results(results)
-    # send comments to github here?
+
     if os.getenv("GITHUB_ACTIONS") == "true":
-        github_session = requests.Session()
-        try:
-            github_session.headers[
-                "Authorization"
-            ] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
-            url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
-            bug_report = "https://github.com/returntocorp/semgrep-rules/issues/new?assignees=&labels=&template=bug_report.md&title="
-            for finding in new_findings:
-                if finding.severity == 2:
-                    severity_msg = "Error :red_circle:"
-                elif finding.severity == 1:
-                    severity_msg = "Warning :orange_circle:"
-                else:
-                    severity_msg = "Info :yellow_circle:"
-                body = f"## semgrep-action\n**Severity:** {severity_msg}\n**Rule id:** {finding.check_id}\n**Message:** {finding.message}\n"
-                body += f"<sub>[Report an issue with this rule.]({bug_report + finding.check_id})</sub>"
-                resp = github_session.post(
-                    url,
-                    json={
-                        "body": body,
-                        "commit_id": meta.commit_sha,
-                        "path": finding.path,
-                        "line": finding.line,
-                        "side": "RIGHT",
-                    },
-                    timeout=30,
-                )
-                click.echo(resp)
-        except Exception as e:
-            click.echo(f"Error getting github token/sending request: {e}")
+        if os.getenv("GITHUB_TOKEN") == None:
+            click.echo(
+                "Github token not provided. Add it to semgrep.yml to get inline PR comments."
+            )
+        else:
+            send_inline_github_pr_comments(new_findings, meta)
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
