@@ -166,6 +166,7 @@ def main(
                 "Authorization"
             ] = f"Bearer {os.getenv('GITHUB_TOKEN')}"
             url = f"https://api.github.com/repos/{meta.repo_name}/pulls/{meta.to_dict()['pull_request_id']}/comments"
+            bug_report = "https://github.com/returntocorp/semgrep-rules/issues/new?assignees=&labels=&template=bug_report.md&title="
             for finding in new_findings:
                 if finding.severity == 2:
                     severity_msg = "Error :red_circle:"
@@ -173,7 +174,8 @@ def main(
                     severity_msg = "Warning :orange_circle:"
                 else:
                     severity_msg = "Info :yellow_circle:"
-                body = f"## semgrep-action\n**Severity:** {severity_msg}\n**Message:** {finding.message}"
+                body = f"## semgrep-action\n**Severity:** {severity_msg}\n**Rule id:** {finding.check_id}\n**Message:** {finding.message}\n"
+                body += f"<sub>[Report an issue with this rule.]({bug_report + finding.check_id})</sub>"
                 resp = github_session.post(
                     url,
                     json={
