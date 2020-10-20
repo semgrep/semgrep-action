@@ -21,7 +21,7 @@ jobs:
         name: with a semgrep.live Registry ID
         uses: ./tests/local-image-action
         with:
-          config: r/all
+          config: r/python.jwt
       - id: semgrep-live-ruleset-id
         name: with a semgrep.live Ruleset ID
         uses: ./tests/local-image-action
