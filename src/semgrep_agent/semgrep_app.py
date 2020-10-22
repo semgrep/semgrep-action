@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import tempfile
 from dataclasses import dataclass
 from dataclasses import field
@@ -119,7 +119,7 @@ class Sapp:
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan.id}/findings",
                 json={
-                    "token": os.getenv('GITHUB_TOKEN'),
+                    "token": os.getenv("GITHUB_TOKEN"),
                     "findings": [
                         finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
                         for finding in chunk
