@@ -192,15 +192,10 @@ def main(
             err=True,
         )
 
-    for c in os.getenv("GITHUB_TOKEN"):
-        click.echo(f"{c} ")
-    click.echo("sleeping...")
-    time.sleep(900)
-
     sapp.report_results(results)
 
-    # if os.getenv("GITHUB_ACTIONS") and os.getenv("GITHUB_TOKEN"):
-    #     send_inline_github_pr_comments(new_findings, meta)
+    if os.getenv("GITHUB_ACTIONS") and os.getenv("GITHUB_TOKEN"):
+        send_inline_github_pr_comments(new_findings, meta)
     
 
     exit_code = 1 if blocking_findings else 0
