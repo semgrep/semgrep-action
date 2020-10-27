@@ -71,6 +71,17 @@ commit your own `.semgrepignore`.
 Note that `.semgrepignore` is picked up only by the action,
 and will not be honored when running `semgrep` manually.
 
+## Technical details
+
+Semgrep-action scans files in the current directory with [semgrep](https://github.com/returntocorp/semgrep), and exits with a non-zero exit code if blocking issues are found.
+
+Findings are blocking by default. They can be [set to non-blocking](https://github.com/returntocorp/semgrep-action/issues/34) by changing the action in semgrep.dev, or setting the metadata field `dev.semgrep.actions` to something other than `block`.
+
+Semgrep-action has the option to report only new issues, added since a specific commit.
+When ran in a continuous integration (CI) pipeline, semgrep-action determines the base commit from [environment variables](https://github.com/returntocorp/semgrep-action/blob/develop/src/semgrep_agent/meta.py), as set by GitHub, GitLab, Travis or CircleCI. The base commit can also be passed on the command line.
+
+Semgrep-action determines new issues by only [scanning modified files](https://github.com/returntocorp/semgrep-action/blob/develop/src/semgrep_agent/targets.py), and scanning twice. It scans the current commit, checks out the base commit and scans that, and removes previously existing findings from the scan result. When using a semgrep config file stored in the repository itself, the old commit is scanned using the old version of the config file. [Findings are compared](https://github.com/returntocorp/semgrep-action/blob/develop/src/semgrep_agent/findings.py) on identifier, file path, code and count. If the identifier of a rule is modified in the semgrep configuration, or the file containing the issues is renamed, all findings are considered new. For new issues that don't differ on identifier, file path, and code, the issues most at the bottom of the file are reported. Changing code that is matched by a rule will result in a new finding, even though the finding was previously present and the change did not introduce it.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
