@@ -43,7 +43,6 @@ class Sapp:
     def __post_init__(self) -> None:
         # Get deployment from token
         #
-        click.echo(f"token: {self.token}, id: {self.deployment_id}")
         if self.token and self.deployment_id:
             self.is_configured = True
         self.session = requests.Session()
