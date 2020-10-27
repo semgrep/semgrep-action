@@ -1,4 +1,4 @@
-FROM returntocorp/semgrep:0.29.0@sha256:53a307f21aa0bfc50b2b4f243cd2b079fe4454f36bd40603d62851f97a058504
+FROM returntocorp/semgrep:0.29.0@sha256:53a307f21aa0bfc50b2b4f243cd2b079fe4454f36bd40603d62851f97a058504 AS semgrep
 FROM python:3.7-alpine
 
 WORKDIR /app
