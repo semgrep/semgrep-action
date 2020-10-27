@@ -1,3 +1,4 @@
+import os
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -117,10 +118,13 @@ class Sapp:
         for chunk in chunked_iter(results.findings.new, 10_000):
             response = self.session.post(
                 f"{self.url}/api/agent/scan/{self.scan.id}/findings",
-                json=[
-                    finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
-                    for finding in chunk
-                ],
+                json={
+                    "token": os.getenv("GITHUB_TOKEN"),
+                    "findings": [
+                        finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
+                        for finding in chunk
+                    ],
+                },
                 timeout=30,
             )
             debug_echo(f"=== POST .../findings responded: {response!r}")
