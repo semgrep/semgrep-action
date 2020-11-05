@@ -100,7 +100,8 @@ class Sapp:
     def download_rules(self) -> Path:
         """Save the rules configured on semgrep app to a temporary file"""
         # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
-        rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
+        tempfile.tempdir = "." # avoids weird prefixes on rules 
+        rules_file = tempfile.NamedTemporaryFile(suffix=".yml")  # nosem
         rules_path = Path(rules_file.name)
         rules_path.write_text(self.fetch_rules_text())
         return rules_path
