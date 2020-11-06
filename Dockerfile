@@ -1,11 +1,11 @@
-FROM returntocorp/semgrep:0.29.0@sha256:53a307f21aa0bfc50b2b4f243cd2b079fe4454f36bd40603d62851f97a058504 AS semgrep
+FROM returntocorp/semgrep:0.30.0@sha256:9e8010ba8f486aacab557e2ed4d0127c31417587c459e3d9d92e283e576a8ce8 AS semgrep
 FROM python:3.7-alpine
 
 WORKDIR /app
 COPY poetry.lock ./
 COPY pyproject.toml ./
 
-ENV INSTALLED_SEMGREP_VERSION=0.29.0
+ENV INSTALLED_SEMGREP_VERSION=0.30.0
 
 COPY --from=semgrep /usr/local/bin/semgrep-core /tmp/semgrep-core
 
