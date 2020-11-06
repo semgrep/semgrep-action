@@ -130,6 +130,7 @@ def main(
         committed_datetime,
         meta.base_commit_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
+        sapp.is_configured,
     )
     new_findings = results.findings.new
 

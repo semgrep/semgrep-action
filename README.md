@@ -33,6 +33,18 @@ will enable the hundreds of checks from [our registry](https://semgrep.live/r).
 You will probably want to configure a specific set of checks,
 see how to do that below.
 
+### Inline PR Comments
+
+If you would like inline PR comments to get posted by Semgrep (GitHub only), set the environment variable `GITHUB_TOKEN` as well in `.github/workflows/semgrep.yml`.
+You can either use the GitHub App installation access token `secrets.GITHUB_TOKEN`, or a personal access token that has access to repositories.
+
+```yaml
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+To set a personal access token, go to your [developer settings](https://github.com/settings/tokens), and generate a new token with "repo" (if your repository is private) or "public\_repo" (if your repository is public) checked.
+
 ## Configuration
 
 ### Selecting Rules

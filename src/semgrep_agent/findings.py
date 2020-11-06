@@ -75,10 +75,13 @@ class Finding:
 
     @classmethod
     def from_semgrep_result(
-        cls, result: Dict[str, Any], committed_datetime: Optional[datetime]
+        cls,
+        result: Dict[str, Any],
+        committed_datetime: Optional[datetime],
+        rules_path_len: int,
     ) -> "Finding":
         return cls(
-            check_id=result["check_id"],
+            check_id=result["check_id"][rules_path_len:],
             path=result["path"],
             line=result["start"]["line"],
             column=result["start"]["col"],

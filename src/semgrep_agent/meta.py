@@ -35,13 +35,18 @@ class GitMeta:
 
     @cachedproperty
     def repo(self) -> gitpython.Repo:  # type: ignore
-        repo = gitpython.Repo()
+        repo = gitpython.Repo(".", search_parent_directories=True)
         debug_echo(f"found repo: {repo!r}")
         return repo
 
     @cachedproperty
     def repo_name(self) -> str:
-        return Path.cwd().name
+        repo = gitpython.Repo(".", search_parent_directories=True)
+        return str(os.path.basename(repo.working_tree_dir))
+
+    @cachedproperty
+    def repo_url(self) -> Optional[str]:
+        return os.getenv("REPO_URL")
 
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
@@ -57,10 +62,29 @@ class GitMeta:
         debug_echo(f"found commit: {commit!r}")
         return commit
 
+    @cachedproperty
+    def branch(self) -> Optional[str]:
+        br = self.repo.active_branch
+        return br.name if br else None
+
+    @cachedproperty
+    def ci_job_url(self) -> Optional[str]:
+        return os.getenv("JOB_URL")
+
+    @cachedproperty
+    def pr_id(self) -> Optional[str]:
+        return os.getenv("PR_ID")
+
+    @cachedproperty
+    def pr_title(self) -> Optional[str]:
+        return os.getenv("PR_TITLE")
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "repository": self.repo_name,
-            "ci_job_url": None,
+            "repo_url": self.repo_url,
+            "branch": self.branch,
+            "ci_job_url": self.ci_job_url,
             "environment": self.environment,
             "commit": self.commit_sha,
             "commit_committer_email": self.repo.head.commit.committer.email,
@@ -73,12 +97,11 @@ class GitMeta:
             "commit_title": self.commit.summary,
             "config": self.config,
             "on": self.event_name,
-            "branch": None,
             "pull_request_timestamp": None,
             "pull_request_author_username": None,
             "pull_request_author_image_url": None,
-            "pull_request_id": None,
-            "pull_request_title": None,
+            "pull_request_id": self.pr_id,
+            "pull_request_title": self.pr_title,
             "semgrep_version": sh.semgrep(version=True).strip(),
             "python_version": sh.python(version=True).strip(),
         }
@@ -148,11 +171,19 @@ class GithubMeta(GitMeta):
     def event_name(self) -> str:
         return os.getenv("GITHUB_EVENT_NAME", "unknown")
 
+    @cachedproperty
+    def pr_id(self) -> Optional[str]:
+        pr_id = self.glom_event(T["pull_request"]["number"])
+        return str(pr_id) if pr_id else None
+
+    @cachedproperty
+    def pr_title(self) -> Optional[str]:
+        pr_title = self.glom_event(T["pull_request"]["title"])
+        return str(pr_title) if pr_title else None
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
-            "branch": self.commit_ref,
-            "ci_job_url": self.ci_job_url,
             "commit_author_username": self.glom_event(T["sender"]["login"]),
             "commit_author_image_url": self.glom_event(T["sender"]["avatar_url"]),
             "pull_request_timestamp": self.glom_event(T["pull_request"]["created_at"]),
@@ -162,8 +193,6 @@ class GithubMeta(GitMeta):
             "pull_request_author_image_url": self.glom_event(
                 T["pull_request"]["user"]["avatar_url"]
             ),
-            "pull_request_id": self.glom_event(T["pull_request"]["number"]),
-            "pull_request_title": self.glom_event(T["pull_request"]["title"]),
         }
 
 
@@ -223,21 +252,16 @@ class GitlabMeta(GitMeta):
         return os.getenv("CI_PIPELINE_SOURCE", "unknown")
 
     @cachedproperty
-    def mr_id(self) -> Optional[str]:
+    def pr_id(self) -> Optional[str]:
         return os.getenv("CI_MERGE_REQUEST_IID")
 
     @cachedproperty
-    def mr_title(self) -> Optional[str]:
+    def pr_title(self) -> Optional[str]:
         return os.getenv("CI_MERGE_REQUEST_TITLE")
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
-            "ci_job_url": self.ci_job_url,
-            "on": self.event_name,
-            "branch": self.commit_ref,
-            "pull_request_id": self.mr_id,
-            "pull_request_title": self.mr_title,
         }
 
 
