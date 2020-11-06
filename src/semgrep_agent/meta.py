@@ -64,7 +64,7 @@ class GitMeta:
 
     @cachedproperty
     def branch(self) -> Optional[str]:
-        br = self.repo.active_branch
+        br = self.repo.active_branch if self.repo else None
         return br.name if br else None
 
     @cachedproperty
