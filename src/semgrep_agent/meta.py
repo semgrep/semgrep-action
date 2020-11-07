@@ -42,6 +42,8 @@ class GitMeta:
     @cachedproperty
     def repo_name(self) -> str:
         repo = gitpython.Repo(".", search_parent_directories=True)
+        if not repo.head.is_valid():
+            raise RuntimeError("Semgrep action cannot run on repository with no HEAD")
         return str(os.path.basename(repo.working_tree_dir))
 
     @cachedproperty
@@ -64,8 +66,11 @@ class GitMeta:
 
     @cachedproperty
     def branch(self) -> Optional[str]:
-        br = self.repo.active_branch if self.repo else None
-        return br.name if br else None
+        try:
+            br = self.repo.active_branch.name
+        except:
+            br = None
+        return os.getenv("BRANCH") or br
 
     @cachedproperty
     def ci_job_url(self) -> Optional[str]:
@@ -81,7 +86,9 @@ class GitMeta:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
+            # REQUIRED
             "repository": self.repo_name,
+            #  OPTIONAL
             "repo_url": self.repo_url,
             "branch": self.branch,
             "ci_job_url": self.ci_job_url,
