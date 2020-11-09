@@ -5,9 +5,30 @@
 This GitHub Action reviews pull requests with [Semgrep](https://github.com/returntocorp/semgrep)
 whenever a new commit is added to them.
 It reports as failed if there are any new bugs
-that first appeared in that pull request.
+that first appeared in that pull request. 
 
 ## Usage
+
+### Generic
+
+To use Semgrep Action on the commandline with a default ruleset, use
+
+```
+semgrep-agent --config r/all
+```
+
+To run semgrep-agent with a customized policy of rules, email and slack notifications, and with any CI provider, use the following shell command
+
+```
+REPO_URL="https://example.com/myrepo" JOB_URL="https://example.com/myjob" semgrep-agent --publish-deployment=<your_deployment_id> --publish-token=<your_API_token>
+```
+Where the environment variables `REPO_URL` and `JOB_URL` are optional, but will enable more helpful notifications.
+
+You can customize your policies, find `your_deployment_id`, and get `your_API_token` at https://semgrep.dev/manage 
+
+*Treat your API Token as a SECRET and do not store it in the clear!* Save it as a secret environment variable instead.
+
+### GitHub
 
 To start checking all pull requests,
 add the following file at `.github/workflows/semgrep.yml`:
@@ -29,9 +50,10 @@ jobs:
 ```
 
 Note that the `r/all` config value
-will enable the hundreds of checks from [our registry](https://semgrep.live/r).
-You will probably want to configure a specific set of checks,
-see how to do that below.
+will enable hundreds of checks from [our registry](https://semgrep.live/r).
+
+You will probably want to configure a specific set of checks instead.
+See how to do that by setting up a project on semgrep.dev/manage/projects
 
 ### Inline PR Comments
 
