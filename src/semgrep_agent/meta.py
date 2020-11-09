@@ -185,7 +185,6 @@ class GithubMeta(GitMeta):
             **super().to_dict(),
             "commit_author_username": self.glom_event(T["sender"]["login"]),
             "commit_author_image_url": self.glom_event(T["sender"]["avatar_url"]),
-            "pull_request_timestamp": self.glom_event(T["pull_request"]["created_at"]),
             "pull_request_author_username": self.glom_event(
                 T["pull_request"]["user"]["login"]
             ),
@@ -257,11 +256,6 @@ class GitlabMeta(GitMeta):
     @cachedproperty
     def pr_title(self) -> Optional[str]:
         return os.getenv("CI_MERGE_REQUEST_TITLE")
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            **super().to_dict(),
-        }
 
 
 def detect_meta_environment() -> Type[GitMeta]:
