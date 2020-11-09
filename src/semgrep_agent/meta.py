@@ -41,14 +41,13 @@ class GitMeta:
 
     @cachedproperty
     def repo_name(self) -> str:
-        repo = gitpython.Repo(".", search_parent_directories=True)
-        if not repo.head.is_valid():
+        if not self.repo.head.is_valid():
             raise RuntimeError("Semgrep action cannot run on repository with no HEAD")
-        return str(os.path.basename(repo.working_tree_dir))
+        return str(os.path.basename(self.repo.working_tree_dir))
 
     @cachedproperty
     def repo_url(self) -> Optional[str]:
-        return os.getenv("REPO_URL")
+        return os.getenv("SEMGREP_REPO_URL")
 
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
@@ -70,25 +69,25 @@ class GitMeta:
             br = self.repo.active_branch.name
         except:
             br = None
-        return os.getenv("BRANCH") or br
+        return os.getenv("SEMGREP_BRANCH") or br
 
     @cachedproperty
     def ci_job_url(self) -> Optional[str]:
-        return os.getenv("JOB_URL")
+        return os.getenv("SEMGREP_JOB_URL")
 
     @cachedproperty
     def pr_id(self) -> Optional[str]:
-        return os.getenv("PR_ID")
+        return os.getenv("SEMGREP_PR_ID")
 
     @cachedproperty
     def pr_title(self) -> Optional[str]:
-        return os.getenv("PR_TITLE")
+        return os.getenv("SEMGREP_PR_TITLE")
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            # REQUIRED
+            # REQUIRED for semgrep-app backend
             "repository": self.repo_name,
-            #  OPTIONAL
+            #  OPTIONAL for semgrep-app backend
             "repo_url": self.repo_url,
             "branch": self.branch,
             "ci_job_url": self.ci_job_url,
@@ -104,14 +103,6 @@ class GitMeta:
             "pull_request_author_image_url": None,
             "pull_request_id": self.pr_id,
             "pull_request_title": self.pr_title,
-            # NOT EVEN USED BY SEMGREP BACKEND
-            "environment": self.environment,
-            "pull_request_timestamp": None,
-            "semgrep_version": sh.semgrep(version=True).strip(),
-            "python_version": sh.python(version=True).strip(),
-            "commit_authored_timestamp": self.commit.authored_datetime.isoformat(),
-            "commit_committer_email": self.repo.head.commit.committer.email,
-            "commit_timestamp": self.commit.committed_datetime.isoformat(),
         }
 
 
