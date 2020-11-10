@@ -112,6 +112,7 @@ def invoke_semgrep(
     committed_datetime: Optional[datetime],
     base_commit_ref: Optional[str],
     semgrep_ignore: TextIO,
+    uses_managed_policy: bool,
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
@@ -127,6 +128,9 @@ def invoke_semgrep(
 
     debug_echo("=== seeing if there are any findings")
     findings = FindingSets()
+    rules_path_len = (
+        len(os.path.dirname(config_specifier)) if uses_managed_policy else 0
+    )
 
     with targets.current_paths() as paths:
         click.echo(
@@ -138,7 +142,7 @@ def invoke_semgrep(
                 args.append(path)
             semgrep_results = json.loads(str(semgrep(*args)))["results"]
             findings.current.update_findings(
-                Finding.from_semgrep_result(result, committed_datetime)
+                Finding.from_semgrep_result(result, committed_datetime, rules_path_len)
                 for result in semgrep_results
             )
             click.echo(
@@ -166,7 +170,9 @@ def invoke_semgrep(
                         args.append(path)
                     semgrep_results = json.loads(str(semgrep(*args)))["results"]
                     findings.baseline.update_findings(
-                        Finding.from_semgrep_result(result, committed_datetime)
+                        Finding.from_semgrep_result(
+                            result, committed_datetime, rules_path_len
+                        )
                         for result in semgrep_results
                     )
                 click.echo(
@@ -193,11 +199,16 @@ def scan(
     committed_datetime: Optional[datetime],
     base_commit_ref: Optional[str],
     semgrep_ignore: TextIO,
+    uses_managed_policy: bool,
 ) -> Results:
     before = time.time()
     try:
         findings = invoke_semgrep(
-            config_specifier, committed_datetime, base_commit_ref, semgrep_ignore
+            config_specifier,
+            committed_datetime,
+            base_commit_ref,
+            semgrep_ignore,
+            uses_managed_policy,
         )
     except sh.ErrorReturnCode as error:
         message = f"""
