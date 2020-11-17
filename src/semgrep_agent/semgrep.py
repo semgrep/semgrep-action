@@ -137,7 +137,12 @@ def invoke_semgrep(
             "=== looking for current issues in " + unit_len(paths, "file"), err=True
         )
         for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
-            args = ["--skip-unknown-extensions", "--json", *config_args]
+            args = [
+                "--skip-unknown-extensions",
+                "--json",
+                "--no-rewrite-rule-ids",
+                *config_args,
+            ]
             for path in chunk:
                 args.append(path)
             semgrep_results = json.loads(str(semgrep(*args)))["results"]
@@ -165,7 +170,12 @@ def invoke_semgrep(
                     err=True,
                 )
                 for chunk in chunked_iter(paths_to_check, PATHS_CHUNK_SIZE):
-                    args = ["--skip-unknown-extensions", "--json", *config_args]
+                    args = [
+                        "--skip-unknown-extensions",
+                        "--json",
+                        "--no-rewrite-rule-ids",
+                        *config_args,
+                    ]
                     for path in chunk:
                         args.append(path)
                     semgrep_results = json.loads(str(semgrep(*args)))["results"]
@@ -185,7 +195,7 @@ def invoke_semgrep(
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths, sarif_path.open("w") as sarif_file:
-            args = ["--sarif", *config_args]
+            args = ["--sarif", "--no-rewrite-rule-ids", *config_args]
             for path in paths:
                 args.extend(["--include", path])
             semgrep(*args, _out=sarif_file)
