@@ -125,6 +125,7 @@ def invoke_semgrep(
     )
 
     config_args = ["--config", config_specifier]
+    rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
 
     debug_echo("=== seeing if there are any findings")
     findings = FindingSets()
@@ -137,7 +138,7 @@ def invoke_semgrep(
             args = [
                 "--skip-unknown-extensions",
                 "--json",
-                "--no-rewrite-rule-ids",
+                *rewrite_args,
                 *config_args,
             ]
             for path in chunk:
@@ -170,7 +171,7 @@ def invoke_semgrep(
                     args = [
                         "--skip-unknown-extensions",
                         "--json",
-                        "--no-rewrite-rule-ids",
+                        *rewrite_args,
                         *config_args,
                     ]
                     for path in chunk:
@@ -190,7 +191,7 @@ def invoke_semgrep(
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths, sarif_path.open("w") as sarif_file:
-            args = ["--sarif", "--no-rewrite-rule-ids", *config_args]
+            args = ["--sarif", *rewrite_args, *config_args]
             for path in paths:
                 args.extend(["--include", path])
             semgrep(*args, _out=sarif_file)
