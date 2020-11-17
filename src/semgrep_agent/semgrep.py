@@ -128,9 +128,6 @@ def invoke_semgrep(
 
     debug_echo("=== seeing if there are any findings")
     findings = FindingSets()
-    rules_path_len = (
-        len(os.path.dirname(config_specifier)) if uses_managed_policy else 0
-    )
 
     with targets.current_paths() as paths:
         click.echo(
@@ -147,7 +144,7 @@ def invoke_semgrep(
                 args.append(path)
             semgrep_results = json.loads(str(semgrep(*args)))["results"]
             findings.current.update_findings(
-                Finding.from_semgrep_result(result, committed_datetime, rules_path_len)
+                Finding.from_semgrep_result(result, committed_datetime)
                 for result in semgrep_results
             )
             click.echo(
@@ -180,9 +177,7 @@ def invoke_semgrep(
                         args.append(path)
                     semgrep_results = json.loads(str(semgrep(*args)))["results"]
                     findings.baseline.update_findings(
-                        Finding.from_semgrep_result(
-                            result, committed_datetime, rules_path_len
-                        )
+                        Finding.from_semgrep_result(result, committed_datetime)
                         for result in semgrep_results
                     )
                 click.echo(
