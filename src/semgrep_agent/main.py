@@ -72,6 +72,7 @@ def main(
     )
 
     # Get Metadata
+    server = os.getenv("INPUT_PUBLISHURL") or "https://semgrep.dev"
     Meta = detect_meta_environment()
     meta_kwargs = {}
     if baseline_ref:
@@ -90,10 +91,20 @@ def main(
     sapp.report_start(meta)
     if sapp.is_configured:
         click.echo(
-            f"| semgrep.dev - logged in as deployment #{sapp.deployment_id}", err=True,
+            f"| {server} - logged in as deployment #{sapp.deployment_id}", err=True,
         )
     else:
-        click.echo("| semgrep.dev - not logged in", err=True)
+        click.echo(f"| {server} - not logged in", err=True)
+
+    for env_var in [
+        "SEMGREP_REPO_URL",
+        "SEMGREP_JOB_URL",
+        "SEMGREP_BRANCH",
+        "SEMGREP_PR_ID",
+        "SEMGREP_PR_TITLE",
+    ]:
+        if os.getenv(env_var):
+            click.echo(f"| {env_var}={os.getenv(env_var)}")
 
     # Setup Config
     click.echo("=== setting up agent configuration", err=True)
