@@ -125,24 +125,27 @@ def invoke_semgrep(
     )
 
     config_args = ["--config", config_specifier]
+    rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
 
     debug_echo("=== seeing if there are any findings")
     findings = FindingSets()
-    rules_path_len = (
-        len(os.path.dirname(config_specifier)) if uses_managed_policy else 0
-    )
 
     with targets.current_paths() as paths:
         click.echo(
             "=== looking for current issues in " + unit_len(paths, "file"), err=True
         )
         for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
-            args = ["--skip-unknown-extensions", "--json", *config_args]
+            args = [
+                "--skip-unknown-extensions",
+                "--json",
+                *rewrite_args,
+                *config_args,
+            ]
             for path in chunk:
                 args.append(path)
             semgrep_results = json.loads(str(semgrep(*args)))["results"]
             findings.current.update_findings(
-                Finding.from_semgrep_result(result, committed_datetime, rules_path_len)
+                Finding.from_semgrep_result(result, committed_datetime)
                 for result in semgrep_results
             )
             click.echo(
@@ -165,14 +168,17 @@ def invoke_semgrep(
                     err=True,
                 )
                 for chunk in chunked_iter(paths_to_check, PATHS_CHUNK_SIZE):
-                    args = ["--skip-unknown-extensions", "--json", *config_args]
+                    args = [
+                        "--skip-unknown-extensions",
+                        "--json",
+                        *rewrite_args,
+                        *config_args,
+                    ]
                     for path in chunk:
                         args.append(path)
                     semgrep_results = json.loads(str(semgrep(*args)))["results"]
                     findings.baseline.update_findings(
-                        Finding.from_semgrep_result(
-                            result, committed_datetime, rules_path_len
-                        )
+                        Finding.from_semgrep_result(result, committed_datetime)
                         for result in semgrep_results
                     )
                 click.echo(
@@ -185,7 +191,7 @@ def invoke_semgrep(
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths, sarif_path.open("w") as sarif_file:
-            args = ["--sarif", *config_args]
+            args = ["--sarif", *rewrite_args, *config_args]
             for path in paths:
                 args.extend(["--include", path])
             semgrep(*args, _out=sarif_file)
