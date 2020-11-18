@@ -74,7 +74,7 @@ class Sapp:
                 ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
             )
             debug_echo(f"=== Our scan object is: {self.scan!r}")
-            return str(glom(body, T["policy"]))
+            return str(glom(body, T["policy"])) if "policy" in body else None
 
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""

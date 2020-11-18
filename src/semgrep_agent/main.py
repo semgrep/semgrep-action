@@ -93,7 +93,8 @@ def main(
         click.echo(
             f"| {server} - logged in as deployment #{sapp.deployment_id}", err=True,
         )
-        click.echo(f"| using policy {policy}")
+        if policy:
+            click.echo(f"| using policy {policy}")
     else:
         click.echo(f"| {server} - not logged in", err=True)
 
