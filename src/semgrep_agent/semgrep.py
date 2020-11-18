@@ -137,6 +137,7 @@ def invoke_semgrep(
         for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
             args = [
                 "--skip-unknown-extensions",
+                "--ignore-nosem",
                 "--json",
                 *rewrite_args,
                 *config_args,
@@ -147,9 +148,19 @@ def invoke_semgrep(
             findings.current.update_findings(
                 Finding.from_semgrep_result(result, committed_datetime)
                 for result in semgrep_results
+                if result["extra"].get("is_ignored")
+            )
+            findings.ignored.update_findings(
+                Finding.from_semgrep_result(result, committed_datetime)
+                for result in semgrep_results
+                if not result["extra"].get("is_ignored")
             )
             click.echo(
                 f"| {unit_len(findings.current, 'current issue')} found", err=True
+            )
+            click.echo(
+                f"| {unit_len(findings.ignored, 'newly ignored issue')} found",
+                err=True,
             )
 
     if not findings.current:

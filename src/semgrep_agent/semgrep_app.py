@@ -136,6 +136,23 @@ class Sapp:
             except requests.RequestException:
                 raise ActionFailure(f"API server returned this error: {response.text}")
 
+        for chunk in chunked_iter(results.findings.ignored, 10_000):
+            response = self.session.post(
+                f"{self.url}/api/agent/scan/{self.scan.id}/ignores",
+                json={
+                    "findings": [
+                        finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
+                        for finding in chunk
+                    ],
+                },
+                timeout=30,
+            )
+            debug_echo(f"=== POST .../ignores responded: {response!r}")
+            try:
+                response.raise_for_status()
+            except requests.RequestException:
+                raise ActionFailure(f"API server returned this error: {response.text}")
+
         # mark as complete
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/complete",

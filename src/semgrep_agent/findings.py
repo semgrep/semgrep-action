@@ -192,6 +192,7 @@ class FindingSet(Set[Finding]):
 class FindingSets:
     baseline: FindingSet = field(default_factory=FindingSet)
     current: FindingSet = field(default_factory=FindingSet)
+    ignored: FindingSet = field(default_factory=FindingSet)
 
     @property
     def new(self) -> Set[Finding]:
