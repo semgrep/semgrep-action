@@ -48,10 +48,10 @@ class Sapp:
         self.session = requests.Session()
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
-    def report_start(self, meta: GitMeta) -> None:
+    def report_start(self, meta: GitMeta) -> Optional[str]:
         if not self.is_configured:
             debug_echo("=== no semgrep app config, skipping report_start")
-            return
+            return None
         debug_echo(f"=== reporting start to semgrep app at {self.url}")
 
         response = self.session.post(
@@ -74,6 +74,7 @@ class Sapp:
                 ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
             )
             debug_echo(f"=== Our scan object is: {self.scan!r}")
+            return str(glom(body, T["policy"]))
 
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""

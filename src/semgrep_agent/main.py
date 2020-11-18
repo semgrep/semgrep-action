@@ -88,11 +88,12 @@ def main(
     # Setup URL/Token
     sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
     maybe_print_debug_info(meta)
-    sapp.report_start(meta)
+    policy = sapp.report_start(meta)
     if sapp.is_configured:
         click.echo(
             f"| {server} - logged in as deployment #{sapp.deployment_id}", err=True,
         )
+        click.echo(f"| using policy {policy}")
     else:
         click.echo(f"| {server} - not logged in", err=True)
 
