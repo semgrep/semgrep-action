@@ -99,6 +99,7 @@ class Finding:
         d = {k: v for k, v in d.items() if v is not None and k not in omit}
         d["syntactic_id"] = self.syntactic_identifier_str()
         d["commit_date"] = d["commit_date"].isoformat()
+        d["is_blocking"] = self.is_blocking()
         return d
 
     def to_gitlab(self) -> Dict[str, Any]:
