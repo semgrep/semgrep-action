@@ -4,6 +4,7 @@ import tempfile
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
+from typing import cast
 from typing import List
 from typing import Optional
 
@@ -74,7 +75,7 @@ class Sapp:
                 ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
             )
             debug_echo(f"=== Our scan object is: {self.scan!r}")
-            return str(glom(body, T["policy"])) if "policy" in body else None
+            return cast(Optional[str], glom(body, T["policy"], default=None))
 
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""
