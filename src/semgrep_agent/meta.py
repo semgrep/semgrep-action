@@ -183,6 +183,7 @@ class GithubMeta(GitMeta):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
+            "branch": self.commit_ref,
             "commit_author_username": self.glom_event(T["sender"]["login"]),
             "commit_author_image_url": self.glom_event(T["sender"]["avatar_url"]),
             "pull_request_author_username": self.glom_event(
