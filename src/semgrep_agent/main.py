@@ -90,7 +90,8 @@ def main(
     sapp.report_start(meta)
     if sapp.is_configured:
         click.echo(
-            f"| semgrep.dev - logged in as deployment #{sapp.deployment_id}", err=True,
+            f"| semgrep.dev - logged in as deployment #{sapp.deployment_id}",
+            err=True,
         )
     else:
         click.echo("| semgrep.dev - not logged in", err=True)
