@@ -86,7 +86,8 @@ class Sapp:
             )
 
         response = self.session.get(
-            f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml", timeout=30,
+            f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml",
+            timeout=30,
         )
         debug_echo(f"=== POST .../rules.yaml responded: {response!r}")
 
