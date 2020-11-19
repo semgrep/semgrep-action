@@ -43,7 +43,9 @@ class GitMeta:
     def repo_name(self) -> str:
         if not self.repo.head.is_valid():
             raise RuntimeError("Semgrep action cannot run on repository with no HEAD")
-        return str(os.path.basename(self.repo.working_tree_dir))
+        return os.getenv("SEMGREP_REPO_NAME") or str(
+            os.path.basename(self.repo.working_tree_dir)
+        )
 
     @cachedproperty
     def repo_url(self) -> Optional[str]:
