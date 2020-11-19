@@ -42,4 +42,4 @@ rules:
       message: "useless comparison"
       languages: [js]
       severity: ERROR
-  
+

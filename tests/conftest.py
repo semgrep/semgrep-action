@@ -1,11 +1,11 @@
-import pytest
 import json
 import subprocess
-
 from pathlib import Path
 from typing import List
 from typing import Optional
 from typing import Union
+
+import pytest
 
 # Large swaths of this test infrastructure is shamelessly stolen from semgrep core test infrastructure
 TESTS_PATH = Path(__file__).parent
@@ -72,8 +72,9 @@ def _run_semgrep_agent(
     process = subprocess.run(
         ["python3", "-m", "semgrep_agent", *options],
         encoding="utf-8",
+        cwd=TESTS_PATH,
         stderr=subprocess.STDOUT if stderr else subprocess.PIPE,
-        stdout=subprocess.PIPE
+        stdout=subprocess.PIPE,
     )
 
     if output_format in {"json", "gitlab"} and not stderr:
@@ -85,6 +86,7 @@ def _run_semgrep_agent(
 @pytest.fixture
 def run_semgrep_agent():
     yield _run_semgrep_agent
+
 
 @pytest.fixture
 def get_test_root():
