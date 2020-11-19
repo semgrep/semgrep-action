@@ -49,21 +49,21 @@ class StatusCode:
 @attr.s
 class TargetFileManager:
     """
-        Handles all logic related to knowing what files to run on.
+    Handles all logic related to knowing what files to run on.
 
-        This includes:
-            - understanding files are ignores based on semgrepignore rules
-            - traversing project directories
-            - pruning traversal
-            - listing staged files
-            - changing git state
+    This includes:
+        - understanding files are ignores based on semgrepignore rules
+        - traversing project directories
+        - pruning traversal
+        - listing staged files
+        - changing git state
 
-        Parameters:
-            base_commit: Git ref to compare against
-            base_path: Path to start walking files from
-            paths: List of Paths (absolute or relative to current working directory) that
-                    we want to traverse
-            ignore_rules_file: Text buffer with .semgrepignore rules
+    Parameters:
+        base_commit: Git ref to compare against
+        base_path: Path to start walking files from
+        paths: List of Paths (absolute or relative to current working directory) that
+                we want to traverse
+        ignore_rules_file: Text buffer with .semgrepignore rules
     """
 
     _base_path = attr.ib(type=Path)
@@ -79,7 +79,7 @@ class TargetFileManager:
     @_status.default
     def get_git_status(self) -> GitStatus:
         """
-            Returns Absolute Paths to all files that are staged
+        Returns Absolute Paths to all files that are staged
         """
         import gitdb.exc  # type: ignore
 
@@ -145,7 +145,7 @@ class TargetFileManager:
     @_target_paths.default
     def _get_target_files(self) -> List[Path]:
         """
-            Return list of all absolute paths to analyze
+        Return list of all absolute paths to analyze
         """
         repo = get_git_repo()
         submodules = repo.submodules  # type: ignore
@@ -210,10 +210,10 @@ class TargetFileManager:
 
     def _abort_if_dirty(self) -> None:
         """
-            Raises ActionFailure if paths are untracked or staged.
+        Raises ActionFailure if paths are untracked or staged.
 
-            :param removed (list): Removed paths
-            :raises ActionFailure: If the git repo is not in a clean state
+        :param removed (list): Removed paths
+        :raises ActionFailure: If the git repo is not in a clean state
         """
         output = git.status("--porcelain").stdout.decode().strip()
         if output:

@@ -194,8 +194,7 @@ class Parser:
 
     @staticmethod
     def remove_comments(line: str) -> Iterator[str]:
-        """If a line has a comment, remove the comment and just return the ignore pattern
-        """
+        """If a line has a comment, remove the comment and just return the ignore pattern"""
         m = COMMENT_START_REGEX.match(line)
         if m:
             yield m.groupdict().get(

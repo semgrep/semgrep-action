@@ -75,7 +75,9 @@ class Finding:
 
     @classmethod
     def from_semgrep_result(
-        cls, result: Dict[str, Any], committed_datetime: Optional[datetime],
+        cls,
+        result: Dict[str, Any],
+        committed_datetime: Optional[datetime],
     ) -> "Finding":
         return cls(
             check_id=result["check_id"],
