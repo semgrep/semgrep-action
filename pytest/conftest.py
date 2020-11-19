@@ -69,18 +69,15 @@ def _run_semgrep_agent(
     if output_format == "gitlab":
         options.append("--gitlab")
 
-    process = subprocess.Popen(
+    process = subprocess.run(
         ["python3", "-m", "semgrep_agent", *options],
         encoding="utf-8",
         stderr=subprocess.STDOUT if stderr else subprocess.PIPE,
         stdout=subprocess.PIPE
     )
-    # we have to use Popen,wait,communicate here because findings trigger non-zero exit codes
-    process.wait()
-    output,error = process.communicate()
 
     if output_format in {"json", "gitlab"} and not stderr:
-        output = _clean_output_json(output)
+        output = _clean_output_json(process.stdout)
 
     return output
 
