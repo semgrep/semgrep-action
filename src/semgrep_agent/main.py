@@ -55,6 +55,8 @@ def get_event_type() -> str:
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
 @click.option("--json", "json_output", hidden=True, is_flag=True)
+#the GITLAB_CI variable is a default variable present in Gitlab pipelines
+@click.option("--gitlab", "gitlab_output", envvar="GITLAB_CI", is_flag=True)
 def main(
     config: str,
     baseline_ref: str,
@@ -62,6 +64,7 @@ def main(
     publish_token: str,
     publish_deployment: int,
     json_output: bool,
+    gitlab_output: bool,
 ) -> NoReturn:
     click.echo("=== detecting environment", err=True)
     click.echo(
@@ -142,6 +145,13 @@ def main(
             f.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS) for f in new_findings
         ]
         click.echo(json.dumps(output))
+    elif gitlab_output:
+        #output all new findings in Gitlab format
+        output = {
+            "$schema": "https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/sast-report-format.json",
+            "version": "2.0",
+            "vulnerabilities": [f.to_gitlab() for f in new_findings],
+        }
     else:
         # Print out blocking findings
         formatter.dump(blocking_findings)
