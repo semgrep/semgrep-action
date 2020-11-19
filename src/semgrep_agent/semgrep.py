@@ -159,7 +159,8 @@ def invoke_semgrep(
                 f"| {unit_len(findings.current, 'current issue')} found", err=True
             )
             click.echo(
-                f"| {unit_len(findings.ignored, 'ignored issue')} found", err=True,
+                f"| {unit_len(findings.ignored, 'ignored issue')} found",
+                err=True,
             )
 
     if not findings.current:
