@@ -55,7 +55,7 @@ def get_event_type() -> str:
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
 @click.option("--json", "json_output", hidden=True, is_flag=True)
-#the GITLAB_CI variable is a default variable present in Gitlab pipelines
+# the GITLAB_CI variable is a default variable present in Gitlab pipelines
 @click.option("--gitlab", "gitlab_output", envvar="GITLAB_CI", is_flag=True)
 def main(
     config: str,
@@ -147,7 +147,7 @@ def main(
         ]
         click.echo(json.dumps(output))
     elif gitlab_output:
-        #output all new findings in Gitlab format
+        # output all new findings in Gitlab format
         output = {
             "$schema": "https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/sast-report-format.json",
             "version": "2.0",
