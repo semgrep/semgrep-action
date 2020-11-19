@@ -7,6 +7,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+# Large swaths of this test infrastructure is shamelessly stolen from semgrep core test infrastructure
 TESTS_PATH = Path(__file__).parent
 MASKED_KEYS = [
     "tool.driver.semanticVersion",
@@ -74,6 +75,7 @@ def _run_semgrep_agent(
         stderr=subprocess.STDOUT if stderr else subprocess.PIPE,
         stdout=subprocess.PIPE
     )
+    # we have to use Popen,wait,communicate here because findings trigger non-zero exit codes
     process.wait()
     output,error = process.communicate()
 
