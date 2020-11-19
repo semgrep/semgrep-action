@@ -278,9 +278,12 @@ class TargetFileManager:
         """
         Prepare file system for baseline scan, and return the paths to be analyzed.
 
-        Returned list of paths are all abolute paths and include all files that are
+        Returned list of paths are all relative paths and include all files that are
+            - already in the baseline commit, i.e. not created later
             - not ignored based on .semgrepignore rules
             - in any path include filters specified.
+
+        Returned list is empty if a baseline commit is inaccessible.
 
         :return: A list of paths
         :raises ActionFailure: If git cannot detect a HEAD commit or unmerged files exist
@@ -303,7 +306,7 @@ class TargetFileManager:
         """
         Prepare file system for current scan, and return the paths to be analyzed.
 
-        Returned list of paths are all abolute paths and include all files that are
+        Returned list of paths are all relative paths and include all files that are
             - not ignored based on .semgrepignore rules
             - in any path include filters specified.
 
