@@ -159,9 +159,14 @@ def invoke_semgrep(
         )
     else:
         with targets.baseline_paths() as paths:
-            if paths:
-                paths_with_findings = {finding.path for finding in findings.current}
-                paths_to_check = set(str(path) for path in paths) & paths_with_findings
+            paths_with_findings = {finding.path for finding in findings.current}
+            paths_to_check = set(str(path) for path in paths) & paths_with_findings
+            if not paths_to_check:
+                click.echo(
+                    "=== not looking at pre-existing issues since all files with current issues are newly created",
+                    err=True,
+                )
+            else:
                 click.echo(
                     "=== looking for pre-existing issues in "
                     + unit_len(paths_to_check, "file"),
