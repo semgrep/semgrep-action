@@ -128,6 +128,7 @@ def main(
         sys.exit(1)
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
+
     results = semgrep.scan(
         config,
         committed_datetime,
@@ -152,6 +153,7 @@ def main(
             "version": "2.0",
             "vulnerabilities": [f.to_gitlab() for f in new_findings],
         }
+        click.echo(json.dumps(output))
     else:
         # Print out blocking findings
         formatter.dump(blocking_findings)

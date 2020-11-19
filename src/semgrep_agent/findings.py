@@ -115,15 +115,15 @@ class Finding:
             "location": {
                 "file": str(self.path),
                 # Gitlab only uses line identifiers
-                "start_line": self.start["line"],
-                "end_line": self.end["line"],
+                "start_line": self.line,
+                "end_line": self.end_line,
                 "dependency": {"package": {}},
             },
             "identifiers": [
                 {
                     "type": "semgrep_type",
-                    "name": f"Semgrep - {self.id}",
-                    "value": self.id,
+                    "name": f"Semgrep - {self.check_id}",
+                    "value": self.check_id,
                     "url": self._construct_semgrep_rule_url(),
                 }
             ],
@@ -136,8 +136,9 @@ class Finding:
             "WARN":"Medium",
             "ERROR":"High",
         }
-        if conversion_table[self.severity]:
-            return conversion_table[self.severity]
+        val = conversion_table.get(self.severity,None)
+        if val is not None:
+            return val
         else:
             return "Unknown"
 
@@ -146,7 +147,7 @@ class Finding:
 
     def _construct_semgrep_rule_url(self) -> str:
         # this is a hack to fix name -> registry disagreement
-        components = self.id.split(".")
+        components = self.check_id.split(".")
         result = []
         for chunk in components:
             if chunk not in result:

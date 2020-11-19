@@ -18,6 +18,9 @@ gitpython = "^2.1.15"
 glom = "^20.8.0"
 pymmh3 = "^0.0.5"
 attrs = "~=19.3.0"
+pytest = "^6.1.2"
+pathlib = "^1.0.1"
+jsonschema = "^3.2.0"
 
 [tool.poetry.dev-dependencies]
 
