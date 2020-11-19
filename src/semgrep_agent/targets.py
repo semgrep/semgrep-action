@@ -285,11 +285,18 @@ class TargetFileManager:
         :return: A list of paths
         :raises ActionFailure: If git cannot detect a HEAD commit or unmerged files exist
         """
-        if self._base_commit is None:
+        repo = get_git_repo()
+
+        if not repo or self._base_commit is None:
             yield []
         else:
             with self._baseline_context():
-                yield self._target_paths
+                yield [
+                    relative_path
+                    for relative_path in self._target_paths
+                    if self._fname_to_path(repo, str(relative_path))
+                    not in self._status.added
+                ]
 
     @contextmanager
     def current_paths(self) -> Iterator[List[Path]]:
