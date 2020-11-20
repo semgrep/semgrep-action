@@ -129,18 +129,14 @@ class Finding:
             ],
         }
 
-    def _to_gitlab_severity(self):
+    def _to_gitlab_severity(self) -> str:
         # Todo: Semgrep states currently don't map super well to Gitlab schema.
-        conversion_table = {
-            "INFO": "Info",
-            "WARN": "Medium",
-            "ERROR": "High",
+        conversion_table: Dict[int, str] = {
+            0: "Info",
+            1: "Medium",
+            2: "High",
         }
-        val = conversion_table.get(self.severity, None)
-        if val is not None:
-            return val
-        else:
-            return "Unknown"
+        return conversion_table.get(self.severity, "Unknown")
 
     def _gitlab_tool_info(self) -> Dict[str, Any]:
         return {"id": "semgrep", "name": "Semgrep"}

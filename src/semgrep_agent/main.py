@@ -142,18 +142,18 @@ def main(
 
     if json_output:
         # Output all new findings as json
-        output = [
+        json_contents = [
             f.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS) for f in new_findings
         ]
-        click.echo(json.dumps(output))
+        click.echo(json.dumps(json_contents))
     elif gitlab_output:
         # output all new findings in Gitlab format
-        output = {
+        gitlab_contents = {
             "$schema": "https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/sast-report-format.json",
             "version": "2.0",
             "vulnerabilities": [f.to_gitlab() for f in new_findings],
         }
-        click.echo(json.dumps(output))
+        click.echo(json.dumps(gitlab_contents))
     else:
         # Print out blocking findings
         formatter.dump(blocking_findings)

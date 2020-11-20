@@ -79,6 +79,8 @@ def _run_semgrep_agent(
 
     if output_format in {"json", "gitlab"} and not stderr:
         output = _clean_output_json(process.stdout)
+    else:
+        output = process.stdout
 
     return output
 
