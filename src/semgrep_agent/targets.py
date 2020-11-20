@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from enum import auto
 from enum import Enum
 from pathlib import Path
+from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import NamedTuple
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING
 import attr
 import click
 import sh
+from boltons.iterutils import bucketize
 from boltons.strutils import unit_len
 from sh.contrib import git
 
@@ -42,8 +44,9 @@ class StatusCode:
     Renamed = "R"
     Modified = "M"
     Unmerged = "U"
-    Untracked = "?"
     Ignored = "!"
+    Untracked = "?"
+    Unstaged = " "  # but changed
 
 
 @attr.s
@@ -72,6 +75,7 @@ class TargetFileManager:
     _base_commit = attr.ib(type=Optional[str], default=None)
     _status = attr.ib(type=GitStatus, init=False)
     _target_paths = attr.ib(type=List[Path], init=False)
+    _dirty_paths_by_status = attr.ib(type=Dict[str, List[Path]], init=False)
 
     def _fname_to_path(self, repo: "gitpython.Repo", fname: str) -> Path:  # type: ignore
         return (Path(repo.working_tree_dir) / fname).resolve()
@@ -96,6 +100,7 @@ class TargetFileManager:
         # Output of git command will be relative to git project root
         status_output = zsplit(
             git.diff(
+                "--cached",
                 "--name-status",
                 "--no-ext-diff",
                 "-z",
@@ -140,6 +145,7 @@ class TargetFileManager:
         debug_echo(
             f"Git status:\nadded: {added}\nmodified: {modified}\nremoved: {removed}\nunmerged: {unmerged}"
         )
+
         return GitStatus(added, modified, removed, unmerged)
 
     @_target_paths.default
@@ -208,17 +214,58 @@ class TargetFileManager:
 
         return relative_paths
 
-    def _abort_if_dirty(self) -> None:
+    @_dirty_paths_by_status.default
+    def get_dirty_paths_by_status(self) -> Dict[str, List[Path]]:
         """
-        Raises ActionFailure if paths are untracked or staged.
+        Returns all paths that have a git status, grouped by change type.
 
-        :param removed (list): Removed paths
+        These can be staged, unstaged, or untracked.
+        """
+        output = zsplit(git.status("--porcelain", "-z").stdout.decode())
+        return bucketize(
+            output,
+            key=lambda line: line[0],
+            value_transform=lambda line: Path(line[3:]),
+        )
+
+    def _abort_on_pending_changes(self) -> None:
+        """
+        Raises ActionFailure if any tracked files are changed.
+
         :raises ActionFailure: If the git repo is not in a clean state
         """
-        output = git.status("--porcelain").stdout.decode().strip()
-        if output:
-            raise ActionFailure(  # TODO we can probably be more lenient
-                "Found untracked or staged files. Diff-aware runs require a clean git state."
+        if set(self._dirty_paths_by_status) - {StatusCode.Untracked}:
+            raise ActionFailure(
+                "Found pending changes in tracked files. Diff-aware runs require a clean git state."
+            )
+
+    def _abort_on_conflicting_untracked_paths(self) -> None:
+        """
+        Raises ActionFailure if untracked paths were touched in the baseline, too.
+
+        :raises ActionFailure: If the git repo is not in a clean state
+        """
+        repo = get_git_repo()
+
+        if not repo or self._base_commit is None:
+            return
+
+        changed_paths = set(
+            self._status.added
+            + self._status.modified
+            + self._status.removed
+            + self._status.unmerged
+        )
+        untracked_paths = {
+            self._fname_to_path(repo, str(path))
+            for path in (self._dirty_paths_by_status.get(StatusCode.Untracked, []))
+        }
+        overlapping_paths = untracked_paths & changed_paths
+
+        if overlapping_paths:
+            raise ActionFailure(
+                "Some paths that changed since the baseline commit now show up as untracked files. "
+                f"Please commit or stash your untracked changes in these paths: {overlapping_paths}."
             )
 
     @contextmanager
@@ -235,7 +282,8 @@ class TargetFileManager:
             yield
             return
 
-        self._abort_if_dirty()
+        self._abort_on_pending_changes()
+        self._abort_on_conflicting_untracked_paths()
 
         current_tree = git("write-tree").stdout.decode().strip()
         try:
