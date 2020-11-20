@@ -14,6 +14,19 @@ Install dependencies with poetry
 poetry install
 ```
 
+Get a Poetry shell with
+```
+poetry shell
+```
+
+Install pre-commit hooks:
+
+```
+python -m pip install pre-commit
+pre-commit install
+```
+
+
 Run the agent with
 
 ```

@@ -1,5 +1,6 @@
 import binascii
 import textwrap
+import uuid
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
@@ -99,6 +100,58 @@ class Finding:
         d["syntactic_id"] = self.syntactic_identifier_str()
         d["commit_date"] = d["commit_date"].isoformat()
         return d
+
+    def to_gitlab(self) -> Dict[str, Any]:
+        return {
+            "id": str(uuid.uuid5(uuid.NAMESPACE_URL, str(self.path))),
+            "category": "sast",
+            # CVE is a required field from Gitlab schema.  Semgrep is CVE-unaware AFAIK
+            "cve": "",
+            "message": self.message,
+            "severity": self._to_gitlab_severity(),
+            # KB note:
+            # Semgrep is designed to be a low-FP tool by design.
+            # Does hard-coding confidence make sense here?
+            "confidence": "High",
+            "scanner": self._gitlab_tool_info(),
+            "location": {
+                "file": str(self.path),
+                # Gitlab only uses line identifiers
+                "start_line": self.line,
+                "end_line": self.end_line,
+                "dependency": {"package": {}},
+            },
+            "identifiers": [
+                {
+                    "type": "semgrep_type",
+                    "name": f"Semgrep - {self.check_id}",
+                    "value": self.check_id,
+                    "url": self._construct_semgrep_rule_url(),
+                }
+            ],
+        }
+
+    def _to_gitlab_severity(self) -> str:
+        # Todo: Semgrep states currently don't map super well to Gitlab schema.
+        conversion_table: Dict[int, str] = {
+            0: "Info",
+            1: "Medium",
+            2: "High",
+        }
+        return conversion_table.get(self.severity, "Unknown")
+
+    def _gitlab_tool_info(self) -> Dict[str, Any]:
+        return {"id": "semgrep", "name": "Semgrep"}
+
+    def _construct_semgrep_rule_url(self) -> str:
+        # this is a hack to fix name -> registry disagreement
+        components = self.check_id.split(".")
+        result = []
+        for chunk in components:
+            if chunk not in result:
+                result.append(chunk)
+        rule_name = ".".join(result)
+        return f"https://semgrep.dev/editor?registry={rule_name}"
 
 
 class FindingSet(Set[Finding]):

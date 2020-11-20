@@ -55,6 +55,9 @@ def get_event_type() -> str:
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
 @click.option("--json", "json_output", hidden=True, is_flag=True)
+@click.option(
+    "--gitlab-json", "gitlab_output", envvar="SEMGREP_GITLAB_JSON", is_flag=True
+)
 def main(
     config: str,
     baseline_ref: str,
@@ -62,6 +65,7 @@ def main(
     publish_token: str,
     publish_deployment: int,
     json_output: bool,
+    gitlab_output: bool,
 ) -> NoReturn:
     click.echo("=== detecting environment", err=True)
     click.echo(
@@ -147,6 +151,7 @@ def main(
         sys.exit(1)
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
+
     results = semgrep.scan(
         config,
         committed_datetime,
@@ -160,10 +165,18 @@ def main(
 
     if json_output:
         # Output all new findings as json
-        output = [
+        json_contents = [
             f.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS) for f in new_findings
         ]
-        click.echo(json.dumps(output))
+        click.echo(json.dumps(json_contents))
+    elif gitlab_output:
+        # output all new findings in Gitlab format
+        gitlab_contents = {
+            "$schema": "https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/sast-report-format.json",
+            "version": "2.0",
+            "vulnerabilities": [f.to_gitlab() for f in new_findings],
+        }
+        click.echo(json.dumps(gitlab_contents))
     else:
         # Print out blocking findings
         formatter.dump(blocking_findings)
