@@ -9,10 +9,7 @@ import pytest
 
 # Large swaths of this test infrastructure is shamelessly stolen from semgrep core test infrastructure
 TESTS_PATH = Path(__file__).parent
-MASKED_KEYS = [
-    "tool.driver.semanticVersion",
-    "results.extra.metavars.*.unique_id.md5sum",
-]
+MASKED_KEYS: List[str] = []
 
 
 def mark_masked(obj, path):
@@ -39,8 +36,13 @@ def _mark_masked(obj, path_items):
 
 
 def _clean_output_json(output_json: str) -> str:
-    """Make semgrep's output deterministic and nicer to read."""
-    output = json.loads(output_json)
+    """Make JSON output deterministic and nicer to read."""
+    try:
+        output = json.loads(output_json)
+    except json.JSONDecodeError:
+        raise ValueError(
+            f"Instead of JSON, output was:\n--- output start ---\n{output_json}\n--- output end ---"
+        )
     for path in MASKED_KEYS:
         mark_masked(output, path)
 
@@ -50,11 +52,9 @@ def _clean_output_json(output_json: str) -> str:
 def _run_semgrep_agent(
     config: Optional[Union[str, Path, List[str]]] = None,
     *,
-    target_name: str = "basic",
     options: Optional[List[Union[str, Path]]] = None,
     output_format: str = "json",
     stderr: bool = False,
-    strict: bool = True,
 ):
     if options is None:
         options = []
@@ -70,12 +70,14 @@ def _run_semgrep_agent(
         options.append("--gitlab-json")
 
     process = subprocess.run(
-        ["python3", "-m", "semgrep_agent", *options],
+        ["semgrep-agent", *options],
         encoding="utf-8",
         cwd=TESTS_PATH,
         stderr=subprocess.STDOUT if stderr else subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
+
+    print(f"--- stderr start ---\n{process.stderr}\n--- stderr end ---")
 
     if output_format in {"json", "gitlab"} and not stderr:
         output = _clean_output_json(process.stdout)

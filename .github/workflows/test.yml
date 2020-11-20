@@ -3,11 +3,55 @@ name: Tests
 on:
   pull_request:
   push:
-    branches: [master, develop]
+    branches: [develop]
 
 jobs:
-  test-semgrep:
-    name: Live runs of action
+  pytest:
+    name: run pytest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - id: setup-poetry
+        name: Setup poetry
+        run: |
+          python -m pip install --upgrade poetry
+          echo "::set-output name=cache-dir::$(poetry config cache-dir)"
+
+      # if we cached the complete virtualenv, it would cache the local semgrep-agent package too
+      # so instead we cache poetry's package cache, which speeds up the install command
+      - id: reuse-poetry-package-cache
+        name: Reuse poetry's package cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.setup-poetry.outputs.cache-dir }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.python-version }}-poetry-
+
+      - name: Install dependencies
+        run: |
+          poetry install
+          poetry add semgrep --no-interaction
+
+      - name: Run pytest
+        run: |
+          # tests should simulate CI environment when they need one
+          unset CI
+          unset "${!GITHUB_@}"
+
+          poetry run pytest
+
+  live-runs:
+    name: live run of action on this repo
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
