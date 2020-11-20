@@ -107,12 +107,12 @@ def main(
         click.echo(get_aligned_command("manage", f"not logged in"), err=True)
 
     for env_var in [
+        "SEMGREP_REPO_NAME",
         "SEMGREP_REPO_URL",
         "SEMGREP_JOB_URL",
         "SEMGREP_BRANCH",
         "SEMGREP_PR_ID",
         "SEMGREP_PR_TITLE",
-        "SEMGREP_REPO_NAME",
     ]:
         if os.getenv(env_var):
             click.echo(get_aligned_command(env_var, str(os.getenv(env_var))))
