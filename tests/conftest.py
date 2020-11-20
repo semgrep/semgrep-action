@@ -67,7 +67,7 @@ def _run_semgrep_agent(
             options.extend(["--config", config])
 
     if output_format == "gitlab":
-        options.append("--gitlab")
+        options.append("--gitlab-json")
 
     process = subprocess.run(
         ["python3", "-m", "semgrep_agent", *options],

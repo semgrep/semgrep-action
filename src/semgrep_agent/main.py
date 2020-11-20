@@ -55,8 +55,9 @@ def get_event_type() -> str:
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
 @click.option("--json", "json_output", hidden=True, is_flag=True)
-# the GITLAB_CI variable is a default variable present in Gitlab pipelines
-@click.option("--gitlab", "gitlab_output", envvar="GITLAB_CI", is_flag=True)
+@click.option(
+    "--gitlab-json", "gitlab_output", envvar="SEMGREP_GITLAB_JSON", is_flag=True
+)
 def main(
     config: str,
     baseline_ref: str,
