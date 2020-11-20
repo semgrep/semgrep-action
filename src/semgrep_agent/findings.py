@@ -1,5 +1,6 @@
 import binascii
 import textwrap
+import uuid
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
@@ -13,7 +14,6 @@ from typing import Optional
 from typing import Set
 
 import attr
-import uuid
 import click
 import pymmh3
 
@@ -132,11 +132,11 @@ class Finding:
     def _to_gitlab_severity(self):
         # Todo: Semgrep states currently don't map super well to Gitlab schema.
         conversion_table = {
-            "INFO":"Info",
-            "WARN":"Medium",
-            "ERROR":"High",
+            "INFO": "Info",
+            "WARN": "Medium",
+            "ERROR": "High",
         }
-        val = conversion_table.get(self.severity,None)
+        val = conversion_table.get(self.severity, None)
         if val is not None:
             return val
         else:
@@ -154,6 +154,7 @@ class Finding:
                 result.append(chunk)
         rule_name = ".".join(result)
         return f"https://semgrep.dev/editor?registry={rule_name}"
+
 
 class FindingSet(Set[Finding]):
     """
