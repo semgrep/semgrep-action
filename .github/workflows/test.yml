@@ -12,6 +12,9 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
+    env:
+      PIPX_HOME: .pipx
+      PIPX_BIN_DIR: .pipx_bin
     steps:
       - uses: actions/checkout@v2
 
@@ -24,26 +27,25 @@ jobs:
         name: Setup package managers
         run: |
           python -m pip install --upgrade poetry pipx
-          echo "::set-output name=poetry-cache-dir::$(poetry config cache-dir)"
+          echo "$(pwd)/.pipx_bin" >> $GITHUB_PATH
+          poetry config virtualenvs.in-project true
           echo "::set-output name=installed-semgrep-version::$(sed --quiet --regexp-extended 's/.+INSTALLED_SEMGREP_VERSION=(.+)/\1/p' Dockerfile)"
-
-      # if we cached the complete virtualenv, it would cache the local semgrep-agent package too
-      # so instead we cache poetry's package cache, which speeds up the install command
-      - id: reuse-poetry-package-cache
-        name: Reuse poetry's package cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.setup-package-managers.outputs.poetry-cache-dir }}
-          key: ${{ runner.os }}-${{ matrix.python-version }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-poetry-
 
       - id: reuse-pipx-semgrep-virtualenv
         name: Reuse pipx semgrep virtualenv
         uses: actions/cache@v2
         with:
-          path: ~/.local/pipx/venvs/semgrep
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pipx-semgrep-${{ steps.setup-package-managers.outputs.installed-semgrep-version }}
+          path: |
+            .pipx/venvs/semgrep
+            .pipx_bin/semgrep*
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pipx-semgrep-v${{ steps.setup-package-managers.outputs.installed-semgrep-version }}
+
+      - id: reuse-poetry-virtualenv
+        name: Reuse poetry's virtualenv
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: ${{ runner.os }}-${{ matrix.python-version }}-poetry-${{ hashFiles('**/poetry.lock') }}
 
       # install semgrep first so that errors are more obvious if agent dependencies conflict
       - name: Install semgrep
@@ -51,6 +53,10 @@ jobs:
         if: steps.reuse-pipx-semgrep-virtualenv.outputs.cache-hit != 'true'
 
       - name: Install dependencies
+        run: poetry install --no-root
+        if: steps.reuse-poetry-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Install semgrep-agent
         run: poetry install
 
       - name: Run pytest
