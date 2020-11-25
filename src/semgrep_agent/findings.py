@@ -1,4 +1,5 @@
 import binascii
+import re
 import textwrap
 import uuid
 from dataclasses import dataclass
@@ -18,6 +19,16 @@ import click
 import pymmh3
 
 
+NOSEM_COMMENT_RE = re.compile(r"[:#/]+\s*nosem.*$", re.IGNORECASE)
+
+
+def normalize_syntactic_context(value: str) -> str:
+    value = textwrap.dedent(value)
+    value = NOSEM_COMMENT_RE.sub("", value)
+    value = value.strip()
+    return value
+
+
 @attr.s(frozen=True, hash=False)
 class Finding:
     """
@@ -30,7 +41,7 @@ class Finding:
     column = attr.ib(type=int, hash=None, eq=False)
     message = attr.ib(type=str, hash=None, eq=False)
     severity = attr.ib(type=int, hash=None, eq=False)
-    syntactic_context = attr.ib(type=str, converter=textwrap.dedent)
+    syntactic_context = attr.ib(type=str, converter=normalize_syntactic_context)
     index = attr.ib(type=int, default=0)
     end_line = attr.ib(
         type=Optional[int], default=None, hash=None, eq=False, kw_only=True
@@ -99,6 +110,7 @@ class Finding:
         d = {k: v for k, v in d.items() if v is not None and k not in omit}
         d["syntactic_id"] = self.syntactic_identifier_str()
         d["commit_date"] = d["commit_date"].isoformat()
+        d["is_blocking"] = self.is_blocking()
         return d
 
     def to_gitlab(self) -> Dict[str, Any]:
@@ -192,6 +204,7 @@ class FindingSet(Set[Finding]):
 class FindingSets:
     baseline: FindingSet = field(default_factory=FindingSet)
     current: FindingSet = field(default_factory=FindingSet)
+    ignored: FindingSet = field(default_factory=FindingSet)
 
     @property
     def new(self) -> Set[Finding]:
