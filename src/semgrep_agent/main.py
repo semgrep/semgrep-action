@@ -98,10 +98,10 @@ def main(
     maybe_print_debug_info(meta)
     policy = sapp.report_start(meta)
     if sapp.is_configured:
-        server = "" if publish_url == "https://semgrep.dev" else f"to {publish_url}"
+        to_server = "" if publish_url == "https://semgrep.dev" else f" to {publish_url}"
         click.echo(
             get_aligned_command(
-                "manage", f"logged in {server} as deployment #{sapp.deployment_id}"
+                "manage", f"logged in{to_server} as deployment #{sapp.deployment_id}"
             ),
             err=True,
         )
