@@ -1,5 +1,4 @@
 import os
-import sys
 import tempfile
 from dataclasses import dataclass
 from dataclasses import field
@@ -8,9 +7,7 @@ from typing import cast
 from typing import List
 from typing import Optional
 
-import click
 import requests
-from boltons.iterutils import chunked_iter
 from glom import glom
 from glom import T
 
@@ -117,41 +114,38 @@ class Sapp:
 
         response: Optional["requests.Response"] = None
 
-        # report findings
-        for chunk in chunked_iter(results.findings.new, 10_000):
-            response = self.session.post(
-                f"{self.url}/api/agent/scan/{self.scan.id}/findings",
-                json={
-                    "token": os.getenv("GITHUB_TOKEN"),
-                    "findings": [
-                        finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
-                        for finding in chunk
-                    ],
-                },
-                timeout=30,
-            )
-            debug_echo(f"=== POST .../findings responded: {response!r}")
-            try:
-                response.raise_for_status()
-            except requests.RequestException:
-                raise ActionFailure(f"API server returned this error: {response.text}")
+        response = self.session.post(
+            f"{self.url}/api/agent/scan/{self.scan.id}/findings",
+            json={
+                "token": os.getenv("GITHUB_TOKEN"),
+                "findings": [
+                    finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
+                    for finding in results.findings.new
+                ],
+            },
+            timeout=30,
+        )
+        debug_echo(f"=== POST .../findings responded: {response!r}")
+        try:
+            response.raise_for_status()
+        except requests.RequestException:
+            raise ActionFailure(f"API server returned this error: {response.text}")
 
-        for chunk in chunked_iter(results.findings.ignored, 10_000):
-            response = self.session.post(
-                f"{self.url}/api/agent/scan/{self.scan.id}/ignores",
-                json={
-                    "findings": [
-                        finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
-                        for finding in chunk
-                    ],
-                },
-                timeout=30,
-            )
-            debug_echo(f"=== POST .../ignores responded: {response!r}")
-            try:
-                response.raise_for_status()
-            except requests.RequestException:
-                raise ActionFailure(f"API server returned this error: {response.text}")
+        response = self.session.post(
+            f"{self.url}/api/agent/scan/{self.scan.id}/ignores",
+            json={
+                "findings": [
+                    finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
+                    for finding in results.findings.ignored
+                ],
+            },
+            timeout=30,
+        )
+        debug_echo(f"=== POST .../ignores responded: {response!r}")
+        try:
+            response.raise_for_status()
+        except requests.RequestException:
+            raise ActionFailure(f"API server returned this error: {response.text}")
 
         # mark as complete
         response = self.session.post(
