@@ -43,6 +43,11 @@ class Sapp:
         #
         if self.token and self.deployment_id:
             self.is_configured = True
+        if self.is_configured and len(self.token) < constants.PUBLISH_TOKEN_LENGTH:
+            raise ActionFailure(
+                f"Expected token length {constants.PUBLISH_TOKEN_LENGTH}, received length {len(self.token)}. "
+                f"Please check your publish token."
+            )
         self.session = requests.Session()
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
