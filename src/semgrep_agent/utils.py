@@ -11,6 +11,8 @@ import git as gitpython
 from boltons import ecoutils
 from sh.contrib import git
 
+from semgrep_agent import constants
+
 if TYPE_CHECKING:
     from semgrep_agent.meta import GitMeta
 
@@ -61,3 +63,7 @@ def zsplit(s: str) -> List[str]:
         return s.split("\0")
     else:
         return []
+
+
+def validate_publish_token(token: str) -> bool:
+    return constants.PUBLISH_TOKEN_VALIDATOR.match(token) is not None
