@@ -16,6 +16,7 @@ from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
 from semgrep_agent.utils import ActionFailure
 from semgrep_agent.utils import debug_echo
+from semgrep_agent.utils import validate_publish_token
 
 
 @dataclass
@@ -43,9 +44,9 @@ class Sapp:
         #
         if self.token and self.deployment_id:
             self.is_configured = True
-        if self.is_configured and len(self.token) < constants.PUBLISH_TOKEN_LENGTH:
+        if self.is_configured and not validate_publish_token(self.token):
             raise ActionFailure(
-                f"Expected token length {constants.PUBLISH_TOKEN_LENGTH}, received length {len(self.token)}. "
+                f"Received invalid publish token, token length {len(self.token)}. "
                 f"Please check your publish token."
             )
         self.session = requests.Session()
