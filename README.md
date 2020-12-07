@@ -9,6 +9,31 @@ that first appeared in that pull request.
 
 ## Usage
 
+### In any environment
+
+The project has deep integration with the CI environment of GitHub Actions and GitLab CI (see below),
+but its more advanced features work anywhere if you pass a few environment variables.
+
+To use Semgrep Action on the commandline with a default ruleset, use
+
+```
+semgrep-agent --config r/all
+```
+
+To run semgrep-agent with a customized policy of rules, email and slack notifications, and with any CI provider, use the following shell command
+
+```
+SEMGREP_REPO_URL="https://example.com/myrepo" SEMGREP_JOB_URL="https://example.com/myjob" semgrep-agent --publish-deployment=<your_deployment_id> --publish-token=<your_API_token>
+```
+
+Where the environment variables `SEMGREP_REPO_URL` and `SEMGREP_JOB_URL` are optional, but will enable more helpful notifications.
+
+You can customize your policies, find `your_deployment_id`, and get `your_API_token` at <https://semgrep.dev/manage>
+
+_Treat your API Token as a SECRET and do not store it in the clear!_ Save it as a secret environment variable instead.
+
+### In GitHub
+
 To start checking all pull requests,
 add the following file at `.github/workflows/semgrep.yml`:
 
@@ -20,18 +45,31 @@ jobs:
     runs-on: ubuntu-latest
     name: Check
     steps:
-    - uses: actions/checkout@v1
-    - name: Semgrep
-      id: semgrep
-      uses: returntocorp/semgrep-action@v1
-      with:
-        config: r/all
+      - uses: actions/checkout@v1
+      - name: Semgrep
+        id: semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/r2c
 ```
 
-Note that the `r/all` config value
-will enable the hundreds of checks from [our registry](https://semgrep.live/r).
-You will probably want to configure a specific set of checks,
-see how to do that below.
+Note that the `p/r2c` config value
+will enable a default set of checks from [our registry](https://semgrep.live/explore).
+
+You will probably want to configure a specific set of checks instead.
+See how to do that by setting up a project on <https://semgrep.dev/manage/projects>
+
+#### Inline PR Comments
+
+If you would like inline PR comments to get posted by Semgrep (GitHub only), set the environment variable `GITHUB_TOKEN` as well in `.github/workflows/semgrep.yml`.
+You can either use the GitHub App installation access token `secrets.GITHUB_TOKEN`, or a personal access token that has access to repositories.
+
+```yaml
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+To set a personal access token, go to your [developer settings](https://github.com/settings/tokens), and generate a new token with "repo" (if your repository is private) or "public_repo" (if your repository is public) checked.
 
 ## Configuration
 

@@ -14,12 +14,14 @@ requests = "^2.24.0"
 click = "^7.1.2"
 sh = "^1.13.1"
 boltons = "^20.2.1"
-gitpython = "^2.1.15"
 glom = "^20.8.0"
 pymmh3 = "^0.0.5"
-attrs = "~=19.3.0"
+attrs = "^20.3.0"
+GitPython = "^3.1.11"
 
 [tool.poetry.dev-dependencies]
+pytest = "^6.1.2"
+jsonschema = "^3.2.0"
 
 [tool.poetry.scripts]
 semgrep-agent = "semgrep_agent.__main__:error_guard"

@@ -1,5 +1,7 @@
 import binascii
+import re
 import textwrap
+import uuid
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
@@ -17,6 +19,16 @@ import click
 import pymmh3
 
 
+NOSEM_COMMENT_RE = re.compile(r"[:#/]+\s*nosem.*$", re.IGNORECASE)
+
+
+def normalize_syntactic_context(value: str) -> str:
+    value = textwrap.dedent(value)
+    value = NOSEM_COMMENT_RE.sub("", value)
+    value = value.strip()
+    return value
+
+
 @attr.s(frozen=True, hash=False)
 class Finding:
     """
@@ -29,7 +41,7 @@ class Finding:
     column = attr.ib(type=int, hash=None, eq=False)
     message = attr.ib(type=str, hash=None, eq=False)
     severity = attr.ib(type=int, hash=None, eq=False)
-    syntactic_context = attr.ib(type=str, converter=textwrap.dedent)
+    syntactic_context = attr.ib(type=str, converter=normalize_syntactic_context)
     index = attr.ib(type=int, default=0)
     end_line = attr.ib(
         type=Optional[int], default=None, hash=None, eq=False, kw_only=True
@@ -75,7 +87,9 @@ class Finding:
 
     @classmethod
     def from_semgrep_result(
-        cls, result: Dict[str, Any], committed_datetime: Optional[datetime]
+        cls,
+        result: Dict[str, Any],
+        committed_datetime: Optional[datetime],
     ) -> "Finding":
         return cls(
             check_id=result["check_id"],
@@ -96,7 +110,60 @@ class Finding:
         d = {k: v for k, v in d.items() if v is not None and k not in omit}
         d["syntactic_id"] = self.syntactic_identifier_str()
         d["commit_date"] = d["commit_date"].isoformat()
+        d["is_blocking"] = self.is_blocking()
         return d
+
+    def to_gitlab(self) -> Dict[str, Any]:
+        return {
+            "id": str(uuid.uuid5(uuid.NAMESPACE_URL, str(self.path))),
+            "category": "sast",
+            # CVE is a required field from Gitlab schema.  Semgrep is CVE-unaware AFAIK
+            "cve": "",
+            "message": self.message,
+            "severity": self._to_gitlab_severity(),
+            # KB note:
+            # Semgrep is designed to be a low-FP tool by design.
+            # Does hard-coding confidence make sense here?
+            "confidence": "High",
+            "scanner": self._gitlab_tool_info(),
+            "location": {
+                "file": str(self.path),
+                # Gitlab only uses line identifiers
+                "start_line": self.line,
+                "end_line": self.end_line,
+                "dependency": {"package": {}},
+            },
+            "identifiers": [
+                {
+                    "type": "semgrep_type",
+                    "name": f"Semgrep - {self.check_id}",
+                    "value": self.check_id,
+                    "url": self._construct_semgrep_rule_url(),
+                }
+            ],
+        }
+
+    def _to_gitlab_severity(self) -> str:
+        # Todo: Semgrep states currently don't map super well to Gitlab schema.
+        conversion_table: Dict[int, str] = {
+            0: "Info",
+            1: "Medium",
+            2: "High",
+        }
+        return conversion_table.get(self.severity, "Unknown")
+
+    def _gitlab_tool_info(self) -> Dict[str, Any]:
+        return {"id": "semgrep", "name": "Semgrep"}
+
+    def _construct_semgrep_rule_url(self) -> str:
+        # this is a hack to fix name -> registry disagreement
+        components = self.check_id.split(".")
+        result = []
+        for chunk in components:
+            if chunk not in result:
+                result.append(chunk)
+        rule_name = ".".join(result)
+        return f"https://semgrep.dev/editor?registry={rule_name}"
 
 
 class FindingSet(Set[Finding]):
@@ -137,6 +204,7 @@ class FindingSet(Set[Finding]):
 class FindingSets:
     baseline: FindingSet = field(default_factory=FindingSet)
     current: FindingSet = field(default_factory=FindingSet)
+    ignored: FindingSet = field(default_factory=FindingSet)
 
     @property
     def new(self) -> Set[Finding]:

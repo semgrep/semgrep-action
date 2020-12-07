@@ -3,11 +3,72 @@ name: Tests
 on:
   pull_request:
   push:
-    branches: [master, develop]
+    branches: [develop]
 
 jobs:
-  test-semgrep:
-    name: Live runs of action
+  pytest:
+    name: run pytest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+    env:
+      PIPX_HOME: .pipx
+      PIPX_BIN_DIR: .pipx_bin
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - id: setup-package-managers
+        name: Setup package managers
+        run: |
+          python -m pip install --upgrade poetry pipx
+          echo "$(pwd)/.pipx_bin" >> $GITHUB_PATH
+          poetry config virtualenvs.in-project true
+          echo "::set-output name=installed-semgrep-version::$(sed --quiet --regexp-extended 's/.+INSTALLED_SEMGREP_VERSION=(.+)/\1/p' Dockerfile)"
+
+      - id: reuse-pipx-semgrep-virtualenv
+        name: Reuse pipx semgrep virtualenv
+        uses: actions/cache@v2
+        with:
+          path: |
+            .pipx/venvs/semgrep
+            .pipx_bin/semgrep*
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pipx-semgrep-v${{ steps.setup-package-managers.outputs.installed-semgrep-version }}
+
+      - id: reuse-poetry-virtualenv
+        name: Reuse poetry's virtualenv
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: ${{ runner.os }}-${{ matrix.python-version }}-poetry-${{ hashFiles('**/poetry.lock') }}
+
+      # install semgrep first so that errors are more obvious if agent dependencies conflict
+      - name: Install semgrep
+        run: pipx install semgrep==${{ steps.setup-package-managers.outputs.installed-semgrep-version }}
+        if: steps.reuse-pipx-semgrep-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Install dependencies
+        run: poetry install --no-root
+        if: steps.reuse-poetry-virtualenv.outputs.cache-hit != 'true'
+
+      - name: Install semgrep-agent
+        run: poetry install
+
+      - name: Run pytest
+        run: |
+          # tests should simulate CI environment iff they need one
+          unset CI
+          unset "${!GITHUB_@}"
+
+          poetry run pytest
+
+  live-runs:
+    name: live run of action on this repo
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1

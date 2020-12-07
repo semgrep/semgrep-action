@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from semgrep_agent.semgrep_app import Scan
 
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
-semgrep = sh.semgrep.bake(_ok_code={0, 1, 2}, _tty_out=False, _env=ua_environ)
+semgrep = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
@@ -112,6 +112,7 @@ def invoke_semgrep(
     committed_datetime: Optional[datetime],
     base_commit_ref: Optional[str],
     semgrep_ignore: TextIO,
+    uses_managed_policy: bool,
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
@@ -124,6 +125,7 @@ def invoke_semgrep(
     )
 
     config_args = ["--config", config_specifier]
+    rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
 
     debug_echo("=== seeing if there are any findings")
     findings = FindingSets()
@@ -133,16 +135,32 @@ def invoke_semgrep(
             "=== looking for current issues in " + unit_len(paths, "file"), err=True
         )
         for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
-            args = ["--skip-unknown-extensions", "--json", *config_args]
+            args = [
+                "--skip-unknown-extensions",
+                "--disable-nosem",
+                "--json",
+                *rewrite_args,
+                *config_args,
+            ]
             for path in chunk:
                 args.append(path)
             semgrep_results = json.loads(str(semgrep(*args)))["results"]
             findings.current.update_findings(
                 Finding.from_semgrep_result(result, committed_datetime)
                 for result in semgrep_results
+                if not result["extra"].get("is_ignored")
+            )
+            findings.ignored.update_findings(
+                Finding.from_semgrep_result(result, committed_datetime)
+                for result in semgrep_results
+                if result["extra"].get("is_ignored")
             )
             click.echo(
                 f"| {unit_len(findings.current, 'current issue')} found", err=True
+            )
+            click.echo(
+                f"| {unit_len(findings.ignored, 'ignored issue')} found",
+                err=True,
             )
 
     if not findings.current:
@@ -152,16 +170,26 @@ def invoke_semgrep(
         )
     else:
         with targets.baseline_paths() as paths:
-            if paths:
-                paths_with_findings = {finding.path for finding in findings.current}
-                paths_to_check = set(str(path) for path in paths) & paths_with_findings
+            paths_with_findings = {finding.path for finding in findings.current}
+            paths_to_check = set(str(path) for path in paths) & paths_with_findings
+            if not paths_to_check:
+                click.echo(
+                    "=== not looking at pre-existing issues since all files with current issues are newly created",
+                    err=True,
+                )
+            else:
                 click.echo(
                     "=== looking for pre-existing issues in "
                     + unit_len(paths_to_check, "file"),
                     err=True,
                 )
                 for chunk in chunked_iter(paths_to_check, PATHS_CHUNK_SIZE):
-                    args = ["--skip-unknown-extensions", "--json", *config_args]
+                    args = [
+                        "--skip-unknown-extensions",
+                        "--json",
+                        *rewrite_args,
+                        *config_args,
+                    ]
                     for path in chunk:
                         args.append(path)
                     semgrep_results = json.loads(str(semgrep(*args)))["results"]
@@ -179,7 +207,7 @@ def invoke_semgrep(
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths, sarif_path.open("w") as sarif_file:
-            args = ["--sarif", *config_args]
+            args = ["--sarif", *rewrite_args, *config_args]
             for path in paths:
                 args.extend(["--include", path])
             semgrep(*args, _out=sarif_file)
@@ -193,11 +221,16 @@ def scan(
     committed_datetime: Optional[datetime],
     base_commit_ref: Optional[str],
     semgrep_ignore: TextIO,
+    uses_managed_policy: bool,
 ) -> Results:
     before = time.time()
     try:
         findings = invoke_semgrep(
-            config_specifier, committed_datetime, base_commit_ref, semgrep_ignore
+            config_specifier,
+            committed_datetime,
+            base_commit_ref,
+            semgrep_ignore,
+            uses_managed_policy,
         )
     except sh.ErrorReturnCode as error:
         message = f"""

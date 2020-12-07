@@ -36,8 +36,11 @@ class CliObj:
 def get_event_type() -> str:
     if "GITHUB_ACTIONS" in os.environ:
         return os.environ["GITHUB_EVENT_NAME"]
-
     return "push"
+
+
+def get_aligned_command(title: str, subtext: str) -> str:
+    return f"| {title.ljust(17)} - {subtext}"
 
 
 @click.command()
@@ -55,6 +58,9 @@ def get_event_type() -> str:
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
 @click.option("--json", "json_output", hidden=True, is_flag=True)
+@click.option(
+    "--gitlab-json", "gitlab_output", envvar="SEMGREP_GITLAB_JSON", is_flag=True
+)
 def main(
     config: str,
     baseline_ref: str,
@@ -62,12 +68,14 @@ def main(
     publish_token: str,
     publish_deployment: int,
     json_output: bool,
+    gitlab_output: bool,
 ) -> NoReturn:
     click.echo("=== detecting environment", err=True)
     click.echo(
-        f"| versions    - "
-        f"semgrep {sh.semgrep(version=True).strip()} on "
-        f"{sh.python(version=True).strip()}",
+        get_aligned_command(
+            "versions",
+            f"semgrep {sh.semgrep(version=True).strip()} on {sh.python(version=True).strip()}",
+        ),
         err=True,
     )
 
@@ -78,22 +86,40 @@ def main(
         meta_kwargs["cli_baseline_ref"] = baseline_ref
     meta = Meta(config, **meta_kwargs)
     click.echo(
-        f"| environment - "
-        f"running in {meta.environment}, "
-        f"triggering event is '{meta.event_name}'",
+        get_aligned_command(
+            "environment",
+            f"running in environment {meta.environment}, triggering event is '{meta.event_name}'",
+        ),
         err=True,
     )
 
     # Setup URL/Token
     sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
     maybe_print_debug_info(meta)
-    sapp.report_start(meta)
+    policy = sapp.report_start(meta)
     if sapp.is_configured:
+        to_server = "" if publish_url == "https://semgrep.dev" else f" to {publish_url}"
         click.echo(
-            f"| semgrep.dev - logged in as deployment #{sapp.deployment_id}", err=True,
+            get_aligned_command(
+                "manage", f"logged in{to_server} as deployment #{sapp.deployment_id}"
+            ),
+            err=True,
         )
+        policy_info = f"using {policy}" if policy else "unknown"
+        click.echo(get_aligned_command("policy", policy_info))
     else:
-        click.echo("| semgrep.dev - not logged in", err=True)
+        click.echo(get_aligned_command("manage", f"not logged in"), err=True)
+
+    for env_var in [
+        "SEMGREP_REPO_NAME",
+        "SEMGREP_REPO_URL",
+        "SEMGREP_JOB_URL",
+        "SEMGREP_BRANCH",
+        "SEMGREP_PR_ID",
+        "SEMGREP_PR_TITLE",
+    ]:
+        if os.getenv(env_var):
+            click.echo(get_aligned_command(env_var, str(os.getenv(env_var))))
 
     # Setup Config
     click.echo("=== setting up agent configuration", err=True)
@@ -125,11 +151,13 @@ def main(
         sys.exit(1)
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
+
     results = semgrep.scan(
         config,
         committed_datetime,
         meta.base_commit_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
+        sapp.is_configured,
     )
     new_findings = results.findings.new
 
@@ -137,10 +165,18 @@ def main(
 
     if json_output:
         # Output all new findings as json
-        output = [
+        json_contents = [
             f.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS) for f in new_findings
         ]
-        click.echo(json.dumps(output))
+        click.echo(json.dumps(json_contents))
+    elif gitlab_output:
+        # output all new findings in Gitlab format
+        gitlab_contents = {
+            "$schema": "https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/sast-report-format.json",
+            "version": "2.0",
+            "vulnerabilities": [f.to_gitlab() for f in new_findings],
+        }
+        click.echo(json.dumps(gitlab_contents))
     else:
         # Print out blocking findings
         formatter.dump(blocking_findings)

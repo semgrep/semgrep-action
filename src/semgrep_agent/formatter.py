@@ -75,13 +75,15 @@ def dump(findings: Set[Finding]) -> None:
     lines = []
     violations = by_path(findings)
     max_message_len = min(
-        max((len(v.message) for v in violations), default=0), PRINT_WIDTH - LEADER_LEN,
+        max((len(v.message) for v in violations), default=0),
+        PRINT_WIDTH - LEADER_LEN,
     )
 
     if sys.stdout.isatty():
         terminal_width, _ = shutil.get_terminal_size((PRINT_WIDTH, 0))
         max_message_len = max(
-            min(max_message_len, terminal_width - LEADER_LEN), MIN_MESSAGE_LEN,
+            min(max_message_len, terminal_width - LEADER_LEN),
+            MIN_MESSAGE_LEN,
         )
 
     ordered: List[Finding] = sorted(violations, key=path_of)

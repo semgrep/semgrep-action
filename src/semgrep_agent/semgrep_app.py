@@ -1,14 +1,13 @@
-import sys
+import os
 import tempfile
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
+from typing import cast
 from typing import List
 from typing import Optional
 
-import click
 import requests
-from boltons.iterutils import chunked_iter
 from glom import glom
 from glom import T
 
@@ -17,6 +16,7 @@ from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
 from semgrep_agent.utils import ActionFailure
 from semgrep_agent.utils import debug_echo
+from semgrep_agent.utils import validate_publish_token
 
 
 @dataclass
@@ -44,13 +44,18 @@ class Sapp:
         #
         if self.token and self.deployment_id:
             self.is_configured = True
+        if self.is_configured and not validate_publish_token(self.token):
+            raise ActionFailure(
+                f"Received invalid publish token, token length {len(self.token)}. "
+                f"Please check your publish token."
+            )
         self.session = requests.Session()
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
-    def report_start(self, meta: GitMeta) -> None:
+    def report_start(self, meta: GitMeta) -> Optional[str]:
         if not self.is_configured:
             debug_echo("=== no semgrep app config, skipping report_start")
-            return
+            return None
         debug_echo(f"=== reporting start to semgrep app at {self.url}")
 
         response = self.session.post(
@@ -73,6 +78,7 @@ class Sapp:
                 ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
             )
             debug_echo(f"=== Our scan object is: {self.scan!r}")
+            return cast(Optional[str], glom(body, T["policy"], default=None))
 
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""
@@ -83,7 +89,8 @@ class Sapp:
             )
 
         response = self.session.get(
-            f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml", timeout=30,
+            f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml",
+            timeout=30,
         )
         debug_echo(f"=== POST .../rules.yaml responded: {response!r}")
 
@@ -113,21 +120,38 @@ class Sapp:
 
         response: Optional["requests.Response"] = None
 
-        # report findings
-        for chunk in chunked_iter(results.findings.new, 10_000):
-            response = self.session.post(
-                f"{self.url}/api/agent/scan/{self.scan.id}/findings",
-                json=[
+        response = self.session.post(
+            f"{self.url}/api/agent/scan/{self.scan.id}/findings",
+            json={
+                "token": os.getenv("GITHUB_TOKEN"),
+                "findings": [
                     finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
-                    for finding in chunk
+                    for finding in results.findings.new
                 ],
-                timeout=30,
-            )
-            debug_echo(f"=== POST .../findings responded: {response!r}")
-            try:
-                response.raise_for_status()
-            except requests.RequestException:
-                raise ActionFailure(f"API server returned this error: {response.text}")
+            },
+            timeout=30,
+        )
+        debug_echo(f"=== POST .../findings responded: {response!r}")
+        try:
+            response.raise_for_status()
+        except requests.RequestException:
+            raise ActionFailure(f"API server returned this error: {response.text}")
+
+        response = self.session.post(
+            f"{self.url}/api/agent/scan/{self.scan.id}/ignores",
+            json={
+                "findings": [
+                    finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
+                    for finding in results.findings.ignored
+                ],
+            },
+            timeout=30,
+        )
+        debug_echo(f"=== POST .../ignores responded: {response!r}")
+        try:
+            response.raise_for_status()
+        except requests.RequestException:
+            raise ActionFailure(f"API server returned this error: {response.text}")
 
         # mark as complete
         response = self.session.post(

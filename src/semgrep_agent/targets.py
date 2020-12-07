@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from enum import auto
 from enum import Enum
 from pathlib import Path
+from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import NamedTuple
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING
 import attr
 import click
 import sh
+from boltons.iterutils import bucketize
 from boltons.strutils import unit_len
 from sh.contrib import git
 
@@ -42,28 +44,29 @@ class StatusCode:
     Renamed = "R"
     Modified = "M"
     Unmerged = "U"
-    Untracked = "?"
     Ignored = "!"
+    Untracked = "?"
+    Unstaged = " "  # but changed
 
 
 @attr.s
 class TargetFileManager:
     """
-        Handles all logic related to knowing what files to run on.
+    Handles all logic related to knowing what files to run on.
 
-        This includes:
-            - understanding files are ignores based on semgrepignore rules
-            - traversing project directories
-            - pruning traversal
-            - listing staged files
-            - changing git state
+    This includes:
+        - understanding files are ignores based on semgrepignore rules
+        - traversing project directories
+        - pruning traversal
+        - listing staged files
+        - changing git state
 
-        Parameters:
-            base_commit: Git ref to compare against
-            base_path: Path to start walking files from
-            paths: List of Paths (absolute or relative to current working directory) that
-                    we want to traverse
-            ignore_rules_file: Text buffer with .semgrepignore rules
+    Parameters:
+        base_commit: Git ref to compare against
+        base_path: Path to start walking files from
+        paths: List of Paths (absolute or relative to current working directory) that
+                we want to traverse
+        ignore_rules_file: Text buffer with .semgrepignore rules
     """
 
     _base_path = attr.ib(type=Path)
@@ -72,6 +75,7 @@ class TargetFileManager:
     _base_commit = attr.ib(type=Optional[str], default=None)
     _status = attr.ib(type=GitStatus, init=False)
     _target_paths = attr.ib(type=List[Path], init=False)
+    _dirty_paths_by_status = attr.ib(type=Dict[str, List[Path]], init=False)
 
     def _fname_to_path(self, repo: "gitpython.Repo", fname: str) -> Path:  # type: ignore
         return (Path(repo.working_tree_dir) / fname).resolve()
@@ -79,7 +83,7 @@ class TargetFileManager:
     @_status.default
     def get_git_status(self) -> GitStatus:
         """
-            Returns Absolute Paths to all files that are staged
+        Returns Absolute Paths to all files that are staged
         """
         import gitdb.exc  # type: ignore
 
@@ -96,6 +100,7 @@ class TargetFileManager:
         # Output of git command will be relative to git project root
         status_output = zsplit(
             git.diff(
+                "--cached",
                 "--name-status",
                 "--no-ext-diff",
                 "-z",
@@ -140,12 +145,13 @@ class TargetFileManager:
         debug_echo(
             f"Git status:\nadded: {added}\nmodified: {modified}\nremoved: {removed}\nunmerged: {unmerged}"
         )
+
         return GitStatus(added, modified, removed, unmerged)
 
     @_target_paths.default
     def _get_target_files(self) -> List[Path]:
         """
-            Return list of all absolute paths to analyze
+        Return list of all absolute paths to analyze
         """
         repo = get_git_repo()
         submodules = repo.submodules  # type: ignore
@@ -208,17 +214,58 @@ class TargetFileManager:
 
         return relative_paths
 
-    def _abort_if_dirty(self) -> None:
+    @_dirty_paths_by_status.default
+    def get_dirty_paths_by_status(self) -> Dict[str, List[Path]]:
         """
-            Raises ActionFailure if paths are untracked or staged.
+        Returns all paths that have a git status, grouped by change type.
 
-            :param removed (list): Removed paths
-            :raises ActionFailure: If the git repo is not in a clean state
+        These can be staged, unstaged, or untracked.
         """
-        output = git.status("--porcelain").stdout.decode().strip()
-        if output:
-            raise ActionFailure(  # TODO we can probably be more lenient
-                "Found untracked or staged files. Diff-aware runs require a clean git state."
+        output = zsplit(git.status("--porcelain", "-z").stdout.decode())
+        return bucketize(
+            output,
+            key=lambda line: line[0],
+            value_transform=lambda line: Path(line[3:]),
+        )
+
+    def _abort_on_pending_changes(self) -> None:
+        """
+        Raises ActionFailure if any tracked files are changed.
+
+        :raises ActionFailure: If the git repo is not in a clean state
+        """
+        if set(self._dirty_paths_by_status) - {StatusCode.Untracked}:
+            raise ActionFailure(
+                "Found pending changes in tracked files. Diff-aware runs require a clean git state."
+            )
+
+    def _abort_on_conflicting_untracked_paths(self) -> None:
+        """
+        Raises ActionFailure if untracked paths were touched in the baseline, too.
+
+        :raises ActionFailure: If the git repo is not in a clean state
+        """
+        repo = get_git_repo()
+
+        if not repo or self._base_commit is None:
+            return
+
+        changed_paths = set(
+            self._status.added
+            + self._status.modified
+            + self._status.removed
+            + self._status.unmerged
+        )
+        untracked_paths = {
+            self._fname_to_path(repo, str(path))
+            for path in (self._dirty_paths_by_status.get(StatusCode.Untracked, []))
+        }
+        overlapping_paths = untracked_paths & changed_paths
+
+        if overlapping_paths:
+            raise ActionFailure(
+                "Some paths that changed since the baseline commit now show up as untracked files. "
+                f"Please commit or stash your untracked changes in these paths: {overlapping_paths}."
             )
 
     @contextmanager
@@ -235,7 +282,8 @@ class TargetFileManager:
             yield
             return
 
-        self._abort_if_dirty()
+        self._abort_on_pending_changes()
+        self._abort_on_conflicting_untracked_paths()
 
         current_tree = git("write-tree").stdout.decode().strip()
         try:
@@ -278,25 +326,35 @@ class TargetFileManager:
         """
         Prepare file system for baseline scan, and return the paths to be analyzed.
 
-        Returned list of paths are all abolute paths and include all files that are
+        Returned list of paths are all relative paths and include all files that are
+            - already in the baseline commit, i.e. not created later
             - not ignored based on .semgrepignore rules
             - in any path include filters specified.
+
+        Returned list is empty if a baseline commit is inaccessible.
 
         :return: A list of paths
         :raises ActionFailure: If git cannot detect a HEAD commit or unmerged files exist
         """
-        if self._base_commit is None:
+        repo = get_git_repo()
+
+        if not repo or self._base_commit is None:
             yield []
         else:
             with self._baseline_context():
-                yield self._target_paths
+                yield [
+                    relative_path
+                    for relative_path in self._target_paths
+                    if self._fname_to_path(repo, str(relative_path))
+                    not in self._status.added
+                ]
 
     @contextmanager
     def current_paths(self) -> Iterator[List[Path]]:
         """
         Prepare file system for current scan, and return the paths to be analyzed.
 
-        Returned list of paths are all abolute paths and include all files that are
+        Returned list of paths are all relative paths and include all files that are
             - not ignored based on .semgrepignore rules
             - in any path include filters specified.
 
