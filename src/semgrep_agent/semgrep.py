@@ -137,23 +137,25 @@ def fix_head_for_github(meta: GitMeta) -> Iterator[Optional[str]]:
         stashed_rev = git(["branch", "--show-current"]).stdout.decode("utf-8").rstrip()
         if not stashed_rev:
             stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
-        click.echo(f"| not on head ref {meta.head_ref}; checking that out now...")
+        click.echo(
+            f"| not on head ref {meta.head_ref}; checking that out now...", err=True
+        )
         git.checkout([meta.head_ref])
 
     try:
         if base_ref is not None:
-            click.echo("| scanning only the following commits:")
+            click.echo("| scanning only the following commits:", err=True)
             # fmt:off
             log = git.log(["--oneline", "--graph", f"{base_ref}..HEAD"]).stdout  # type:ignore
             # fmt: on
             rr = cast(bytes, log).decode("utf-8").rstrip().split("\n")
             r = "\n|   ".join(rr)
-            click.echo("|   " + r)
+            click.echo("|   " + r, err=True)
 
         yield base_ref
     finally:
         if stashed_rev is not None:
-            click.echo(f"| returning to original head revision {stashed_rev}")
+            click.echo(f"| returning to original head revision {stashed_rev}", err=True)
             git.checkout([stashed_rev])
 
 
