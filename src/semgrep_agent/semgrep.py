@@ -33,6 +33,7 @@ from semgrep_agent.findings import FindingSets
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
+from semgrep_agent.utils import get_git_repo
 
 if TYPE_CHECKING:
     from semgrep_agent.semgrep_app import Scan
@@ -123,6 +124,10 @@ def fix_head_for_github(meta: GitMeta) -> Iterator[Optional[str]]:
 
     stashed_rev: Optional[str] = None
     base_ref: Optional[str] = meta.base_commit_ref
+
+    if get_git_repo() is None:
+        yield base_ref
+        return
 
     if base_ref:
         # Preserve location of head^ after we possibly change location below
