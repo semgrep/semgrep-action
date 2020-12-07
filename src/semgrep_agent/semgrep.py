@@ -136,7 +136,7 @@ def fix_head_for_github(meta: GitMeta) -> Iterator[Optional[str]]:
     if meta.head_ref:
         stashed_rev = git(["branch", "--show-current"]).stdout.decode("utf-8").rstrip()
         if not stashed_rev:
-            stashed_rev = git(["rev-parse", "head"]).stdout.decode("utf-8").rstrip()
+            stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
         click.echo(f"| not on head ref {meta.head_ref}; checking that out now...")
         git.checkout([meta.head_ref])
 
