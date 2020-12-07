@@ -11,6 +11,7 @@ from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
 from typing import Any
+from typing import cast
 from typing import Dict
 from typing import Iterator
 from typing import List
@@ -29,6 +30,7 @@ from sh.contrib import git
 
 from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
+from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 
@@ -107,61 +109,106 @@ def rewrite_sarif_file(sarif_path: Path) -> None:
         json.dump(sarif_results, sarif_file, indent=2, sort_keys=True)
 
 
+@contextmanager
+def fix_head_for_github(meta: GitMeta) -> Iterator[Optional[str]]:
+    """
+    GHA can checkout the incorrect commit for a PR (it will create a fake merge commit),
+    so we need to reset the head to the actual PR branch head before continuing.
+
+    Note that this code is written in a generic manner, so that it becomes a no-op when
+    the CI system has not artifically altered the HEAD ref.
+
+    :return: The baseline ref as a commit hash
+    """
+
+    stashed_rev: Optional[str] = None
+    base_ref: Optional[str] = meta.base_commit_ref
+
+    if base_ref:
+        # Preserve location of head^ after we possibly change location below
+        base_ref = git(["rev-parse", base_ref]).stdout.decode("utf-8").rstrip()
+
+    if meta.head_ref:
+        stashed_rev = git(["branch", "--show-current"]).stdout.decode("utf-8").rstrip()
+        if not stashed_rev:
+            stashed_rev = git(["rev-parse", "head"]).stdout.decode("utf-8").rstrip()
+        click.echo(f"| not on head ref {meta.head_ref}; checking that out now...")
+        git.checkout([meta.head_ref])
+
+    try:
+        if base_ref is not None:
+            click.echo("| scanning only the following commits:")
+            # fmt:off
+            log = git.log(["--oneline", "--graph", f"{base_ref}..HEAD"]).stdout  # type:ignore
+            # fmt: on
+            rr = cast(bytes, log).decode("utf-8").rstrip().split("\n")
+            r = "\n|   ".join(rr)
+            click.echo("|   " + r)
+
+        yield base_ref
+    finally:
+        if stashed_rev is not None:
+            click.echo(f"| returning to original head revision {stashed_rev}")
+            git.checkout([stashed_rev])
+
+
 def invoke_semgrep(
     config_specifier: str,
-    committed_datetime: Optional[datetime],
-    base_commit_ref: Optional[str],
+    meta: GitMeta,
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
-    workdir = Path.cwd()
-    targets = TargetFileManager(
-        base_path=workdir,
-        base_commit=base_commit_ref,
-        paths=[workdir],
-        ignore_rules_file=semgrep_ignore,
-    )
+    committed_datetime = meta.commit.committed_datetime if meta.commit else None
 
-    config_args = ["--config", config_specifier]
-    rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
-
-    debug_echo("=== seeing if there are any findings")
-    findings = FindingSets()
-
-    with targets.current_paths() as paths:
-        click.echo(
-            "=== looking for current issues in " + unit_len(paths, "file"), err=True
+    with fix_head_for_github(meta) as base_ref:
+        workdir = Path.cwd()
+        targets = TargetFileManager(
+            base_path=workdir,
+            base_commit=base_ref,
+            paths=[workdir],
+            ignore_rules_file=semgrep_ignore,
         )
-        for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
-            args = [
-                "--skip-unknown-extensions",
-                "--disable-nosem",
-                "--json",
-                *rewrite_args,
-                *config_args,
-            ]
-            for path in chunk:
-                args.append(path)
-            semgrep_results = json.loads(str(semgrep(*args)))["results"]
-            findings.current.update_findings(
-                Finding.from_semgrep_result(result, committed_datetime)
-                for result in semgrep_results
-                if not result["extra"].get("is_ignored")
-            )
-            findings.ignored.update_findings(
-                Finding.from_semgrep_result(result, committed_datetime)
-                for result in semgrep_results
-                if result["extra"].get("is_ignored")
-            )
+
+        config_args = ["--config", config_specifier]
+        rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
+
+        debug_echo("=== seeing if there are any findings")
+        findings = FindingSets()
+
+        with targets.current_paths() as paths:
             click.echo(
-                f"| {unit_len(findings.current, 'current issue')} found", err=True
+                "=== looking for current issues in " + unit_len(paths, "file"), err=True
             )
-            click.echo(
-                f"| {unit_len(findings.ignored, 'ignored issue')} found",
-                err=True,
-            )
+            for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
+                args = [
+                    "--skip-unknown-extensions",
+                    "--disable-nosem",
+                    "--json",
+                    *rewrite_args,
+                    *config_args,
+                ]
+                for path in chunk:
+                    args.append(path)
+                semgrep_results = json.loads(str(semgrep(*args)))["results"]
+                findings.current.update_findings(
+                    Finding.from_semgrep_result(result, committed_datetime)
+                    for result in semgrep_results
+                    if not result["extra"].get("is_ignored")
+                )
+                findings.ignored.update_findings(
+                    Finding.from_semgrep_result(result, committed_datetime)
+                    for result in semgrep_results
+                    if result["extra"].get("is_ignored")
+                )
+                click.echo(
+                    f"| {unit_len(findings.current, 'current issue')} found", err=True
+                )
+                click.echo(
+                    f"| {unit_len(findings.ignored, 'ignored issue')} found",
+                    err=True,
+                )
 
     if not findings.current:
         click.echo(
@@ -218,8 +265,7 @@ def invoke_semgrep(
 
 def scan(
     config_specifier: str,
-    committed_datetime: Optional[datetime],
-    base_commit_ref: Optional[str],
+    meta: GitMeta,
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
 ) -> Results:
@@ -227,8 +273,7 @@ def scan(
     try:
         findings = invoke_semgrep(
             config_specifier,
-            committed_datetime,
-            base_commit_ref,
+            meta,
             semgrep_ignore,
             uses_managed_policy,
         )
