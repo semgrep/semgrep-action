@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
 from typing import Any
-from typing import cast
 from typing import Dict
 from typing import Optional
 from typing import Type
@@ -55,10 +54,6 @@ class GitMeta:
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
         return self.repo.head.commit.hexsha  # type: ignore
-
-    @cachedproperty
-    def head_ref(self) -> Optional[str]:
-        return None
 
     @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
@@ -150,18 +145,12 @@ class GithubMeta(GitMeta):
         return super().commit_sha  # type: ignore
 
     @cachedproperty
-    def head_ref(self) -> Optional[str]:
-        if self.event_name == "pull_request":
-            return cast(str, self.glom_event(T["pull_request"]["base"]["sha"]))
-        else:
-            return None
-
-    @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
-        if self.event_name == "pull_request" and self.head_ref is not None:
+        if self.event_name == "pull_request":
+            pr_base = self.glom_event(T["pull_request"]["base"]["sha"])
             # The pull request "base" that GitHub sends us is not necessarily the merge base,
             # so we need to get the merge-base from Git
-            return git("merge-base", self.head_ref, "HEAD").stdout.decode().strip()
+            return git("merge-base", pr_base, "HEAD").stdout.decode().strip()
         return None
 
     @cachedproperty

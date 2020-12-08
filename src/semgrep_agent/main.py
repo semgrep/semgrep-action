@@ -156,7 +156,6 @@ def main(
         config,
         committed_datetime,
         meta.base_commit_ref,
-        meta.head_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
         sapp.is_configured,
     )
