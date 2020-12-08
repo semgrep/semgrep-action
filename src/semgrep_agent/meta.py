@@ -26,7 +26,6 @@ from semgrep_agent.utils import debug_echo
 class GitMeta:
     """Gather metadata only from local filesystem."""
 
-    config: str
     cli_baseline_ref: Optional[str] = None
     environment: str = field(default="git", init=False)
 
@@ -104,7 +103,6 @@ class GitMeta:
             "commit_author_username": None,
             "commit_author_image_url": None,
             "commit_title": self.commit.summary,
-            "config": self.config,
             "on": self.event_name,
             "pull_request_author_username": None,
             "pull_request_author_image_url": None,
@@ -276,25 +274,14 @@ class GitlabMeta(GitMeta):
         return os.getenv("CI_MERGE_REQUEST_TITLE")
 
 
-def detect_meta_environment() -> Type[GitMeta]:
+def generate_meta_from_environment(baseline_ref: Optional[str]) -> GitMeta:
     # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables
     if os.getenv("GITHUB_ACTIONS") == "true":
-        return GithubMeta
-
-    # https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
-    elif os.getenv("CIRCLECI") == "true":  # nosem
-        return GitMeta
-
-    # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
-    elif os.getenv("TRAVIS") == "true":  # nosem
-        return GitMeta
+        return GithubMeta()
 
     # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
     elif os.getenv("GITLAB_CI") == "true":
-        return GitlabMeta
-
-    elif os.getenv("CI"):  # nosem
-        return GitMeta
+        return GitlabMeta()
 
     else:  # nosem
-        return GitMeta
+        return GitMeta(baseline_ref)
