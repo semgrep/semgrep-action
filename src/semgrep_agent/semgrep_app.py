@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 from dataclasses import dataclass
@@ -26,12 +27,7 @@ yaml = YAML(typ="rt")
 @dataclass
 class Scan:
     id: int = -1
-    config: str = "r/all"
     ignore_patterns: List[str] = field(default_factory=list)
-
-    @property
-    def is_loaded(self) -> bool:
-        return self.id != -1
 
 
 @dataclass
@@ -44,8 +40,6 @@ class Sapp:
     session: requests.Session = field(init=False)
 
     def __post_init__(self) -> None:
-        # Get deployment from token
-        #
         if self.token and self.deployment_id:
             self.is_configured = True
         if self.is_configured and not validate_publish_token(self.token):
@@ -56,10 +50,12 @@ class Sapp:
         self.session = requests.Session()
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
-    def report_start(self, meta: GitMeta) -> Optional[str]:
-        if not self.is_configured:
-            debug_echo("=== no semgrep app config, skipping report_start")
-            return None
+    def report_start(self, meta: GitMeta) -> str:
+        """
+        Get scan id and file ignores
+
+        returns name of policy used to scan
+        """
         debug_echo(f"=== reporting start to semgrep app at {self.url}")
 
         response = self.session.post(
@@ -67,7 +63,14 @@ class Sapp:
             json={"meta": meta.to_dict()},
             timeout=30,
         )
+
         debug_echo(f"=== POST .../scan responded: {response!r}")
+
+        if response.status_code == 404:
+            raise ActionFailure(
+                "Failed to create a scan with given token and deployment_id. Please make sure they have been set correctly."
+            )
+
         try:
             response.raise_for_status()
         except requests.RequestException:
@@ -76,22 +79,16 @@ class Sapp:
             )
         else:
             body = response.json()
+
             self.scan = Scan(
                 id=glom(body, T["scan"]["id"]),
-                config=glom(body, T["scan"]["meta"].get("config")),
                 ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
             )
             debug_echo(f"=== Our scan object is: {self.scan!r}")
-            return cast(Optional[str], glom(body, T["policy"], default=None))
+            return cast(str, glom(body, T["policy"]))
 
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""
-        if not self.scan.is_loaded:
-            raise ActionFailure(
-                f"The API server at {self.url} is not working properly. "
-                f"Please contact {constants.SUPPORT_EMAIL} for assistance."
-            )
-
         response = self.session.get(
             f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml",
             timeout=30,
@@ -104,6 +101,13 @@ class Sapp:
             raise ActionFailure(
                 f"API server at {self.url} returned this error: {response.text}\n"
                 "Failed to get configured rules"
+            )
+
+        # Can remove once server guarantees will always have at least one rule
+        parsed = json.loads(response.text)
+        if not parsed["rules"]:
+            raise ActionFailure(
+                "No rules returned by server for this scan. Note that if a rule is not set to notify or block it is not returned by the server."
             )
         else:
             return response.text
@@ -119,9 +123,6 @@ class Sapp:
         return rules_path, len(parsed["rules"])
 
     def report_results(self, results: Results) -> None:
-        if not self.is_configured or not self.scan.is_loaded:
-            debug_echo("=== no semgrep app config, skipping report_results")
-            return
         debug_echo(f"=== reporting results to semgrep app at {self.url}")
 
         response: Optional["requests.Response"] = None
