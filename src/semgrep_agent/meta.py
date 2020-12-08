@@ -152,7 +152,7 @@ class GithubMeta(GitMeta):
     @cachedproperty
     def head_ref(self) -> Optional[str]:
         if self.event_name == "pull_request":
-            return cast(str, self.glom_event(T["pull_request"]["base"]["sha"]))
+            return self.commit_sha  # type: ignore
         else:
             return None
 
