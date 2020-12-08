@@ -150,9 +150,13 @@ def main(
         click.echo(message, err=True)
         sys.exit(1)
 
+    committed_datetime = meta.commit.committed_datetime if meta.commit else None
+
     results = semgrep.scan(
         config,
-        meta,
+        committed_datetime,
+        meta.base_commit_ref,
+        meta.head_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
         sapp.is_configured,
     )

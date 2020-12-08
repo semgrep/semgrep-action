@@ -111,7 +111,9 @@ def rewrite_sarif_file(sarif_path: Path) -> None:
 
 
 @contextmanager
-def fix_head_for_github(meta: GitMeta) -> Iterator[Optional[str]]:
+def fix_head_for_github(
+    base_commit_ref: Optional[str], head_ref: Optional[str]
+) -> Iterator[Optional[str]]:
     """
     GHA can checkout the incorrect commit for a PR (it will create a fake merge commit),
     so we need to reset the head to the actual PR branch head before continuing.
@@ -123,7 +125,7 @@ def fix_head_for_github(meta: GitMeta) -> Iterator[Optional[str]]:
     """
 
     stashed_rev: Optional[str] = None
-    base_ref: Optional[str] = meta.base_commit_ref
+    base_ref: Optional[str] = base_commit_ref
 
     if get_git_repo() is None:
         yield base_ref
@@ -133,14 +135,12 @@ def fix_head_for_github(meta: GitMeta) -> Iterator[Optional[str]]:
         # Preserve location of head^ after we possibly change location below
         base_ref = git(["rev-parse", base_ref]).stdout.decode("utf-8").rstrip()
 
-    if meta.head_ref:
+    if head_ref:
         stashed_rev = git(["branch", "--show-current"]).stdout.decode("utf-8").rstrip()
         if not stashed_rev:
             stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
-        click.echo(
-            f"| not on head ref {meta.head_ref}; checking that out now...", err=True
-        )
-        git.checkout([meta.head_ref])
+        click.echo(f"| not on head ref {head_ref}; checking that out now...", err=True)
+        git.checkout([head_ref])
 
     try:
         if base_ref is not None:
@@ -161,15 +161,15 @@ def fix_head_for_github(meta: GitMeta) -> Iterator[Optional[str]]:
 
 def invoke_semgrep(
     config_specifier: str,
-    meta: GitMeta,
+    committed_datetime: Optional[datetime],
+    base_commit_ref: Optional[str],
+    head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
-    committed_datetime = meta.commit.committed_datetime if meta.commit else None
-
-    with fix_head_for_github(meta) as base_ref:
+    with fix_head_for_github(base_commit_ref, head_ref) as base_ref:
         workdir = Path.cwd()
         targets = TargetFileManager(
             base_path=workdir,
@@ -272,7 +272,9 @@ def invoke_semgrep(
 
 def scan(
     config_specifier: str,
-    meta: GitMeta,
+    committed_datetime: Optional[datetime],
+    base_commit_ref: Optional[str],
+    head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
 ) -> Results:
@@ -280,7 +282,9 @@ def scan(
     try:
         findings = invoke_semgrep(
             config_specifier,
-            meta,
+            committed_datetime,
+            base_commit_ref,
+            head_ref,
             semgrep_ignore,
             uses_managed_policy,
         )
