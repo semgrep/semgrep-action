@@ -158,6 +158,8 @@ class GithubMeta(GitMeta):
 
     @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
+        if self.cli_baseline_ref:
+            return self.cli_baseline_ref
         if self.event_name == "pull_request" and self.head_ref is not None:
             # The pull request "base" that GitHub sends us is not necessarily the merge base,
             # so we need to get the merge-base from Git
@@ -241,10 +243,11 @@ class GitlabMeta(GitMeta):
 
     @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
+        if self.cli_baseline_ref:
+            return self.cli_baseline_ref
         target_branch = os.getenv("CI_MERGE_REQUEST_TARGET_BRANCH_NAME")
         if not target_branch:
             return None
-
         head_sha = git("rev-parse", "HEAD").stdout.strip()
         git.fetch(self._get_remote_url(), target_branch)
         base_sha = (
