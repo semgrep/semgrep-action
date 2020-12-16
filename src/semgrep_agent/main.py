@@ -127,9 +127,11 @@ def main(
         config = semgrep.resolve_config_shorthand(config)
         click.echo(f"| using semgrep rules from {config}", err=True)
     elif sapp.is_configured:
-        local_config_path = sapp.download_rules()
+        local_config_path, num_rules = sapp.download_rules()
         config = str(local_config_path)
-        click.echo("| using semgrep rules configured on the web UI", err=True)
+        click.echo(
+            f"| using {num_rules} semgrep rules configured on the web UI", err=True
+        )
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
         config = ".semgrep.yml"

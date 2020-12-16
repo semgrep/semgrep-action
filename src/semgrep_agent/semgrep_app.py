@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import cast
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import requests
 from glom import glom
 from glom import T
+from ruamel import yaml  # type: ignore
 
 from semgrep_agent import constants
 from semgrep_agent.meta import GitMeta
@@ -104,13 +106,15 @@ class Sapp:
         else:
             return response.text
 
-    def download_rules(self) -> Path:
+    def download_rules(self) -> Tuple[Path, int]:
         """Save the rules configured on semgrep app to a temporary file"""
         # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
         rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
         rules_path = Path(rules_file.name)
-        rules_path.write_text(self.fetch_rules_text())
-        return rules_path
+        rules = self.fetch_rules_text()
+        parsed = yaml.load(rules, Loader=yaml.Loader)
+        rules_path.write_text(rules)
+        return rules_path, len(parsed["rules"])
 
     def report_results(self, results: Results) -> None:
         if not self.is_configured or not self.scan.is_loaded:
