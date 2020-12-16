@@ -11,7 +11,7 @@ from typing import Tuple
 import requests
 from glom import glom
 from glom import T
-from ruamel import yaml  # type: ignore
+from ruamel.yaml import YAML  # type: ignore
 
 from semgrep_agent import constants
 from semgrep_agent.meta import GitMeta
@@ -19,6 +19,8 @@ from semgrep_agent.semgrep import Results
 from semgrep_agent.utils import ActionFailure
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import validate_publish_token
+
+yaml = YAML(typ="rt")
 
 
 @dataclass
@@ -112,7 +114,7 @@ class Sapp:
         rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
         rules_path = Path(rules_file.name)
         rules = self.fetch_rules_text()
-        parsed = yaml.load(rules, Loader=yaml.Loader)
+        parsed = yaml.load(rules)
         rules_path.write_text(rules)
         return rules_path, len(parsed["rules"])
 
