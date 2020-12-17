@@ -112,6 +112,7 @@ class GitMeta:
             "pull_request_title": self.pr_title,
         }
 
+
 @dataclass
 class EnvVarMeta(GitMeta):
     """Gather metadata only from local environment variables."""
@@ -124,7 +125,7 @@ class EnvVarMeta(GitMeta):
         return os.getenv("SEMGREP_EVENT_NAME")
 
     @cachedproperty
-    def repo_name(self) -> str:
+    def repo_name(self) -> Optional[str]:
         return os.getenv("SEMGREP_REPO_NAME")
 
     @cachedproperty
@@ -158,7 +159,7 @@ class EnvVarMeta(GitMeta):
     @cachedproperty
     def pr_author_username(self) -> Optional[str]:
         return os.getenv("SEMGREP_PR_AUTHOR_USERNAME")
-    
+
     @cachedproperty
     def commit_author_image_url(self) -> Optional[str]:
         return os.getenv("SEMGREP_COMMIT_AUTHOR_IMAGE_URL")
@@ -166,7 +167,7 @@ class EnvVarMeta(GitMeta):
     @cachedproperty
     def commit_author_username(self) -> Optional[str]:
         return os.getenv("SEMGREP_COMMIT_AUTHOR_USERNAME")
-    
+
     @cachedproperty
     def commit_author_email(self) -> Optional[str]:
         return os.getenv("SEMGREP_COMMIT_AUTHOR_EMAIL")
@@ -204,6 +205,7 @@ class EnvVarMeta(GitMeta):
             "pull_request_id": self.pr_id,
             "pull_request_title": self.pr_title,
         }
+
 
 @dataclass
 class GithubMeta(GitMeta):
@@ -388,7 +390,7 @@ def detect_meta_environment() -> Type[GitMeta]:
     elif os.getenv("CI"):  # nosem
         return GitMeta
 
-    elif os.getenv("SEMGREP_MANUAL_ENV")
+    elif os.getenv("SEMGREP_MANUAL_ENV"):  # nosem
         return EnvVarMeta
 
     else:  # nosem
