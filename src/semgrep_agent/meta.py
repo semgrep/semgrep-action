@@ -125,8 +125,8 @@ class EnvVarMeta(GitMeta):
         return os.getenv("SEMGREP_EVENT_NAME")
 
     @cachedproperty
-    def repo_name(self) -> Optional[str]:
-        return os.getenv("SEMGREP_REPO_NAME")
+    def repo_name(self) -> str:
+        return os.getenv("SEMGREP_REPO_NAME") or "unset-SEMGREP_REPO_NAME"
 
     @cachedproperty
     def repo_url(self) -> Optional[str]:
