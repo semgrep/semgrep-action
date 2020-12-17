@@ -112,6 +112,98 @@ class GitMeta:
             "pull_request_title": self.pr_title,
         }
 
+@dataclass
+class EnvVarMeta(GitMeta):
+    """Gather metadata only from local environment variables."""
+
+    config: str
+    environment: str = field(default="env-vars", init=False)
+
+    @cachedproperty
+    def event_name(self) -> Optional[str]:
+        return os.getenv("SEMGREP_EVENT_NAME")
+
+    @cachedproperty
+    def repo_name(self) -> str:
+        return os.getenv("SEMGREP_REPO_NAME")
+
+    @cachedproperty
+    def repo_url(self) -> Optional[str]:
+        return os.getenv("SEMGREP_REPO_URL")
+
+    @cachedproperty
+    def commit_sha(self) -> Optional[str]:
+        return os.getenv("SEMGREP_COMMIT_SHA")
+
+    @cachedproperty
+    def head_ref(self) -> Optional[str]:
+        return os.getenv("SEMGREP_COMMIT_SHA")
+
+    @cachedproperty
+    def branch(self) -> Optional[str]:
+        return os.getenv("SEMGREP_BRANCH")
+
+    @cachedproperty
+    def ci_job_url(self) -> Optional[str]:
+        return os.getenv("SEMGREP_JOB_URL")
+
+    @cachedproperty
+    def pr_id(self) -> Optional[str]:
+        return os.getenv("SEMGREP_PR_ID")
+
+    @cachedproperty
+    def pr_author_image_url(self) -> Optional[str]:
+        return os.getenv("SEMGREP_PR_AUTHOR_IMAGE_URL")
+
+    @cachedproperty
+    def pr_author_username(self) -> Optional[str]:
+        return os.getenv("SEMGREP_PR_AUTHOR_USERNAME")
+    
+    @cachedproperty
+    def commit_author_image_url(self) -> Optional[str]:
+        return os.getenv("SEMGREP_COMMIT_AUTHOR_IMAGE_URL")
+
+    @cachedproperty
+    def commit_author_username(self) -> Optional[str]:
+        return os.getenv("SEMGREP_COMMIT_AUTHOR_USERNAME")
+    
+    @cachedproperty
+    def commit_author_email(self) -> Optional[str]:
+        return os.getenv("SEMGREP_COMMIT_AUTHOR_EMAIL")
+
+    @cachedproperty
+    def commit_author_name(self) -> Optional[str]:
+        return os.getenv("SEMGREP_COMMIT_AUTHOR_NAME")
+
+    @cachedproperty
+    def commit_title(self) -> Optional[str]:
+        return os.getenv("SEMGREP_COMMIT_TITLE")
+
+    @cachedproperty
+    def pr_title(self) -> Optional[str]:
+        return os.getenv("SEMGREP_PR_TITLE")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            # REQUIRED for semgrep-app backend
+            "repository": self.repo_name,
+            #  OPTIONAL for semgrep-app backend
+            "repo_url": self.repo_url,
+            "branch": self.branch,
+            "ci_job_url": self.ci_job_url,
+            "commit": self.commit_sha,
+            "commit_author_email": self.commit_author_email,
+            "commit_author_name": self.commit_author_name,
+            "commit_author_username": self.commit_author_username,
+            "commit_author_image_url": self.commit_author_image_url,
+            "commit_title": self.commit_title,
+            "config": self.config,
+            "on": self.event_name,
+            "pull_request_author_username": self.pr_author_username,
+            "pull_request_author_image_url": self.pr_author_image_url,
+            "pull_request_id": self.pr_id,
+            "pull_request_title": self.pr_title,
+        }
 
 @dataclass
 class GithubMeta(GitMeta):
@@ -295,6 +387,9 @@ def detect_meta_environment() -> Type[GitMeta]:
 
     elif os.getenv("CI"):  # nosem
         return GitMeta
+
+    elif os.getenv("SEMGREP_MANUAL_ENV")
+        return EnvVarMeta
 
     else:  # nosem
         return GitMeta
