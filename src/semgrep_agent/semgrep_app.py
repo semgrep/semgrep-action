@@ -106,7 +106,7 @@ class Sapp:
             )
 
         # Can remove once server guarantees will always have at least one rule
-        parsed = json.loads(response.text)
+        parsed = yaml.load(response.text)
         if not parsed["rules"]:
             raise ActionFailure(
                 "No rules returned by server for this scan. Note that if a rule is not set to notify or block it is not returned by the server."
