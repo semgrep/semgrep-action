@@ -9,6 +9,7 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+import click
 import requests
 from glom import glom
 from glom import T
@@ -68,7 +69,9 @@ class Sapp:
 
         if response.status_code == 404:
             raise ActionFailure(
-                "Failed to create a scan with given token and deployment_id. Please make sure they have been set correctly."
+                "Failed to create a scan with given token and deployment_id."
+                "Please make sure they have been set correctly."
+                f"API server at {self.url} returned this response: {response.text}"
             )
 
         try:
@@ -79,7 +82,6 @@ class Sapp:
             )
         else:
             body = response.json()
-
             self.scan = Scan(
                 id=glom(body, T["scan"]["id"]),
                 ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
@@ -141,6 +143,12 @@ class Sapp:
         debug_echo(f"=== POST .../findings responded: {response!r}")
         try:
             response.raise_for_status()
+
+            errors = response.json()["errors"]
+            for error in errors:
+                message = error["message"]
+                click.echo(f"Server returned following warning: {message}", err=True)
+
         except requests.RequestException:
             raise ActionFailure(f"API server returned this error: {response.text}")
 

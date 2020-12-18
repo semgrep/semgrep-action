@@ -11,6 +11,7 @@ from typing import Optional
 from typing import Type
 from typing import Union
 
+import click
 import git as gitpython
 import sh
 from boltons.cacheutils import cachedproperty
@@ -284,4 +285,9 @@ def generate_meta_from_environment(baseline_ref: Optional[str]) -> GitMeta:
         return GitlabMeta()
 
     else:  # nosem
+        if not baseline_ref:
+            click.echo(
+                "Note that no baseline-ref was passed and detected environment is not Github or Gitlab to will default to perfoming a full scan. If you want semgrep to only report on new findings from a pull request please set baseline-ref ",
+                err=True,
+            )
         return GitMeta(baseline_ref)
