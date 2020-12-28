@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
-from typing import Any
+from typing import Any, Generator, Tuple
 from typing import cast
 from typing import Dict
 from typing import Iterator
@@ -34,27 +34,6 @@ from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
-
-if TYPE_CHECKING:
-    from semgrep_agent.semgrep_app import Scan
-
-ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
-semgrep = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
-
-# a typical old system has 128 * 1024 as their max command length
-# we assume an average ~250 characters for a path in the worst case
-PATHS_CHUNK_SIZE = 500
-
-
-def resolve_config_shorthand(config: str) -> str:
-    maybe_prefix = config[:2]
-    if maybe_prefix in {"p/", "r/"}:
-        return f"https://semgrep.dev/c/{config}"
-    elif maybe_prefix == "s/":
-        return f"https://semgrep.dev/c/{config[2:]}"
-    else:
-        return config
-
 
 def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
     semgrepignore = io.StringIO()
@@ -81,7 +60,6 @@ def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
 
     return semgrepignore
 
-
 @dataclass
 class Results:
     findings: FindingSets
@@ -95,19 +73,6 @@ class Results:
         }
 
 
-def rewrite_sarif_file(sarif_path: Path) -> None:
-    """Fix SARIF errors in semgrep output and pretty format the file."""
-
-    with sarif_path.open() as sarif_file:
-        sarif_results = json.load(sarif_file)
-
-    rules_by_id = {
-        rule["id"]: rule for rule in sarif_results["runs"][0]["tool"]["driver"]["rules"]
-    }
-    sarif_results["runs"][0]["tool"]["driver"]["rules"] = list(rules_by_id.values())
-
-    with sarif_path.open("w") as sarif_file:
-        json.dump(sarif_results, sarif_file, indent=2, sort_keys=True)
 
 
 @contextmanager
@@ -158,155 +123,77 @@ def fix_head_for_github(
             click.echo(f"| returning to original head revision {stashed_rev}", err=True)
             git.checkout([stashed_rev])
 
+def compare_lockfiles(a_text: str, b_text: Optional[str]):
+    print('posting...')
+    output = requests.post('https://semgrepdep.herokuapp.com', json={
+        'old': a_text,
+        'new': b_text,
+    }, timeout=60)
+    res = output.json()
+    print(res)
+    #if res['status'] == 1:
+    #    print(res)
+
+TARGET_FILENAMES = ["pipfile.lock"]
+
+def get_files_matching_name_insensitive_case(
+    paths: List[Path]
+) -> Generator[Path, None, None]:
+    for target_file in TARGET_FILENAMES:
+        for path in paths:
+            if path.name.lower() == target_file.lower():
+                yield path
 
 def invoke_semgrep(
-    config_specifier: str,
-    committed_datetime: Optional[datetime],
     base_commit_ref: Optional[str],
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
-    uses_managed_policy: bool,
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
     with fix_head_for_github(base_commit_ref, head_ref) as base_ref:
         workdir = Path.cwd()
+
         targets = TargetFileManager(
             base_path=workdir,
             base_commit=base_ref,
             paths=[workdir],
-            ignore_rules_file=semgrep_ignore,
+                        ignore_rules_file=semgrep_ignore,
+
         )
+        old_targets = []
+        new_targets = []
+        old_targets_text = {}
+        new_targets_text = {}
+        with targets.current_paths() as current_paths:
+            new_targets = list(get_files_matching_name_insensitive_case(current_paths))
+            for t in new_targets:
+                new_targets_text[t] = t.read_text()            
 
-        config_args = ["--config", config_specifier]
-        rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
+        with targets.baseline_paths() as baseline_paths:
+            old_targets = list(get_files_matching_name_insensitive_case(baseline_paths))
+            for t in old_targets:
+                old_targets_text[t] = t.read_text()
 
-        debug_echo("=== seeing if there are any findings")
-        findings = FindingSets()
+        # we only care about new things or things that changed
+        changed_targets = {t: (text, old_targets_text[t]) for t, text in new_targets_text.items() if t in old_targets_text}
+        introduced_targets = {t: text for t, text in new_targets_text.items() if t not in old_targets_text}
 
-        with targets.current_paths() as paths:
-            click.echo(
-                "=== looking for current issues in " + unit_len(paths, "file"), err=True
-            )
-            for chunk in chunked_iter(paths, PATHS_CHUNK_SIZE):
-                args = [
-                    "--skip-unknown-extensions",
-                    "--disable-nosem",
-                    "--json",
-                    *rewrite_args,
-                    *config_args,
-                ]
-                for path in chunk:
-                    args.append(path)
-                semgrep_results = json.loads(str(semgrep(*args)))["results"]
-                findings.current.update_findings(
-                    Finding.from_semgrep_result(result, committed_datetime)
-                    for result in semgrep_results
-                    if not result["extra"].get("is_ignored")
-                )
-                findings.ignored.update_findings(
-                    Finding.from_semgrep_result(result, committed_datetime)
-                    for result in semgrep_results
-                    if result["extra"].get("is_ignored")
-                )
-                click.echo(
-                    f"| {unit_len(findings.current, 'current issue')} found", err=True
-                )
-                click.echo(
-                    f"| {unit_len(findings.ignored, 'ignored issue')} found",
-                    err=True,
-                )
+        print('changed', changed_targets.keys())
+        print('introduced', introduced_targets.keys())
+        
+        for a, b in changed_targets.values():
+            compare_lockfiles(a, b)
+        for a in introduced_targets.values():
+            compare_lockfiles(a, None)
 
-    if not findings.current:
-        click.echo(
-            "=== not looking at pre-existing issues since there are no current issues",
-            err=True,
-        )
-    else:
-        with targets.baseline_paths() as paths:
-            paths_with_findings = {finding.path for finding in findings.current}
-            paths_to_check = set(str(path) for path in paths) & paths_with_findings
-            if not paths_to_check:
-                click.echo(
-                    "=== not looking at pre-existing issues since all files with current issues are newly created",
-                    err=True,
-                )
-            else:
-                click.echo(
-                    "=== looking for pre-existing issues in "
-                    + unit_len(paths_to_check, "file"),
-                    err=True,
-                )
-                for chunk in chunked_iter(paths_to_check, PATHS_CHUNK_SIZE):
-                    args = [
-                        "--skip-unknown-extensions",
-                        "--json",
-                        *rewrite_args,
-                        *config_args,
-                    ]
-                    for path in chunk:
-                        args.append(path)
-                    semgrep_results = json.loads(str(semgrep(*args)))["results"]
-                    findings.baseline.update_findings(
-                        Finding.from_semgrep_result(result, committed_datetime)
-                        for result in semgrep_results
-                    )
-                click.echo(
-                    f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
-                    err=True,
-                )
-
-    if os.getenv("INPUT_GENERATESARIF"):
-        # FIXME: This will crash when running on thousands of files due to command length limit
-        click.echo("=== re-running scan to generate a SARIF report", err=True)
-        sarif_path = Path("semgrep.sarif")
-        with targets.current_paths() as paths, sarif_path.open("w") as sarif_file:
-            args = ["--sarif", *rewrite_args, *config_args]
-            for path in paths:
-                args.extend(["--include", path])
-            semgrep(*args, _out=sarif_file)
-        rewrite_sarif_file(sarif_path)
-
-    return findings
-
-
-def scan(
-    config_specifier: str,
-    committed_datetime: Optional[datetime],
+def cai(
     base_commit_ref: Optional[str],
     head_ref: Optional[str],
-    semgrep_ignore: TextIO,
-    uses_managed_policy: bool,
-) -> Results:
-    before = time.time()
-    try:
-        findings = invoke_semgrep(
-            config_specifier,
-            committed_datetime,
-            base_commit_ref,
-            head_ref,
-            semgrep_ignore,
-            uses_managed_policy,
-        )
-    except sh.ErrorReturnCode as error:
-        message = f"""
-        === failed command's STDOUT:
-
-{indent(error.stdout.decode(), 8 * ' ')}
-
-        === failed command's STDERR:
-
-{indent(error.stderr.decode(), 8 * ' ')}
-
-        === [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
-
-        This is an internal error, please file an issue at https://github.com/returntocorp/semgrep-action/issues/new/choose
-        and include any log output from above.
-        """
-        message = dedent(message).strip()
-        click.echo("", err=True)
-        click.echo(message, err=True)
-        sys.exit(error.exit_code)
-    after = time.time()
-
-    return Results(findings, after - before)
+    semgrep_ignore: TextIO
+) -> None:
+    invoke_semgrep(
+        base_commit_ref,
+        head_ref,
+        semgrep_ignore
+    )
