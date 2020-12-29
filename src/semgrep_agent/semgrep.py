@@ -129,7 +129,7 @@ def fix_head_for_github(
 def compare_lockfiles(a_text: Optional[str], b_text: str) -> Dict[str, Any]:
     print("posting...")
     output = requests.post(
-        "http://34.221.58.132:8000/semgrepdep",
+        "https://deps.semgrep.dev/semgrepdep",
         json={
             "old": a_text,
             "new": b_text,

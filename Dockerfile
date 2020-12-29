@@ -1,4 +1,4 @@
-FROM returntocorp/semgrep:0.35.0@sha256:203eefa7fef3d85e9313fd322642a78ee030188876122a0e7521fdc5c4d199c3 AS semgrep
+#FROM returntocorp/semgrep:0.35.0@sha256:203eefa7fef3d85e9313fd322642a78ee030188876122a0e7521fdc5c4d199c3 AS semgrep
 FROM python:3.7-alpine
 
 WORKDIR /app
@@ -7,13 +7,13 @@ COPY pyproject.toml ./
 
 ENV INSTALLED_SEMGREP_VERSION=0.35.0
 
-COPY --from=semgrep /usr/local/bin/semgrep-core /tmp/semgrep-core
+#COPY --from=semgrep /usr/local/bin/semgrep-core /tmp/semgrep-core
 
 RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &&\
     apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
     pip install --no-cache-dir poetry==1.0.10 &&\
     pip install --no-cache-dir pipx &&\
-    PRECOMPILED_LOCATION=/tmp/semgrep-core pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
+    #PRECOMPILED_LOCATION=/tmp/semgrep-core pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
     poetry config virtualenvs.create false &&\
     # Don't install dev dependencies or semgrep-agent
     poetry install --no-dev --no-root &&\
