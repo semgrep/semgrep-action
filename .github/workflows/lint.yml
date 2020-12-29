@@ -23,3 +23,10 @@ jobs:
         with:
           publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
           publishDeployment: "1"
+
+  semgrepdep:
+    name: semgrepdep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ievans/semgrep-action@0.1-alpha
