@@ -9,8 +9,8 @@ ENV INSTALLED_SEMGREP_VERSION=0.35.0
 
 #COPY --from=semgrep /usr/local/bin/semgrep-core /tmp/semgrep-core
 
-RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &&\
-    apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
+# apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &&\
+RUN apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
     pip install --no-cache-dir poetry==1.0.10 &&\
     pip install --no-cache-dir pipx &&\
     #PRECOMPILED_LOCATION=/tmp/semgrep-core pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
