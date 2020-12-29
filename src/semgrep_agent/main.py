@@ -53,12 +53,12 @@ def get_aligned_command(title: str, subtext: str) -> str:
 )
 def main(
     baseline_ref: str,
-) -> NoReturn:
+) -> None:
     click.echo("=== detecting environment", err=True)
     click.echo(
         get_aligned_command(
             "versions",
-            f"semgrep {sh.semgrep(version=True).strip()} on {sh.python(version=True).strip()}",
+            f"on {sh.python(version=True).strip()}",
         ),
         err=True,
     )
@@ -68,7 +68,7 @@ def main(
     meta_kwargs = {}
     if baseline_ref:
         meta_kwargs["cli_baseline_ref"] = baseline_ref
-    meta = Meta('noconfig', **meta_kwargs)
+    meta = Meta("noconfig", **meta_kwargs)
     click.echo(
         get_aligned_command(
             "environment",
@@ -76,10 +76,10 @@ def main(
         ),
         err=True,
     )
-    
+
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
 
-    results = semgrep.cai(
+    semgrep.cai(
         meta.base_commit_ref,
         meta.head_ref,
         semgrep.get_semgrepignore([]),
