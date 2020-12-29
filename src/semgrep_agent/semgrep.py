@@ -205,7 +205,7 @@ def invoke_semgrep(
             compare_lockfiles(a, b)
         for a in introduced_targets.values():
             compare_lockfiles(None, a)
-        print("::set-output text=this is custom text")
+        print("::set-output name=semgrepdepoutput::this is custom text")
 
 
 def cai(
