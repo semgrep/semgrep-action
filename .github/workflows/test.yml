@@ -72,24 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - id: semgrep-app-config
-        name: with semgrep-app connection
-        uses: ./tests/local-image-action
-        with:
-          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
-          publishDeployment: "1"
       - id: semgrep-live-registry-id
         name: with a semgrep.live Registry ID
         uses: ./tests/local-image-action
         with:
           config: r/python.jwt
-      - id: semgrep-live-ruleset-id
-        name: with a semgrep.live Ruleset ID
-        uses: ./tests/local-image-action
-        with:
-          config: p/r2c-CI
-      - id: semgrep-live-id
-        name: with a semgrep.live Rule ID
-        uses: ./tests/local-image-action
-        with:
-          config: s/QKP
