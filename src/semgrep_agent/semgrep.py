@@ -129,9 +129,10 @@ def fix_head_for_github(
 def compare_lockfiles(a_text: Optional[str], b_text: str) -> Dict[str, Any]:
     REMOTE_URL = "https://deps.semgrep.dev/semgrepdep"
     LOCAL_URL = "http://localhost:5000/semgrepdep"
-    print("posting...")
+    TARGET_URL = REMOTE_URL
+    print(f"posting to {TARGET_URL}...")
     output = requests.post(
-        REMOTE_URL,
+        TARGET_URL,
         json={
             "old": a_text,
             "new": b_text,
