@@ -10,13 +10,15 @@ from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
-from typing import Any, Generator, Tuple
+from typing import Any
 from typing import cast
 from typing import Dict
+from typing import Generator
 from typing import Iterator
 from typing import List
 from typing import Optional
 from typing import TextIO
+from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -34,6 +36,7 @@ from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
+
 
 def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
     semgrepignore = io.StringIO()
@@ -60,6 +63,7 @@ def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
 
     return semgrepignore
 
+
 @dataclass
 class Results:
     findings: FindingSets
@@ -71,8 +75,6 @@ class Results:
             "findings": len(self.findings.new),
             "total_time": self.total_time,
         }
-
-
 
 
 @contextmanager
@@ -123,32 +125,41 @@ def fix_head_for_github(
             click.echo(f"| returning to original head revision {stashed_rev}", err=True)
             git.checkout([stashed_rev])
 
-def compare_lockfiles(a_text: str, b_text: Optional[str]):
-    print('posting...')
-    output = requests.post('https://semgrepdep.herokuapp.com', json={
-        'old': a_text,
-        'new': b_text,
-    }, timeout=60)
-    res = output.json()
+
+def compare_lockfiles(a_text: Optional[str], b_text: str) -> Dict[str, Any]:
+    print("posting...")
+    output = requests.post(
+        "http://34.221.58.132:8000/semgrepdep",
+        json={
+            "old": a_text,
+            "new": b_text,
+        },
+        timeout=600,
+    )
+    res: Dict[str, Any] = output.json()
     print(res)
-    #if res['status'] == 1:
+    return res
+    # if res['status'] == 1:
     #    print(res)
+
 
 TARGET_FILENAMES = ["pipfile.lock"]
 
+
 def get_files_matching_name_insensitive_case(
-    paths: List[Path]
+    paths: List[Path],
 ) -> Generator[Path, None, None]:
     for target_file in TARGET_FILENAMES:
         for path in paths:
             if path.name.lower() == target_file.lower():
                 yield path
 
+
 def invoke_semgrep(
     base_commit_ref: Optional[str],
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
-) -> FindingSets:
+) -> None:
     debug_echo("=== adding semgrep configuration")
 
     with fix_head_for_github(base_commit_ref, head_ref) as base_ref:
@@ -158,8 +169,7 @@ def invoke_semgrep(
             base_path=workdir,
             base_commit=base_ref,
             paths=[workdir],
-                        ignore_rules_file=semgrep_ignore,
-
+            ignore_rules_file=semgrep_ignore,
         )
         old_targets = []
         new_targets = []
@@ -168,7 +178,7 @@ def invoke_semgrep(
         with targets.current_paths() as current_paths:
             new_targets = list(get_files_matching_name_insensitive_case(current_paths))
             for t in new_targets:
-                new_targets_text[t] = t.read_text()            
+                new_targets_text[t] = t.read_text()
 
         with targets.baseline_paths() as baseline_paths:
             old_targets = list(get_files_matching_name_insensitive_case(baseline_paths))
@@ -176,24 +186,25 @@ def invoke_semgrep(
                 old_targets_text[t] = t.read_text()
 
         # we only care about new things or things that changed
-        changed_targets = {t: (text, old_targets_text[t]) for t, text in new_targets_text.items() if t in old_targets_text}
-        introduced_targets = {t: text for t, text in new_targets_text.items() if t not in old_targets_text}
+        changed_targets = {
+            t: (old_targets_text[t], text)
+            for t, text in new_targets_text.items()
+            if t in old_targets_text
+        }
+        introduced_targets = {
+            t: text for t, text in new_targets_text.items() if t not in old_targets_text
+        }
 
-        print('changed', changed_targets.keys())
-        print('introduced', introduced_targets.keys())
-        
+        print("changed", changed_targets.keys())
+        print("introduced", introduced_targets.keys())
+
         for a, b in changed_targets.values():
             compare_lockfiles(a, b)
         for a in introduced_targets.values():
-            compare_lockfiles(a, None)
+            compare_lockfiles(None, a)
+
 
 def cai(
-    base_commit_ref: Optional[str],
-    head_ref: Optional[str],
-    semgrep_ignore: TextIO
+    base_commit_ref: Optional[str], head_ref: Optional[str], semgrep_ignore: TextIO
 ) -> None:
-    invoke_semgrep(
-        base_commit_ref,
-        head_ref,
-        semgrep_ignore
-    )
+    invoke_semgrep(base_commit_ref, head_ref, semgrep_ignore)
