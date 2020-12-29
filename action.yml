@@ -3,20 +3,7 @@ author: "Return To Corporation"
 description: "Easily detect and prevent bugs and anti-patterns in your codebase"
 runs:
   using: "docker"
-  image: "docker://returntocorp/semgrep-action:v1"
-inputs:
-  config:
-    description: |
-      Rules and patterns to search for with semgrep.
-  publishToken:
-    description: |
-      Access token to post results to the semgrep app.
-  publishDeployment:
-    description: |
-      Deployment ID on semgrep app.
-  generateSarif:
-    description: |
-      Set to 1 if you want a semgrep.sarif file to be written with all semgrep findings.
+  image: "docker://ievans/semgrep-action:0.1-alpha"
 branding:
   icon: "align-left"
   color: "gray-dark"
