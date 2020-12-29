@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: ievans/semgrep-action@v100
+        id: semgrepdep
       - uses: actions/github-script@v3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
@@ -28,5 +29,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '👋 Thanks for reporting!'
+              body: '👋 Thanks for reporting! ${{join(steps.semgrepdep.outputs.*, '\n')}}'
             })
