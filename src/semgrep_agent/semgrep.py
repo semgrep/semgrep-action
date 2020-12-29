@@ -138,7 +138,6 @@ def compare_lockfiles(a_text: Optional[str], b_text: str) -> Dict[str, Any]:
     )
     res: Dict[str, Any] = output.json()
     print(res)
-    print("::set-output text=this is custom text")
     return res
     # if res['status'] == 1:
     #    print(res)
@@ -203,6 +202,7 @@ def invoke_semgrep(
             compare_lockfiles(a, b)
         for a in introduced_targets.values():
             compare_lockfiles(None, a)
+        print("::set-output text=this is custom text")
 
 
 def cai(
