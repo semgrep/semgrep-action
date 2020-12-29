@@ -1,9 +1,9 @@
-name: "Semgrep Action"
+name: "Semgrepdep"
 author: "Return To Corporation"
-description: "Easily detect and prevent bugs and anti-patterns in your codebase"
+description: "TODO"
 runs:
   using: "docker"
-  image: "docker://ievans/semgrep-action:0.1-alpha"
+  image: 'Dockerfile'
 branding:
   icon: "align-left"
   color: "gray-dark"
