@@ -201,10 +201,19 @@ def invoke_semgrep(
         print("changed", changed_targets.keys())
         print("introduced", introduced_targets.keys())
 
+        res = {}
         for a, b in changed_targets.values():
-            compare_lockfiles(a, b)
+            res = compare_lockfiles(a, b)
         for a in introduced_targets.values():
-            compare_lockfiles(None, a)
+            res = compare_lockfiles(None, a)
+
+        output_file = os.environ.get("GITHUB_ENV")
+        print(f"output file is {output_file}")
+        if output_file is not None:
+            with open(output_file, "w") as fout:
+                fout.write("MARKDOWN_COMMENT<<EOF")
+                fout.write(str(res))
+                fout.write("EOF")
         print("::set-output name=semgrepdepoutput::this is custom text")
 
 
