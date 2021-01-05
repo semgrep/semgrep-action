@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
 from typing import Any
+from typing import cast
 from typing import Dict
 from typing import Optional
 from typing import Type
@@ -54,6 +55,10 @@ class GitMeta:
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
         return self.repo.head.commit.hexsha  # type: ignore
+
+    @cachedproperty
+    def head_ref(self) -> Optional[str]:
+        return None
 
     @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
@@ -145,12 +150,21 @@ class GithubMeta(GitMeta):
         return super().commit_sha  # type: ignore
 
     @cachedproperty
-    def base_commit_ref(self) -> Optional[str]:
+    def head_ref(self) -> Optional[str]:
         if self.event_name == "pull_request":
-            pr_base = self.glom_event(T["pull_request"]["base"]["sha"])
+            return self.commit_sha  # type: ignore
+        else:
+            return None
+
+    @cachedproperty
+    def base_commit_ref(self) -> Optional[str]:
+        if self.cli_baseline_ref:
+            return self.cli_baseline_ref
+        if self.event_name == "pull_request" and self.head_ref is not None:
             # The pull request "base" that GitHub sends us is not necessarily the merge base,
             # so we need to get the merge-base from Git
-            return git("merge-base", pr_base, "HEAD").stdout.decode().strip()
+            pr_base = self.glom_event(T["pull_request"]["base"]["sha"])
+            return git("merge-base", pr_base, self.head_ref).stdout.decode().strip()
         return None
 
     @cachedproperty
@@ -229,10 +243,11 @@ class GitlabMeta(GitMeta):
 
     @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
+        if self.cli_baseline_ref:
+            return self.cli_baseline_ref
         target_branch = os.getenv("CI_MERGE_REQUEST_TARGET_BRANCH_NAME")
         if not target_branch:
             return None
-
         head_sha = git("rev-parse", "HEAD").stdout.strip()
         git.fetch(self._get_remote_url(), target_branch)
         base_sha = (
