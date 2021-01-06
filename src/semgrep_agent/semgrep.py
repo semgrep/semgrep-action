@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import shlex
 import sys
 import time
 import urllib.parse
@@ -166,6 +167,8 @@ def invoke_semgrep(
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
+    *,
+    semgrep_opts: str,
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
@@ -243,6 +246,7 @@ def invoke_semgrep(
                         "--json",
                         *rewrite_args,
                         *config_args,
+                        *shlex.split(semgrep_opts),  # incompatible with Windows
                     ]
                     for path in chunk:
                         args.append(path)
@@ -277,6 +281,8 @@ def scan(
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
+    *,
+    semgrep_opts: str,
 ) -> Results:
     before = time.time()
     try:
@@ -287,6 +293,7 @@ def scan(
             head_ref,
             semgrep_ignore,
             uses_managed_policy,
+            semgrep_opts=semgrep_opts,
         )
     except sh.ErrorReturnCode as error:
         message = f"""

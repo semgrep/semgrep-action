@@ -61,6 +61,7 @@ def get_aligned_command(title: str, subtext: str) -> str:
 @click.option(
     "--gitlab-json", "gitlab_output", envvar="SEMGREP_GITLAB_JSON", is_flag=True
 )
+@click.option("--semgrep-opts", type=str)
 def main(
     config: str,
     baseline_ref: str,
@@ -69,6 +70,7 @@ def main(
     publish_deployment: int,
     json_output: bool,
     gitlab_output: bool,
+    semgrep_opts: str,
 ) -> NoReturn:
     click.echo("=== detecting environment", err=True)
     click.echo(
@@ -175,6 +177,7 @@ def main(
         meta.head_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
         sapp.is_configured,
+        semgrep_opts=semgrep_opts,
     )
     new_findings = results.findings.new
 
