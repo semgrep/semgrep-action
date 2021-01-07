@@ -112,7 +112,7 @@ class Sapp:
         """Save the rules configured on semgrep app to a temporary file"""
         # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
         rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
-        rules_path = Path(rules_file.name)
+        rules_path = Path(rules_file.name)  # nosem
         rules = self.fetch_rules_text()
         parsed = yaml.load(rules)
         rules_path.write_text(rules)

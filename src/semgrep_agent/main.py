@@ -128,6 +128,20 @@ def main(
         click.echo(f"| using semgrep rules from {config}", err=True)
     elif sapp.is_configured:
         local_config_path, num_rules = sapp.download_rules()
+        if num_rules == 0:
+            message = """
+            == [ERROR] This policy will not run any rules
+
+            Semgrep will only run rules in your policy that
+            have an action associated with them (notify or block).
+            We have a logging-only option coming soon, but in
+            the mean time, you can accomplish this by selecting
+            "notify" on the policy tab and not configuring any
+            channels on the notifications tab
+            """
+            message = dedent(message).strip()
+            click.echo(message, err=True)
+            sys.exit(1)
         config = str(local_config_path)
         click.echo(
             f"| using {num_rules} semgrep rules configured on the web UI", err=True
