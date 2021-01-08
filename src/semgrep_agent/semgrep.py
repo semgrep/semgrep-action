@@ -1,12 +1,14 @@
 import io
 import json
 import os
+import shlex
 import sys
 import time
 import urllib.parse
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from json.decoder import JSONDecodeError
 from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
@@ -44,6 +46,16 @@ semgrep = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
 PATHS_CHUNK_SIZE = 500
+
+
+class SemgrepCommandFailure(Exception):
+    """This imitates ``sh.ErrorReturnCode``, but is raised when Semgrep fails with exit code 0."""
+
+    def __init__(self, command: sh.RunningCommand):
+        self.stdout = command.stdout
+        self.stderr = command.stderr
+        self.full_cmd = b" ".join(command.cmd).decode()
+        self.exit_code = command.exit_code
 
 
 def resolve_config_shorthand(config: str) -> str:
@@ -166,6 +178,8 @@ def invoke_semgrep(
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
+    *,
+    semgrep_opts: str,
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
@@ -180,6 +194,7 @@ def invoke_semgrep(
 
         config_args = ["--config", config_specifier]
         rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
+        user_provided_args = shlex.split(semgrep_opts)  # incompatible with Windows
 
         debug_echo("=== seeing if there are any findings")
         findings = FindingSets()
@@ -195,10 +210,15 @@ def invoke_semgrep(
                     "--json",
                     *rewrite_args,
                     *config_args,
+                    *user_provided_args,
                 ]
                 for path in chunk:
                     args.append(path)
-                semgrep_results = json.loads(str(semgrep(*args)))["results"]
+                semgrep_command = semgrep(*args)
+                try:
+                    semgrep_results = json.loads(str(semgrep_command))["results"]
+                except (JSONDecodeError, KeyError):
+                    raise SemgrepCommandFailure(semgrep_command)
                 findings.current.update_findings(
                     Finding.from_semgrep_result(result, committed_datetime)
                     for result in semgrep_results
@@ -243,10 +263,15 @@ def invoke_semgrep(
                         "--json",
                         *rewrite_args,
                         *config_args,
+                        *user_provided_args,
                     ]
                     for path in chunk:
                         args.append(path)
-                    semgrep_results = json.loads(str(semgrep(*args)))["results"]
+                    semgrep_command = semgrep(*args)
+                    try:
+                        semgrep_results = json.loads(str(semgrep_command))["results"]
+                    except (JSONDecodeError, KeyError):
+                        raise SemgrepCommandFailure(semgrep_command)
                     findings.baseline.update_findings(
                         Finding.from_semgrep_result(result, committed_datetime)
                         for result in semgrep_results
@@ -277,6 +302,8 @@ def scan(
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
+    *,
+    semgrep_opts: str,
 ) -> Results:
     before = time.time()
     try:
@@ -287,8 +314,21 @@ def scan(
             head_ref,
             semgrep_ignore,
             uses_managed_policy,
+            semgrep_opts=semgrep_opts,
         )
-    except sh.ErrorReturnCode as error:
+    except (sh.ErrorReturnCode, SemgrepCommandFailure) as error:
+        if not semgrep_opts:
+            next_steps = (
+                "This is an internal error, please file an issue at "
+                "https://github.com/returntocorp/semgrep-action/issues/new/choose "
+                "and include any log output from above."
+            )
+        else:
+            next_steps = (
+                f"You've passed these custom semgrep options: '{semgrep_opts}'. "
+                "Custom options can easily break the internals of semgrep-agent, "
+                "so please reproduce this error without them before opening an issue."
+            )
         message = f"""
         === failed command's STDOUT:
 
@@ -300,8 +340,7 @@ def scan(
 
         === [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
 
-        This is an internal error, please file an issue at https://github.com/returntocorp/semgrep-action/issues/new/choose
-        and include any log output from above.
+        {next_steps}
         """
         message = dedent(message).strip()
         click.echo("", err=True)
