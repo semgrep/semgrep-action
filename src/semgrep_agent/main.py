@@ -57,11 +57,11 @@ def get_aligned_command(title: str, subtext: str) -> str:
 )
 @click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
 @click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
-@click.option("--json", "json_output", hidden=True, is_flag=True)
 @click.option(
     "--gitlab-json", "gitlab_output", envvar="SEMGREP_GITLAB_JSON", is_flag=True
 )
-@click.option("--semgrep-opts", type=str)
+@click.option("--json", "json_output", hidden=True, is_flag=True)
+@click.option("--semgrep-opts", hidden=True, type=str)
 def main(
     config: str,
     baseline_ref: str,
