@@ -15,7 +15,7 @@ from boltons.strutils import unit_len
 from semgrep_agent import constants
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
-from semgrep_agent.meta import generate_meta_from_environment
+from semgrep_agent.meta import detect_meta_environment
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import maybe_print_debug_info
@@ -23,6 +23,20 @@ from semgrep_agent.utils import maybe_print_debug_info
 
 def url(string: str) -> str:
     return string.rstrip("/")
+
+
+@dataclass
+class CliObj:
+    event_type: str
+    config: str
+    meta: GitMeta
+    sapp: Sapp
+
+
+def get_event_type() -> str:
+    if "GITHUB_ACTIONS" in os.environ:
+        return os.environ["GITHUB_EVENT_NAME"]
+    return "push"
 
 
 def get_aligned_command(title: str, subtext: str) -> str:
@@ -56,6 +70,7 @@ def main(
     json_output: bool,
     gitlab_output: bool,
 ) -> NoReturn:
+    click.echo("=== detecting environment", err=True)
     click.echo(
         get_aligned_command(
             "versions",
@@ -65,8 +80,11 @@ def main(
     )
 
     # Get Metadata
-    meta = generate_meta_from_environment(baseline_ref)
-    maybe_print_debug_info(meta)
+    Meta = detect_meta_environment()
+    meta_kwargs = {}
+    if baseline_ref:
+        meta_kwargs["cli_baseline_ref"] = baseline_ref
+    meta = Meta(config, **meta_kwargs)
     click.echo(
         get_aligned_command(
             "environment",
@@ -77,8 +95,9 @@ def main(
 
     # Setup URL/Token
     sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
+    maybe_print_debug_info(meta)
+    policy = sapp.report_start(meta)
     if sapp.is_configured:
-        policy = sapp.report_start(meta)
         to_server = "" if publish_url == "https://semgrep.dev" else f" to {publish_url}"
         click.echo(
             get_aligned_command(
@@ -86,7 +105,8 @@ def main(
             ),
             err=True,
         )
-        click.echo(get_aligned_command("policy", f"using {policy}"))
+        policy_info = f"using {policy}" if policy else "unknown"
+        click.echo(get_aligned_command("policy", policy_info))
     else:
         click.echo(get_aligned_command("manage", f"not logged in"), err=True)
 
@@ -187,8 +207,7 @@ def main(
             err=True,
         )
 
-    if sapp.is_configured:
-        sapp.report_results(results)
+    sapp.report_results(results)
 
     exit_code = 1 if blocking_findings else 0
     click.echo(
