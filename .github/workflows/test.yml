@@ -38,7 +38,7 @@ jobs:
           path: |
             .pipx/venvs/semgrep
             .pipx_bin/semgrep*
-          key: ${{ runner.os }}-${{ matrix.python-version }}-pipx-semgrep-${{ steps.setup-package-managers.outputs.installed-semgrep-version }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-pipx-semgrep-somekey${{ steps.setup-package-managers.outputs.installed-semgrep-version }}
 
       - id: reuse-poetry-virtualenv
         name: Reuse poetry's virtualenv
