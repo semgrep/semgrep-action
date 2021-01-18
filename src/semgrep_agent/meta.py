@@ -177,7 +177,7 @@ class GithubMeta(GitMeta):
 
         try:  # check if both branches connect to the yet-unknown branch-off point now
             process = git("merge-base", self.base_branch_tip, self.head_ref)
-        except sh.ErrorReturnCode_1 as error:
+        except sh.ErrorReturnCode as error:
             output = error.stderr.decode()
             if "Not a valid" not in output.strip():  # message when ref is missing
                 exit_with_sh_error(error)
