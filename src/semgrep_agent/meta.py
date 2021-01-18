@@ -180,7 +180,7 @@ class GithubMeta(GitMeta):
                 .stdout.decode()
                 .strip()
             )
-        except sh.ErrorReturnCode as error:
+        except sh.ErrorReturnCode_1 as error:
             output = error.stderr.decode()
             if "Not a valid commit name" not in output.strip():
                 raise error
