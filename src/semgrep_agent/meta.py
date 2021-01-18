@@ -122,7 +122,7 @@ class GithubMeta(GitMeta):
     """Gather metadata from GitHub Actions."""
 
     environment: str = field(default="github-actions", init=False)
-    MAX_FETCH_ATTEMPT_COUNT: int = field(default=5, init=False)
+    MAX_FETCH_ATTEMPT_COUNT: int = field(default=1, init=False)
 
     def glom_event(self, spec: TType) -> Any:
         return glom(self.event, spec, default=None)
@@ -166,14 +166,17 @@ class GithubMeta(GitMeta):
         return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
 
     def _find_branchoff_point(self, attempt_count: int = 0) -> str:
-        fetch_depth = 4 ** attempt_count  # fetch 0, 4, 16, 64, 256, 1024 commits
-        if attempt_count:
-            click.echo(
-                f"| fetching {fetch_depth} commits from history to find branch-off point of pull request",
-                err=True,
+        if attempt_count:  # skip fetching on first try
+            fetch_depth_arg = (
+                f"--depth={4 ** attempt_count}"  # fetch 4, 16, 64, 256, 1024 commits
+                if attempt_count < self.MAX_FETCH_ATTEMPT_COUNT
+                else "--unshallow"
             )
-            git.fetch("origin", "--deepen", fetch_depth, self.base_branch_tip)
-            git.fetch("origin", "--deepen", fetch_depth, self.head_ref)
+            debug_echo(
+                f"fetching with arg {fetch_depth_arg} to find branch-off point of pull request"
+            )
+            git.fetch("origin", fetch_depth_arg, self.base_branch_tip)
+            git.fetch("origin", fetch_depth_arg, self.head_ref)
 
         try:  # check if both branches connect to the yet-unknown branch-off point now
             process = git("merge-base", self.base_branch_tip, self.head_ref)
@@ -189,7 +192,6 @@ class GithubMeta(GitMeta):
                 raise ActionFailure(
                     "Could not find branch-off point between "
                     f"the baseline tip {self.base_branch_tip} and current head '{self.head_ref}' "
-                    f"among the most recent {fetch_depth} commits of the two refs"
                 )
 
             return self._find_branchoff_point(attempt_count + 1)
