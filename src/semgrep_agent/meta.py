@@ -14,6 +14,7 @@ from typing import Union
 import click
 import git as gitpython
 import sh
+from boltons import cacheutils
 from boltons.cacheutils import cachedproperty
 from glom import glom
 from glom import T
@@ -91,6 +92,9 @@ class GitMeta:
     def pr_title(self) -> Optional[str]:
         return os.getenv("SEMGREP_PR_TITLE")
 
+    def initialize_repo(self) -> None:
+        return
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             # REQUIRED for semgrep-app backend
@@ -161,6 +165,7 @@ class GithubMeta(GitMeta):
     def base_branch_tip(self) -> Optional[str]:
         return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
 
+    @cacheutils.cachedmethod(cacheutils.LRI())
     def _find_branchoff_point(self, attempt_count: int = 1) -> str:
         fetch_depth = 4 ** attempt_count  # fetch 4, 16, 64, 256, 1024 commits
         if fetch_depth:
@@ -227,6 +232,9 @@ class GithubMeta(GitMeta):
     def pr_title(self) -> Optional[str]:
         pr_title = self.glom_event(T["pull_request"]["title"])
         return str(pr_title) if pr_title else None
+
+    def initialize_repo(self) -> None:
+        return
 
     def to_dict(self) -> Dict[str, Any]:
         return {

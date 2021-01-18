@@ -66,6 +66,7 @@ def main(
 
     # Get Metadata
     meta = generate_meta_from_environment(baseline_ref)
+    meta.initialize_repo()
 
     maybe_print_debug_info(meta)
     click.echo(
