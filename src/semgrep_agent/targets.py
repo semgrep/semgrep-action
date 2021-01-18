@@ -298,7 +298,7 @@ class TargetFileManager:
             # message, which means we are fragile with respect to git version here.
             try:
                 git.checkout(current_tree.strip(), "--", ".")
-            except sh.ErrorReturnCode as error:
+            except sh.ErrorReturnCode_1 as error:
                 output = error.stderr.decode()
                 if (
                     output
