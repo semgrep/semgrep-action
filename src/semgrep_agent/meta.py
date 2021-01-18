@@ -123,7 +123,7 @@ class GithubMeta(GitMeta):
     """Gather metadata from GitHub Actions."""
 
     environment: str = field(default="github-actions", init=False)
-    MAX_FETCH_ATTEMPT_COUNT: int = field(default=6, init=False)
+    MAX_FETCH_ATTEMPT_COUNT: int = field(default=2, init=False)
 
     def glom_event(self, spec: TType) -> Any:
         return glom(self.event, spec, default=None)
