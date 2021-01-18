@@ -175,11 +175,7 @@ class GithubMeta(GitMeta):
             git.fetch("origin", "--deepen", fetch_depth, self.head_ref)
 
         try:  # check if both branches connect to the yet-unknown branch-off point now
-            return (
-                git("merge-base", self.base_branch_tip, self.head_ref)
-                .stdout.decode()
-                .strip()
-            )
+            process = git("merge-base", self.base_branch_tip, self.head_ref)
         except sh.ErrorReturnCode_1 as error:
             output = error.stderr.decode()
             if "Not a valid" not in output.strip():  # message when ref is missing
@@ -193,6 +189,8 @@ class GithubMeta(GitMeta):
                 )
 
             return self._find_branchoff_point(attempt_count + 1)
+        else:
+            return process.stdout.decode().strip()
 
     @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
