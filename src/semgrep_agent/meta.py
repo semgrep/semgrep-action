@@ -180,9 +180,10 @@ class GithubMeta(GitMeta):
                 .stdout.decode()
                 .strip()
             )
-        except sh.ErrorReturnCode as ex:
-            if b"Not a valid commit name" not in ex.stderr:
-                raise ex
+        except sh.ErrorReturnCode as error:
+            output = error.stderr.decode()
+            if "Not a valid commit name" not in output.strip():
+                raise error
 
             if attempt_count >= self.MAX_FETCH_ATTEMPT_COUNT:
                 raise ActionFailure(
