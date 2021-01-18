@@ -32,6 +32,7 @@ from semgrep_agent.findings import FindingSets
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
+from semgrep_agent.utils import exit_with_sh_error
 from semgrep_agent.utils import fix_head_for_github
 
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
@@ -236,24 +237,7 @@ def scan(
             uses_managed_policy,
         )
     except sh.ErrorReturnCode as error:
-        message = f"""
-        === failed command's STDOUT:
-
-{indent(error.stdout.decode(), 8 * ' ')}
-
-        === failed command's STDERR:
-
-{indent(error.stderr.decode(), 8 * ' ')}
-
-        === [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
-
-        This is an internal error, please file an issue at https://github.com/returntocorp/semgrep-action/issues/new/choose
-        and include any log output from above.
-        """
-        message = dedent(message).strip()
-        click.echo("", err=True)
-        click.echo(message, err=True)
-        sys.exit(error.exit_code)
+        exit_with_sh_error(error)
     after = time.time()
 
     return Results(findings, after - before)

@@ -1,16 +1,21 @@
 import json
 import os
+import sys
 import urllib.parse
 from contextlib import contextmanager
 from pathlib import Path
+from textwrap import dedent
+from textwrap import indent
 from typing import cast
 from typing import Iterator
 from typing import List
+from typing import NoReturn
 from typing import Optional
 from typing import TYPE_CHECKING
 
 import click
 import git as gitpython
+import sh
 from boltons import ecoutils
 from sh.contrib import git
 
@@ -111,3 +116,24 @@ def fix_head_for_github(
         if stashed_rev is not None:
             click.echo(f"| returning to original head revision {stashed_rev}", err=True)
             git.checkout([stashed_rev])
+
+
+def exit_with_sh_error(error: sh.ErrorReturnCode) -> NoReturn:
+    message = f"""
+    === failed command's STDOUT:
+
+{indent(error.stdout.decode(), 8 * ' ')}
+
+    === failed command's STDERR:
+
+{indent(error.stderr.decode(), 8 * ' ')}
+
+    === [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
+
+    This is an internal error, please file an issue at https://github.com/returntocorp/semgrep-action/issues/new/choose
+    and include any log output from above.
+    """
+    message = dedent(message).strip()
+    click.echo("", err=True)
+    click.echo(message, err=True)
+    sys.exit(error.exit_code)

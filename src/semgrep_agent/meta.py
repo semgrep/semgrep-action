@@ -22,6 +22,7 @@ from sh.contrib import git
 
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.utils import debug_echo
+from semgrep_agent.utils import exit_with_sh_error
 
 
 @dataclass
@@ -179,7 +180,7 @@ class GithubMeta(GitMeta):
         except sh.ErrorReturnCode_1 as error:
             output = error.stderr.decode()
             if "Not a valid" not in output.strip():  # message when ref is missing
-                raise error
+                exit_with_sh_error(error)
 
             if attempt_count >= self.MAX_FETCH_ATTEMPT_COUNT:
                 raise ActionFailure(
