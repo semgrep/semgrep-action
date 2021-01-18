@@ -165,7 +165,7 @@ class GithubMeta(GitMeta):
         return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
 
     def _find_branchoff_point(self, attempt_count: int = 0) -> str:
-        fetch_depth = 4 ** attempt_count  # fetch 4, 16, 64, 256, 1024 commits
+        fetch_depth = 4 ** attempt_count  # fetch 0, 4, 16, 64, 256, 1024 commits
         if fetch_depth:
             click.echo(
                 f"| fetching {fetch_depth} commits from history to find branch-off point of pull request",
@@ -174,7 +174,7 @@ class GithubMeta(GitMeta):
             git.fetch("origin", "--deepen", fetch_depth, self.base_branch_tip)
             git.fetch("origin", "--deepen", fetch_depth, self.head_ref)
 
-        try:
+        try:  # check if both branches connect to the yet-unknown branch-off point now
             return (
                 git("merge-base", self.base_branch_tip, self.head_ref)
                 .stdout.decode()
@@ -182,13 +182,14 @@ class GithubMeta(GitMeta):
             )
         except sh.ErrorReturnCode_1 as error:
             output = error.stderr.decode()
-            if "Not a valid commit name" not in output.strip():
+            if "Not a valid" not in output.strip():  # message when ref is missing
                 raise error
 
             if attempt_count >= self.MAX_FETCH_ATTEMPT_COUNT:
                 raise ActionFailure(
                     "Could not find branch-off point between "
-                    f"the baseline tip {self.base_branch_tip} and current head '{self.head_ref}'"
+                    f"the baseline tip {self.base_branch_tip} and current head '{self.head_ref}' "
+                    f"among the most recent {fetch_depth} commits of the two refs"
                 )
 
             return self._find_branchoff_point(attempt_count + 1)
