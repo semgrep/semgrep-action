@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import urllib.parse
 from dataclasses import dataclass
 from dataclasses import field
@@ -122,7 +123,7 @@ class GithubMeta(GitMeta):
     """Gather metadata from GitHub Actions."""
 
     environment: str = field(default="github-actions", init=False)
-    MAX_FETCH_ATTEMPT_COUNT: int = field(default=1, init=False)
+    MAX_FETCH_ATTEMPT_COUNT: int = field(default=6, init=False)
 
     def glom_event(self, spec: TType) -> Any:
         return glom(self.event, spec, default=None)
@@ -166,17 +167,16 @@ class GithubMeta(GitMeta):
         return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
 
     def _find_branchoff_point(self, attempt_count: int = 0) -> str:
+        fetch_depth = 4 ** attempt_count  # fetch 4, 16, 64, 256, 1024, ...
+        if attempt_count >= self.MAX_FETCH_ATTEMPT_COUNT:  # get all commits on last try
+            fetch_depth = 2 ** 31 - 1  # git expects a signed 32-bit integer
+
         if attempt_count:  # skip fetching on first try
-            fetch_depth_arg = (
-                f"--depth={4 ** attempt_count}"  # fetch 4, 16, 64, 256, 1024 commits
-                if attempt_count < self.MAX_FETCH_ATTEMPT_COUNT
-                else "--unshallow"
-            )
             debug_echo(
-                f"fetching with arg {fetch_depth_arg} to find branch-off point of pull request"
+                f"fetching {fetch_depth} commits to find branch-off point of pull request"
             )
-            git.fetch("origin", fetch_depth_arg, self.base_branch_tip)
-            git.fetch("origin", fetch_depth_arg, self.head_ref)
+            git.fetch("origin", "--depth", fetch_depth, self.base_branch_tip)
+            git.fetch("origin", "--depth", fetch_depth, self.head_ref)
 
         try:  # check if both branches connect to the yet-unknown branch-off point now
             process = git("merge-base", self.base_branch_tip, self.head_ref)
@@ -184,7 +184,7 @@ class GithubMeta(GitMeta):
             output = error.stderr.decode().strip()
             if (
                 output  # output is empty when unable to find branch-off point
-                and "Not a valid " not in output  # message when ref is missing
+                and "Not a valid " not in output  # the error when a ref is missing
             ):
                 exit_with_sh_error(error)
 
