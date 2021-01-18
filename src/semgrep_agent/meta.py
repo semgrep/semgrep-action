@@ -14,7 +14,6 @@ from typing import Union
 import click
 import git as gitpython
 import sh
-from boltons import cacheutils
 from boltons.cacheutils import cachedproperty
 from glom import glom
 from glom import T
@@ -165,8 +164,7 @@ class GithubMeta(GitMeta):
     def base_branch_tip(self) -> Optional[str]:
         return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
 
-    @cacheutils.cachedmethod(cacheutils.LRI())
-    def _find_branchoff_point(self, attempt_count: int = 1) -> str:
+    def _find_branchoff_point(self, attempt_count: int = 0) -> str:
         fetch_depth = 4 ** attempt_count  # fetch 4, 16, 64, 256, 1024 commits
         if fetch_depth:
             click.echo(
