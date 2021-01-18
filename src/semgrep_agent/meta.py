@@ -166,7 +166,7 @@ class GithubMeta(GitMeta):
 
     def _find_branchoff_point(self, attempt_count: int = 0) -> str:
         fetch_depth = 4 ** attempt_count  # fetch 0, 4, 16, 64, 256, 1024 commits
-        if fetch_depth:
+        if attempt_count:
             click.echo(
                 f"| fetching {fetch_depth} commits from history to find branch-off point of pull request",
                 err=True,
