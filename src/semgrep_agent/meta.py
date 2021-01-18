@@ -20,6 +20,7 @@ from glom import T
 from glom.core import TType
 from sh.contrib import git
 
+from semgrep_agent.exc import ActionFailure
 from semgrep_agent.utils import debug_echo
 
 
@@ -117,6 +118,7 @@ class GithubMeta(GitMeta):
     """Gather metadata from GitHub Actions."""
 
     environment: str = field(default="github-actions", init=False)
+    MAX_FETCH_ATTEMPT_COUNT: int = field(default=5, init=False)
 
     def glom_event(self, spec: TType) -> Any:
         return glom(self.event, spec, default=None)
@@ -156,14 +158,45 @@ class GithubMeta(GitMeta):
             return None
 
     @cachedproperty
+    def base_branch_tip(self) -> Optional[str]:
+        return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
+
+    def _find_branchoff_point(self, attempt_count: int = 1) -> str:
+        fetch_depth = 4 ** attempt_count  # fetch 4, 16, 64, 256, 1024 commits
+        if fetch_depth:
+            click.echo(
+                f"| fetching {fetch_depth} commits from history to find branch-off point of pull request",
+                err=True,
+            )
+            git.fetch("origin", "--deepen", fetch_depth, self.base_branch_tip)
+            git.fetch("origin", "--deepen", fetch_depth, self.head_ref)
+
+        try:
+            return (
+                git("merge-base", self.base_branch_tip, self.head_ref)
+                .stdout.decode()
+                .strip()
+            )
+        except sh.ErrorReturnCode as ex:
+            if b"Not a valid commit name" not in ex.stderr:
+                raise ex
+
+            if attempt_count >= self.MAX_FETCH_ATTEMPT_COUNT:
+                raise ActionFailure(
+                    "Could not find branch-off point between "
+                    f"the baseline tip {self.base_branch_tip} and current head '{self.head_ref}'"
+                )
+
+            return self._find_branchoff_point(attempt_count + 1)
+
+    @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
         if self.cli_baseline_ref:
             return self.cli_baseline_ref
         if self.event_name == "pull_request" and self.head_ref is not None:
             # The pull request "base" that GitHub sends us is not necessarily the merge base,
             # so we need to get the merge-base from Git
-            pr_base = self.glom_event(T["pull_request"]["base"]["sha"])
-            return git("merge-base", pr_base, self.head_ref).stdout.decode().strip()
+            return self._find_branchoff_point()
         return None
 
     @cachedproperty

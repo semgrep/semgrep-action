@@ -16,9 +16,9 @@ from glom import T
 from ruamel.yaml import YAML  # type: ignore
 
 from semgrep_agent import constants
+from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
-from semgrep_agent.utils import ActionFailure
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import validate_publish_token
 

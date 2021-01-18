@@ -18,9 +18,9 @@ from boltons.iterutils import bucketize
 from boltons.strutils import unit_len
 from sh.contrib import git
 
+from semgrep_agent.exc import ActionFailure
 from semgrep_agent.ignores import FileIgnore
 from semgrep_agent.ignores import Parser
-from semgrep_agent.utils import ActionFailure
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import zsplit

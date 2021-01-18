@@ -20,15 +20,6 @@ if TYPE_CHECKING:
     from semgrep_agent.meta import GitMeta
 
 
-class ActionFailure(Exception):
-    """
-    Indicates that Semgrep failed and should abort, but prevents a stack trace
-    """
-
-    def __init__(self, message: str) -> None:
-        self.message = message
-
-
 def debug_echo(text: str) -> None:
     """Print debug messages with context-specific debug formatting."""
     if os.getenv("SEMGREP_AGENT_DEBUG"):
@@ -120,24 +111,3 @@ def fix_head_for_github(
         if stashed_rev is not None:
             click.echo(f"| returning to original head revision {stashed_rev}", err=True)
             git.checkout([stashed_rev])
-
-
-def ensure_refs_fetched(meta: "GitMeta") -> None:
-    """Fetch context's head and base refs if they aren't already available.
-
-    This is needed e.g. when actions/checkout@v2 fetches only one commit.
-    """
-    if get_git_repo() is None:
-        return
-
-    refs = [meta.base_commit_ref, meta.head_ref]
-    for ref in refs:
-        if not ref:
-            continue
-        if git("cat-file", "commit", ref).exit_code == 0:
-            continue
-        click.echo(
-            f"| fetching locally unavialable ref '{ref}'",
-            err=True,
-        )
-        git.fetch("origin", ref)
