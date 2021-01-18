@@ -18,6 +18,7 @@ from semgrep_agent import semgrep
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep_app import Sapp
+from semgrep_agent.utils import ensure_refs_fetched
 from semgrep_agent.utils import maybe_print_debug_info
 
 
@@ -66,6 +67,9 @@ def main(
 
     # Get Metadata
     meta = generate_meta_from_environment(baseline_ref)
+
+    ensure_refs_fetched(meta)
+
     maybe_print_debug_info(meta)
     click.echo(
         get_aligned_command(
