@@ -57,6 +57,9 @@ jobs:
 
           poetry run pytest
 
+      - name: Run integration tests
+        run: poetry run pytest tests/acceptance/qa.py
+
   live-runs:
     name: live run of action on this repo
     runs-on: ubuntu-latest
