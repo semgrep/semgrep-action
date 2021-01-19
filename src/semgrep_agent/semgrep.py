@@ -264,7 +264,7 @@ def scan(
             uses_managed_policy,
             semgrep_opts=semgrep_opts,
         )
-    except sh.ErrorReturnCode as error:
+    except (sh.ErrorReturnCode, SemgrepCommandFailure) as error:
         next_steps = (
             f"You've passed these custom semgrep options: '{semgrep_opts}'. "
             "Custom options can easily break the internals of semgrep-agent, "

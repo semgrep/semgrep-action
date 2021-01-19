@@ -12,6 +12,7 @@ from typing import List
 from typing import NoReturn
 from typing import Optional
 from typing import TYPE_CHECKING
+from typing import Union
 
 import click
 import git as gitpython
@@ -23,6 +24,7 @@ from semgrep_agent import constants
 
 if TYPE_CHECKING:
     from semgrep_agent.meta import GitMeta
+    from semgrep_agent.semgrep import SemgrepCommandFailure
 
 
 def debug_echo(text: str) -> None:
@@ -125,8 +127,9 @@ SH_ERROR_NEXT_STEPS = (
 )
 
 
-def exit_with_sh_error(
-    error: sh.ErrorReturnCode, next_steps: str = SH_ERROR_NEXT_STEPS
+def exit_with_sh_error(  # type: ignore
+    error: Union[sh.ErrorReturnCode, "SemgrepCommandFailure"],
+    next_steps: str = SH_ERROR_NEXT_STEPS,
 ) -> NoReturn:
     message = f"""
     === failed command's STDOUT:
