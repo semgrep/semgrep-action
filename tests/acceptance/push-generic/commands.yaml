@@ -1,11 +1,5 @@
 steps:
   - include: generic.yaml
-  - name: push log
-    description: git log with commits
-    command: git log
-    returncode: 0
-    expected_out: push-log.out
-    expected_err: push-log.err
   - name: push agent
     description: run agent on a codebase
     command: semgrep-agent --config p/r2c-ci

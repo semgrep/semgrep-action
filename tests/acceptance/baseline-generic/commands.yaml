@@ -9,7 +9,7 @@ steps:
       - echo "2 == 2" > bar.py && git add bar.py && git commit -m 'add finding'
   - name: new log
     description: git log with commits
-    command: git log
+    command: git log --stat
     returncode: 0
     expected_out: new-log.out
     expected_err: new-log.err

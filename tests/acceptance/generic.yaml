@@ -12,3 +12,9 @@
     - -c
     - echo "10 == 10" > foo.py && git add foo.py && git commit -m base
   returncode: 0
+- name: base log
+  description: base git log
+  command: git log --stat
+  returncode: 0
+  expected_out: base-log.out
+  expected_err: base-log.err
