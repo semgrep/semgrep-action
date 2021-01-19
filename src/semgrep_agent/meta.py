@@ -238,7 +238,8 @@ class GithubMeta(GitMeta):
         return str(pr_title) if pr_title else None
 
     def initialize_repo(self) -> None:
-        self._find_branchoff_point()
+        if self.event_name == "pull_request" and self.head_ref is not None:
+            self._find_branchoff_point()
         return
 
     def to_dict(self) -> Dict[str, Any]:
