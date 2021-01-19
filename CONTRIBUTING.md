@@ -43,6 +43,29 @@ python -m semgrep_agent --config p/r2c --baseline-ref HEAD~1
 
 Connect to semgrep-app with the `--publish-deployment` & `--publish-token` flags.
 
+## Tests
+
+Run unit tests with
+
+```
+pytest tests
+```
+
+Run acceptance tests with
+
+```
+pytest tests/acceptance/qa.py
+```
+
+Regenerate acceptance snapshots with
+
+```
+python tests/acceptance/qa.py
+```
+
+Please always double-check generated snapshots for accuracy prior to committing
+them!
+
 ## Release
 
 Let CI pass on GitHub Actions before releasing.
