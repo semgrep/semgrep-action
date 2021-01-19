@@ -1,4 +1,5 @@
 import os
+import pty
 import re
 import subprocess
 import sys
@@ -87,10 +88,19 @@ def check_command(step: Any, pwd: str, target: str, rewrite: bool) -> None:
 
     print(f"======= {test_identifier} ========")
 
+    # In order to test behavior with a stdin, we create a pseudoterminal for the command here.
+    # To test behavior _without_ a stdin, set the "command" as:
+    # command:
+    #   - bash
+    #   - -c
+    #   - ": | <command>"
+    master_fd, slave_fd = pty.openpty()
+
     runned = subprocess.run(
         substituted,
         cwd=pwd,
         env=env,
+        stdin=slave_fd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         encoding="utf-8",
