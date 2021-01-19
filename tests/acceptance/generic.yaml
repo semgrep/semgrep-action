@@ -4,12 +4,11 @@
     - bash
     - -c
     - git init && git config user.email test@r2c.dev && git config user.name Test
+  returncode: 0
 - name: base commit
   description: create a root git commit
   command:
     - bash
     - -c
-    - echo "10 == 10" > foo.py && git add foo.py && git commit -m base && git checkout -b master
-- name: create branch
-  description: create test branch
-  command: git branch test-a
+    - echo "10 == 10" > foo.py && git add foo.py && git commit -m base
+  returncode: 0
