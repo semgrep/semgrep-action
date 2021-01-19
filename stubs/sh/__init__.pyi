@@ -10,6 +10,8 @@ class ErrorReturnCode(Exception):
     @property
     def stderr(self) -> bytes: ...
 
+class ErrorReturnCode_1(ErrorReturnCode): ...
+
 class GitSubcommandsMixin:
 
     # git subcommands

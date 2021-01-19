@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import urllib.parse
 from dataclasses import dataclass
 from dataclasses import field
@@ -20,7 +21,9 @@ from glom import T
 from glom.core import TType
 from sh.contrib import git
 
+from semgrep_agent.exc import ActionFailure
 from semgrep_agent.utils import debug_echo
+from semgrep_agent.utils import exit_with_sh_error
 
 
 @dataclass
@@ -90,6 +93,9 @@ class GitMeta:
     def pr_title(self) -> Optional[str]:
         return os.getenv("SEMGREP_PR_TITLE")
 
+    def initialize_repo(self) -> None:
+        return
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             # REQUIRED for semgrep-app backend
@@ -117,6 +123,7 @@ class GithubMeta(GitMeta):
     """Gather metadata from GitHub Actions."""
 
     environment: str = field(default="github-actions", init=False)
+    MAX_FETCH_ATTEMPT_COUNT: int = field(default=6, init=False)
 
     def glom_event(self, spec: TType) -> Any:
         return glom(self.event, spec, default=None)
@@ -156,14 +163,49 @@ class GithubMeta(GitMeta):
             return None
 
     @cachedproperty
+    def base_branch_tip(self) -> Optional[str]:
+        return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
+
+    def _find_branchoff_point(self, attempt_count: int = 0) -> str:
+        fetch_depth = 4 ** attempt_count  # fetch 4, 16, 64, 256, 1024, ...
+        if attempt_count >= self.MAX_FETCH_ATTEMPT_COUNT:  # get all commits on last try
+            fetch_depth = 2 ** 31 - 1  # git expects a signed 32-bit integer
+
+        if attempt_count:  # skip fetching on first try
+            debug_echo(
+                f"fetching {fetch_depth} commits to find branch-off point of pull request"
+            )
+            git.fetch("origin", "--depth", fetch_depth, self.base_branch_tip)
+            git.fetch("origin", "--depth", fetch_depth, self.head_ref)
+
+        try:  # check if both branches connect to the yet-unknown branch-off point now
+            process = git("merge-base", self.base_branch_tip, self.head_ref)
+        except sh.ErrorReturnCode as error:
+            output = error.stderr.decode().strip()
+            if (
+                output  # output is empty when unable to find branch-off point
+                and "Not a valid " not in output  # the error when a ref is missing
+            ):
+                exit_with_sh_error(error)
+
+            if attempt_count >= self.MAX_FETCH_ATTEMPT_COUNT:
+                raise ActionFailure(
+                    "Could not find branch-off point between "
+                    f"the baseline tip {self.base_branch_tip} and current head '{self.head_ref}' "
+                )
+
+            return self._find_branchoff_point(attempt_count + 1)
+        else:
+            return process.stdout.decode().strip()
+
+    @cachedproperty
     def base_commit_ref(self) -> Optional[str]:
         if self.cli_baseline_ref:
             return self.cli_baseline_ref
         if self.event_name == "pull_request" and self.head_ref is not None:
             # The pull request "base" that GitHub sends us is not necessarily the merge base,
             # so we need to get the merge-base from Git
-            pr_base = self.glom_event(T["pull_request"]["base"]["sha"])
-            return git("merge-base", pr_base, self.head_ref).stdout.decode().strip()
+            return self._find_branchoff_point()
         return None
 
     @cachedproperty
@@ -194,6 +236,10 @@ class GithubMeta(GitMeta):
     def pr_title(self) -> Optional[str]:
         pr_title = self.glom_event(T["pull_request"]["title"])
         return str(pr_title) if pr_title else None
+
+    def initialize_repo(self) -> None:
+        self._find_branchoff_point()
+        return
 
     def to_dict(self) -> Dict[str, Any]:
         return {

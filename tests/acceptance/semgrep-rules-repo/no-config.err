@@ -1,0 +1,10 @@
+| versions          - semgrep 0.37.0 on Python
+Note that no baseline-ref was passed and detected environment is not Github or Gitlab to will default to perfoming a full scan. If you want semgrep to only report on new findings from a pull request please set baseline-ref
+| environment       - running in environment git, triggering event is 'unknown'
+| manage            - not logged in
+=== setting up agent configuration
+== [ERROR] you didn't configure what rules semgrep should scan for.
+
+Please either set a config in the CI configuration according to
+https://github.com/returntocorp/semgrep-action#configuration
+or commit your own rules at the default path of `.semgrep.yml`

@@ -63,7 +63,7 @@ jobs:
     name: live run of action on this repo
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - id: semgrep-app-config
         name: with semgrep-app connection
         uses: ./tests/local-image-action
