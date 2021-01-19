@@ -89,8 +89,6 @@ def check_command(step: Any, pwd: str, target: str, rewrite: bool) -> None:
 
     runned = subprocess.run(
         substituted,
-        # Note that we can't use BENTO_BASE_PATH since the acceptance tests
-        # depend on hook installation, which uses the working directory.
         cwd=pwd,
         env=env,
         stdout=subprocess.PIPE,
