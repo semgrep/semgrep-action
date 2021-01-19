@@ -1,0 +1,21 @@
+steps:
+  - include: generic.yaml
+  # Tests --baseline-ref
+  - name: new add
+    description: create a new file with findings
+    command:
+      - bash
+      - -c
+      - echo "2 == 2" > bar.py && git add bar.py && git commit -m 'add finding'
+  - name: new log
+    description: git log with commits
+    command: git log --stat
+    returncode: 0
+    expected_out: new-log.out
+    expected_err: new-log.err
+  - name: new agent
+    description: run agent on a single new file
+    command: semgrep-agent --baseline-ref HEAD~1 --config p/r2c-ci
+    returncode: 1
+    expected_out: new-agent.out
+    expected_err: new-agent.err
