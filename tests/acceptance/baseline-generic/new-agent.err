@@ -1,4 +1,4 @@
-| versions          - semgrep 0.35.0 on Python
+| versions          - semgrep 0.37.0 on Python
 | environment       - running in environment git, triggering event is 'unknown'
 | manage            - not logged in
 === setting up agent configuration
