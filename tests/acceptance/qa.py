@@ -184,7 +184,7 @@ def pytest_generate_tests(metafunc: Metafunc) -> None:
 
 
 def test_repo(repo: str) -> None:
-    run_repo(repo)
+    run_repo(repo, lambda path: print(subprocess.check_output(["ls", path])))
 
 
 if __name__ == "__main__":
