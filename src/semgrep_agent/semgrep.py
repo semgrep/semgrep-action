@@ -229,12 +229,19 @@ def invoke_semgrep(semgrep_args: List[str], targets: List[str]) -> Dict[str, Lis
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
             args = semgrep_args.copy()
-            args.extend(["-o", output_json_file.name])
+            args.extend(
+                [
+                    "-o",
+                    output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+                ]
+            )
             for c in chunk:
                 args.append(c)
 
             _ = semgrep_exec(*(args))
-            with open(output_json_file.name) as f:
+            with open(
+                output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+            ) as f:
                 parsed_output = json.load(f)
 
             output["results"].extend(parsed_output["results"])
