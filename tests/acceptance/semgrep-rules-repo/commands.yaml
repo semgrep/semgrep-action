@@ -44,10 +44,10 @@ steps:
     - --config
     - python/lang/best-practice/sleep.yaml
     - --semgrep-opts
-    - --help
+    - --test
     expected_err: wrong-semgrep-opts.err
     expected_out: null
-    returncode: 0
+    returncode: 1
   - name: innocuous-semgrep-opts
     description: expected findings even with these semgrep-opts
     command:
