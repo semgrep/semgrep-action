@@ -2,8 +2,8 @@ import sys
 
 import click
 
+from semgrep_agent.exc import ActionFailure
 from semgrep_agent.main import main
-from semgrep_agent.utils import ActionFailure
 
 
 def error_guard() -> None:

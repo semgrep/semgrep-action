@@ -4,7 +4,6 @@ import os
 import sys
 import time
 import urllib.parse
-from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -33,7 +32,8 @@ from semgrep_agent.findings import FindingSets
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
-from semgrep_agent.utils import get_git_repo
+from semgrep_agent.utils import exit_with_sh_error
+from semgrep_agent.utils import fix_head_for_github
 
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
 semgrep = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
@@ -105,55 +105,6 @@ def rewrite_sarif_file(sarif_path: Path) -> None:
 
     with sarif_path.open("w") as sarif_file:
         json.dump(sarif_results, sarif_file, indent=2, sort_keys=True)
-
-
-@contextmanager
-def fix_head_for_github(
-    base_commit_ref: Optional[str], head_ref: Optional[str]
-) -> Iterator[Optional[str]]:
-    """
-    GHA can checkout the incorrect commit for a PR (it will create a fake merge commit),
-    so we need to reset the head to the actual PR branch head before continuing.
-
-    Note that this code is written in a generic manner, so that it becomes a no-op when
-    the CI system has not artifically altered the HEAD ref.
-
-    :return: The baseline ref as a commit hash
-    """
-
-    stashed_rev: Optional[str] = None
-    base_ref: Optional[str] = base_commit_ref
-
-    if get_git_repo() is None:
-        yield base_ref
-        return
-
-    if base_ref:
-        # Preserve location of head^ after we possibly change location below
-        base_ref = git(["rev-parse", base_ref]).stdout.decode("utf-8").rstrip()
-
-    if head_ref:
-        stashed_rev = git(["branch", "--show-current"]).stdout.decode("utf-8").rstrip()
-        if not stashed_rev:
-            stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
-        click.echo(f"| not on head ref {head_ref}; checking that out now...", err=True)
-        git.checkout([head_ref])
-
-    try:
-        if base_ref is not None:
-            click.echo("| scanning only the following commits:", err=True)
-            # fmt:off
-            log = git.log(["--oneline", "--graph", f"{base_ref}..HEAD"]).stdout  # type:ignore
-            # fmt: on
-            rr = cast(bytes, log).decode("utf-8").rstrip().split("\n")
-            r = "\n|   ".join(rr)
-            click.echo("|   " + r, err=True)
-
-        yield base_ref
-    finally:
-        if stashed_rev is not None:
-            click.echo(f"| returning to original head revision {stashed_rev}", err=True)
-            git.checkout([stashed_rev])
 
 
 def invoke_semgrep(
@@ -286,24 +237,7 @@ def scan(
             uses_managed_policy,
         )
     except sh.ErrorReturnCode as error:
-        message = f"""
-        === failed command's STDOUT:
-
-{indent(error.stdout.decode(), 8 * ' ')}
-
-        === failed command's STDERR:
-
-{indent(error.stderr.decode(), 8 * ' ')}
-
-        === [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
-
-        This is an internal error, please file an issue at https://github.com/returntocorp/semgrep-action/issues/new/choose
-        and include any log output from above.
-        """
-        message = dedent(message).strip()
-        click.echo("", err=True)
-        click.echo(message, err=True)
-        sys.exit(error.exit_code)
+        exit_with_sh_error(error)
     after = time.time()
 
     return Results(findings, after - before)
