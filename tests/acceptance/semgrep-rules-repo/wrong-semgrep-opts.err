@@ -18,11 +18,11 @@ Note that no baseline-ref was passed and detected environment is not Github or G
     Traceback (most recent call last):
       File "/path/to/semgrep", line 8, in <module>
         sys.exit(main())
-      File "/Users/underyx/.local/pipx/venvs/semgrep/lib/python3.9/site-packages/semgrep/__main__.py", line 17, in main
+      File ".../site-packages/semgrep/__main__.py", line 17, in main
         cli()
-      File "/Users/underyx/.local/pipx/venvs/semgrep/lib/python3.9/site-packages/semgrep/cli.py", line 402, in cli
+      File ".../site-packages/semgrep/cli.py", line 402, in cli
         semgrep.test.test_main(args)
-      File "/Users/underyx/.local/pipx/venvs/semgrep/lib/python3.9/site-packages/semgrep/test.py", line 422, in test_main
+      File ".../site-packages/semgrep/test.py", line 422, in test_main
         raise Exception("only one target directory allowed for tests")
     Exception: only one target directory allowed for tests
 
