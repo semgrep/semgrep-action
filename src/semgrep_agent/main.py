@@ -150,14 +150,23 @@ def main(
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
 
-    results = semgrep.scan(
-        config,
-        committed_datetime,
-        meta.base_commit_ref,
-        meta.head_ref,
-        semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
-        sapp.is_configured,
-    )
+    try:
+        results = semgrep.scan(
+            config,
+            committed_datetime,
+            meta.base_commit_ref,
+            meta.head_ref,
+            semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
+            sapp.is_configured,
+        )
+    except SemgrepError as error:
+        # If logged in handle exception
+        if sapp.is_configured:
+            exit_code = sapp.report_failure(error)
+            sys.exit_code(exit_code)
+        else:
+            sys.exit(error.exit_code)
+
     new_findings = results.findings.new
 
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}

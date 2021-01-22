@@ -250,6 +250,14 @@ def invoke_semgrep(semgrep_args: List[str], targets: List[str]) -> Dict[str, Lis
     return output
 
 
+class SemgrepError(Exception):
+    def __init__(self, error: sh.ErrorReturnCode):
+        self._exit_code = error.exit_code
+        self._stdout = error.stdout.decode()
+        self._stderr = error.stderr.decode()
+        self._command = error.full_cmd
+
+
 def scan(
     config_specifier: str,
     committed_datetime: Optional[datetime],
@@ -269,7 +277,7 @@ def scan(
             uses_managed_policy,
         )
     except sh.ErrorReturnCode as error:
-        exit_with_sh_error(error)
+        raise SemgrepError(error)
     after = time.time()
 
     return Results(findings, after - before)

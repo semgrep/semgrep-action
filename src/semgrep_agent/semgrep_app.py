@@ -124,6 +124,31 @@ class Sapp:
         rules_path.write_text(rules)
         return rules_path, len(parsed["rules"])
 
+    def report_failure(self, error: SemgrepError) -> int:
+        """
+        Send semgrep cli non-zero exit code information to server
+        and return what exit code semgrep should exit with.
+        """
+        debug_echo(f"=== sending failure information to semgrep app")
+
+        reponse = self.session.post(
+            f"{self.url}/api/agent/scan/{self.scan.id}/error",
+            json={
+                "exit_code": error.exit_code,
+                "stderr": error.stderr,
+            },
+            timeout=30,
+        )
+
+        debug_echo(f"=== POST .../error responded: {response!r}")
+        try:
+            response.raise_for_status()
+        except requests.RequestException:
+            raise ActionFailure(f"API server returned this error: {response.text}")
+
+        exit_code = int(response.json()["exit_code"])
+        return exit_code
+
     def report_results(self, results: Results) -> None:
         debug_echo(f"=== reporting results to semgrep app at {self.url}")
 
