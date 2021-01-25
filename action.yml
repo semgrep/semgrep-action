@@ -17,6 +17,12 @@ inputs:
   generateSarif:
     description: |
       Set to 1 if you want a semgrep.sarif file to be written with all semgrep findings.
+  silentOn:
+    description: |
+      GitHub Actions events where the action should always report success,
+      even if findings were found.
+      `silentOn: push` will scan for findings but not fail on push events.
+      You can set multiple event names with a space-separated string.
 branding:
   icon: "align-left"
   color: "gray-dark"

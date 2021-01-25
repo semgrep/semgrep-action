@@ -108,6 +108,14 @@ commit your own `.semgrepignore`.
 Note that `.semgrepignore` is picked up only by the action,
 and will not be honored when running `semgrep` manually.
 
+### Silent Mode
+
+You can set `--silent-on event_name` to always report success,
+even if some findings were found.
+For example, in GitHub Actions, if you set the option `silentOn: push`,
+scans will run but not fail on push events.
+You can set multiple event names with this option.
+
 ## Technical details
 
 Semgrep-action scans files in the current directory with [semgrep](https://github.com/returntocorp/semgrep), and exits with a non-zero exit code if blocking issues are found.
