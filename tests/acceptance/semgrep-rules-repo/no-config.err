@@ -1,4 +1,4 @@
-| versions          - semgrep 0.38.0 on Python
+| versions          - semgrep x.y.z on Python x.y.z
 Note that no baseline-ref was passed and detected environment is not Github or Gitlab to will default to perfoming a full scan. If you want semgrep to only report on new findings from a pull request please set baseline-ref
 | environment       - running in environment git, triggering event is 'unknown'
 | manage            - not logged in

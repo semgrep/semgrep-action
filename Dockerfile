@@ -4,7 +4,7 @@ WORKDIR /app
 COPY poetry.lock ./
 COPY pyproject.toml ./
 
-ENV INSTALLED_SEMGREP_VERSION=0.38.0
+ENV INSTALLED_SEMGREP_VERSION=0.39.1
 
 RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &&\
     apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
