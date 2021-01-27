@@ -108,11 +108,11 @@ commit your own `.semgrepignore`.
 Note that `.semgrepignore` is picked up only by the action,
 and will not be honored when running `semgrep` manually.
 
-### Silent Mode
+### Audit Mode
 
-You can set `--silent-on event_name` to always report success,
+You can set `--audit-on event_name` to always report success,
 even if some findings were found.
-For example, in GitHub Actions, if you set the option `silentOn: push`,
+For example, in GitHub Actions, if you set the option `auditOn: push`,
 scans will run but not fail on push events.
 You can set multiple event names with this option.
 

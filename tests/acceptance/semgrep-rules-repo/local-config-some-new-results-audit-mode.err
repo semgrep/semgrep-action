@@ -12,4 +12,5 @@
 | 2 current issues found
 | No ignored issues found
 === not looking at pre-existing issues since all files with current issues are newly created
+| audit mode is on for unknown, so the findings won't cause failure
 === exiting with success status

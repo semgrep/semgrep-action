@@ -25,11 +25,11 @@ steps:
     expected_err: local-config-some-new-results.err
     expected_out: local-config-some-new-results.out
     returncode: 1
-  - name: local-config-some-new-results-silent-mode
+  - name: local-config-some-new-results-audit-mode
     description: expected some new findings but success status in latest commit
-    command: semgrep-agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --silent-on unknown
-    expected_err: local-config-some-new-results-silent-mode.err
-    expected_out: local-config-some-new-results-silent-mode.out
+    command: semgrep-agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --audit-on unknown
+    expected_err: local-config-some-new-results-audit-mode.err
+    expected_out: local-config-some-new-results-audit-mode.out
     returncode: 0
   - name: local-config-some-new-results-json
     description: expected some new findings in latest commit
