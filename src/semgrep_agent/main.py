@@ -164,6 +164,11 @@ def main(
         # If logged in handle exception
         if sapp.is_configured:
             exit_code = sapp.report_failure(error)
+            if exit_code == 0:
+                click.echo(
+                    f"Was going to exit with code {error.exit_code} but semgrep-app configuration is set to fail open so exiting with code 0.",
+                    err=True,
+                )
             sys.exit(exit_code)
         else:
             sys.exit(error.exit_code)
