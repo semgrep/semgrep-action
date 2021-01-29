@@ -50,6 +50,12 @@ class StatusCode:
 
 
 @attr.s
+class PathLists:
+    targeted = attr.ib(type=List[Path])
+    ignored = attr.ib(type=List[Path])
+
+
+@attr.s
 class TargetFileManager:
     """
     Handles all logic related to knowing what files to run on.
@@ -70,11 +76,11 @@ class TargetFileManager:
     """
 
     _base_path = attr.ib(type=Path)
-    _paths = attr.ib(type=List[Path])
+    _all_paths = attr.ib(type=List[Path])
     _ignore_rules_file = attr.ib(type=TextIO)
     _base_commit = attr.ib(type=Optional[str], default=None)
     _status = attr.ib(type=GitStatus, init=False)
-    _target_paths = attr.ib(type=List[Path], init=False)
+    _paths = attr.ib(type=PathLists, init=False)
     _dirty_paths_by_status = attr.ib(type=Dict[str, List[Path]], init=False)
 
     def _fname_to_path(self, repo: "gitpython.Repo", fname: str) -> Path:  # type: ignore
@@ -148,8 +154,8 @@ class TargetFileManager:
 
         return GitStatus(added, modified, removed, unmerged)
 
-    @_target_paths.default
-    def _get_target_files(self) -> List[Path]:
+    @_paths.default
+    def _get_path_lists(self) -> PathLists:
         """
         Return list of all absolute paths to analyze
         """
@@ -160,7 +166,7 @@ class TargetFileManager:
         ]
 
         # resolve given paths relative to current working directory
-        paths = [p.resolve() for p in self._paths]
+        paths = [p.resolve() for p in self._all_paths]
         if self._base_commit is not None:
             paths = [
                 a
@@ -198,21 +204,28 @@ class TargetFileManager:
             f"| found {unit_len(walked_entries, 'file')} in the paths to be scanned",
             err=True,
         )
-        filtered: List[Path] = []
+        survived_paths: List[Path] = []
+        ignored_paths: List[Path] = []
         for elem in walked_entries:
-            if elem.survives:
-                filtered.append(elem.path)
+            paths_group = survived_paths if elem.survives else ignored_paths
+            paths_group.append(elem.path)
 
-        skipped_count = len(walked_entries) - len(filtered)
-        if skipped_count:
+        if ignored_paths:
             click.echo(
-                f"| skipping {unit_len(range(skipped_count), 'file')} based on path ignore rules",
+                f"| skipping {unit_len(ignored_paths, 'file')} based on path ignore rules",
                 err=True,
             )
 
-        relative_paths = [path.relative_to(self._base_path) for path in filtered]
+        relative_survived_paths = [
+            path.relative_to(self._base_path) for path in survived_paths
+        ]
+        relative_ignored_paths = [
+            path.relative_to(self._base_path) for path in ignored_paths
+        ]
 
-        return relative_paths
+        return PathLists(
+            targeted=relative_survived_paths, ignored=relative_ignored_paths
+        )
 
     @_dirty_paths_by_status.default
     def get_dirty_paths_by_status(self) -> Dict[str, List[Path]]:
@@ -344,7 +357,7 @@ class TargetFileManager:
             with self._baseline_context():
                 yield [
                     relative_path
-                    for relative_path in self._target_paths
+                    for relative_path in self._paths.targeted
                     if self._fname_to_path(repo, str(relative_path))
                     not in self._status.added
                 ]
@@ -361,4 +374,13 @@ class TargetFileManager:
         :return: A list of paths
         :raises ActionFailure: If git cannot detect a HEAD commit or unmerged files exist
         """
-        yield self._target_paths
+        yield self._paths.targeted
+
+    @property
+    def ignored_paths(self) -> List[Path]:
+        """
+        Return list of paths that have been ignored.
+
+        :return: A list of paths
+        """
+        return self._paths.ignored

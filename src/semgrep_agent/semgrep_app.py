@@ -159,6 +159,7 @@ class Sapp:
                     finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
                     for finding in results.findings.ignored
                 ],
+                "ignored_paths": list(results.findings.ignored_paths),
             },
             timeout=30,
         )

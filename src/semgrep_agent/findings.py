@@ -5,6 +5,7 @@ import uuid
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from typing import Collection
 from typing import Dict
@@ -205,6 +206,7 @@ class FindingSets:
     baseline: FindingSet = field(default_factory=FindingSet)
     current: FindingSet = field(default_factory=FindingSet)
     ignored: FindingSet = field(default_factory=FindingSet)
+    ignored_paths: Set[Path] = field(default_factory=set)
 
     @property
     def new(self) -> Set[Finding]:

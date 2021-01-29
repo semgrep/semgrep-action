@@ -123,7 +123,7 @@ def get_findings(
         targets = TargetFileManager(
             base_path=workdir,
             base_commit=base_ref,
-            paths=[workdir],
+            all_paths=[workdir],
             ignore_rules_file=semgrep_ignore,
         )
 
@@ -131,7 +131,7 @@ def get_findings(
         rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
 
         debug_echo("=== seeing if there are any findings")
-        findings = FindingSets()
+        findings = FindingSets(ignored_paths=set(targets.ignored_paths))
 
         with targets.current_paths() as paths:
             click.echo(
