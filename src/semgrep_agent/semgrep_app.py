@@ -212,6 +212,7 @@ class Sapp:
             f"{self.url}/api/agent/scan/{self.scan.id}/ignores",
             json={
                 "findings": [finding.to_dict() for finding in results.findings.ignored],
+                "ignored_paths": list(results.findings.ignored_paths),
             },
             timeout=30,
         )

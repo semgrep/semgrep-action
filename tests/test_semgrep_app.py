@@ -54,6 +54,7 @@ def test_no_notification(capfd):
     results = Mock()
     results.findings.new = []
     results.findings.ignored = []
+    results.findings.ignored_paths = []
 
     sapp.report_results(results)
 
