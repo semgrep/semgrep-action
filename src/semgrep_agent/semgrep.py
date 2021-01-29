@@ -257,6 +257,22 @@ class SemgrepError(Exception):
         self._stderr = error.stderr.decode()
         self._command = error.full_cmd
 
+    @property
+    def exit_code(self) -> int:
+        return self._exit_code
+
+    @property
+    def stdout(self) -> str:
+        return self._stdout
+
+    @property
+    def stderr(self) -> str:
+        return self._stderr
+
+    @property
+    def command(self) -> str:
+        return self._command
+
 
 def scan(
     config_specifier: str,

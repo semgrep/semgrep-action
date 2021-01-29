@@ -19,6 +19,7 @@ from semgrep_agent import constants
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
+from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import validate_publish_token
 
@@ -131,7 +132,7 @@ class Sapp:
         """
         debug_echo(f"=== sending failure information to semgrep app")
 
-        reponse = self.session.post(
+        response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/error",
             json={
                 "exit_code": error.exit_code,

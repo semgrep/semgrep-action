@@ -17,6 +17,7 @@ from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
+from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import maybe_print_debug_info
 
@@ -163,7 +164,7 @@ def main(
         # If logged in handle exception
         if sapp.is_configured:
             exit_code = sapp.report_failure(error)
-            sys.exit_code(exit_code)
+            sys.exit(exit_code)
         else:
             sys.exit(error.exit_code)
 
