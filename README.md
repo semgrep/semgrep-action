@@ -2,7 +2,7 @@
 
 [![r2c community slack](https://img.shields.io/badge/r2c_slack-join-brightgreen?style=for-the-badge&logo=slack&labelColor=4A154B)](https://join.slack.com/t/r2c-community/shared_invite/enQtNjU0NDYzMjAwODY4LWE3NTg1MGNhYTAwMzk5ZGRhMjQ2MzVhNGJiZjI1ZWQ0NjQ2YWI4ZGY3OGViMGJjNzA4ODQ3MjEzOWExNjZlNTA)
 
-Semgrep Action is a wrapper around [Semgrep](https://github.com/returntocorp/semgrep) for running as a Github Action, in Gitlab, and other CI providers and interfacing with https://semgrep.dev. 
+Semgrep Action is a wrapper around [Semgrep](https://github.com/returntocorp/semgrep) for running as a Github Action, in Gitlab, and other CI providers and interfacing with https://semgrep.dev.
 
 It reviews only the changed files in pull requests with [Semgrep] whenever a new commit is added to them, and reports only issues that are newly introduced in that pull request.
 
