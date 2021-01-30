@@ -20,6 +20,7 @@ from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import maybe_print_debug_info
+from semgrep_agent.utils import print_sh_error_info
 
 
 def url(string: str) -> str:
@@ -161,6 +162,8 @@ def main(
             sapp.is_configured,
         )
     except SemgrepError as error:
+        print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
+
         # If logged in handle exception
         if sapp.is_configured:
             exit_code = sapp.report_failure(error)
