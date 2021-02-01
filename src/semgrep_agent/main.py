@@ -169,7 +169,7 @@ def main(
             exit_code = sapp.report_failure(error)
             if exit_code == 0:
                 click.echo(
-                    f"Was going to exit with code {error.exit_code} but semgrep-app configuration is set to fail open so exiting with code 0.",
+                    f"Semgrep returned an error (code {error.exit_code}). However, this project's policy on {sapp.url} is configured to pass the build on Semgrep errors. This action will exit with return code 0.",
                     err=True,
                 )
             sys.exit(exit_code)
