@@ -19,6 +19,7 @@ from semgrep_agent import constants
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
+from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import validate_publish_token
 
@@ -123,6 +124,31 @@ class Sapp:
         parsed = yaml.load(rules)
         rules_path.write_text(rules)
         return rules_path, len(parsed["rules"])
+
+    def report_failure(self, error: SemgrepError) -> int:
+        """
+        Send semgrep cli non-zero exit code information to server
+        and return what exit code semgrep should exit with.
+        """
+        debug_echo(f"=== sending failure information to semgrep app")
+
+        response = self.session.post(
+            f"{self.url}/api/agent/scan/{self.scan.id}/error",
+            json={
+                "exit_code": error.exit_code,
+                "stderr": error.stderr,
+            },
+            timeout=30,
+        )
+
+        debug_echo(f"=== POST .../error responded: {response!r}")
+        try:
+            response.raise_for_status()
+        except requests.RequestException:
+            raise ActionFailure(f"API server returned this error: {response.text}")
+
+        exit_code = int(response.json()["exit_code"])
+        return exit_code
 
     def report_results(self, results: Results) -> None:
         debug_echo(f"=== reporting results to semgrep app at {self.url}")

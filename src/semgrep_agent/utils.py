@@ -118,17 +118,17 @@ def fix_head_for_github(
             git.checkout([stashed_rev])
 
 
-def exit_with_sh_error(error: sh.ErrorReturnCode) -> NoReturn:
+def print_sh_error_info(stdout: str, stderr: str, command: str, exit_code: int) -> None:
     message = f"""
     === failed command's STDOUT:
 
-{indent(error.stdout.decode(), 8 * ' ')}
+{indent(stdout, 8 * ' ')}
 
     === failed command's STDERR:
 
-{indent(error.stderr.decode(), 8 * ' ')}
+{indent(stderr, 8 * ' ')}
 
-    === [ERROR] `{error.full_cmd}` failed with exit code {error.exit_code}
+    === [ERROR] `{command}` failed with exit code {exit_code}
 
     This is an internal error, please file an issue at https://github.com/returntocorp/semgrep-action/issues/new/choose
     and include any log output from above.
@@ -136,4 +136,10 @@ def exit_with_sh_error(error: sh.ErrorReturnCode) -> NoReturn:
     message = dedent(message).strip()
     click.echo("", err=True)
     click.echo(message, err=True)
+
+
+def exit_with_sh_error(error: sh.ErrorReturnCode) -> NoReturn:
+    print_sh_error_info(
+        error.stdout.decode(), error.stderr.decode(), error.full_cmd, error.exit_code
+    )
     sys.exit(error.exit_code)
