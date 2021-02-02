@@ -1,15 +1,15 @@
-commit
+commit aaaaaaa
 Author: Test <test@r2c.dev>
-Date:
+Date:   YYYY-MM-DD
 
     add finding
 
  bar.py | 1 +
  1 file changed, 1 insertion(+)
 
-commit
+commit aaaaaaa
 Author: Test <test@r2c.dev>
-Date:
+Date:   YYYY-MM-DD
 
     base
 
