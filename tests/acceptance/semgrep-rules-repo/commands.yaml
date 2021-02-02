@@ -37,3 +37,21 @@ steps:
     expected_err: local-config-some-new-results-gitlab-json.err
     expected_out: local-config-some-new-results-gitlab-json.out
     returncode: 1
+  - name: local-config-some-new-results-github-env-json
+    description: expected some new findings in latest commit
+    command:
+      - bash
+      - -c
+      - "GITHUB_ACTIONS=true semgrep-agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --json"
+    expected_err: local-config-some-new-results-github-env-json.err
+    expected_out: local-config-some-new-results-github-env-json.out
+    returncode: 1
+  - name: local-config-some-new-results-gitlab-env-json
+    description: expected some new findings in latest commit
+    command:
+      - bash
+      - -c
+      - "GITLAB_CI=true semgrep-agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --gitlab-json"
+    expected_err: local-config-some-new-results-gitlab-env-json.err
+    expected_out: local-config-some-new-results-gitlab-env-json.out
+    returncode: 1

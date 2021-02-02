@@ -27,6 +27,7 @@ REPO_ROOT = str(Path(__file__).parent.parent.parent.resolve())
 BRANCH_COMMIT = re.compile(r"^(commit|\|   \*) ([0-9a-f]+)")
 DATE_STR = re.compile(r"Date:   (.*)")
 ENV_VERSIONS = re.compile(r"(\| versions\s+?- semgrep ).+?( on Python ).+?$")
+GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.*$")
 
 PIPE_OUTPUT: Mapping[str, Callable[[subprocess.CompletedProcess], str]] = {
     "expected_out": lambda r: cast(str, r.stdout),
@@ -43,6 +44,7 @@ SUBSTITUTIONS: Sequence[Callable[[str], str]] = [
     lambda s: re.sub(BRANCH_COMMIT, r"\1", s),
     lambda s: re.sub(DATE_STR, r"Date:   ", s),
     lambda s: re.sub(ENV_VERSIONS, r"\1x.y.z\2x.y.z", s),
+    lambda s: re.sub(GITHUB_ACTIONS_DEBUG, "", s),
     lambda s: s.rstrip(),
 ]
 
