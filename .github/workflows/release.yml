@@ -18,12 +18,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Get custom tags
+        id: custom_tags
+        run: |
+          CUSTOM_TAGS=""
+          if [[ $GITHUB_REF == refs/tags/v1 ]]; then
+            CUSTOM_TAGS="stable"
+          fi
+          echo ::set-output name=custom_tags::${CUSTOM_TAGS}
       - name: Docker meta
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1.11.0
         with:
           images: returntocorp/semgrep-action,returntocorp/semgrep-agent
-          tag-sha: true
+          tag-sha: ${{ github.event_name != 'pull_request' }}
+          tag-custom: ${{ steps.custom_tags.outputs.custom_tags }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to Docker Hub
