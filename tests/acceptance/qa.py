@@ -24,10 +24,12 @@ ALL_TESTS = [
 
 REPO_ROOT = str(Path(__file__).parent.parent.parent.resolve())
 
-BRANCH_COMMIT = re.compile(r"^(commit|\|   \*) ([0-9a-f]+)")
-DATE_STR = re.compile(r"Date:   (.*)")
-ENV_VERSIONS = re.compile(r"(\| versions\s+?- semgrep ).+?( on Python ).+?$")
-GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.*$")
+BRANCH_COMMIT = re.compile(r"^(commit|\|   \*) ([0-9a-f]+)", re.MULTILINE)
+DATE_STR = re.compile(r"^Date:   (.*)$", re.MULTILINE)
+ENV_VERSIONS = re.compile(
+    r"^(\| versions\s+?- semgrep ).+?( on Python ).+?$", re.MULTILINE
+)
+GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.+?\n", re.MULTILINE)
 
 PIPE_OUTPUT: Mapping[str, Callable[[subprocess.CompletedProcess], str]] = {
     "expected_out": lambda r: cast(str, r.stdout),
@@ -37,23 +39,22 @@ PIPE_OUTPUT: Mapping[str, Callable[[subprocess.CompletedProcess], str]] = {
 
 def write_expected_file(filename: str, output: str) -> None:
     with open(filename, "w") as file:
-        file.write(strip_output(output))
+        file.write(clean_output(output))
 
 
-SUBSTITUTIONS: Sequence[Callable[[str], str]] = [
-    lambda s: re.sub(BRANCH_COMMIT, r"\1", s),
-    lambda s: re.sub(DATE_STR, r"Date:   ", s),
+CLEANING_FUNCS: Sequence[Callable[[str], str]] = [
+    lambda s: "\n".join(line.rstrip() for line in s.splitlines()) + "\n",
+    lambda s: re.sub(BRANCH_COMMIT, r"\1 aaaaaaa", s),
+    lambda s: re.sub(DATE_STR, r"Date:   YYYY-MM-DD", s),
     lambda s: re.sub(ENV_VERSIONS, r"\1x.y.z\2x.y.z", s),
     lambda s: re.sub(GITHUB_ACTIONS_DEBUG, "", s),
-    lambda s: s.rstrip(),
 ]
 
 
-def strip_output(output: str) -> str:
-    return "\n".join(
-        reduce(lambda s, sub: sub(s), SUBSTITUTIONS, line)
-        for line in output.split("\n")
-    )
+def clean_output(output: str) -> str:
+    for clean in CLEANING_FUNCS:
+        output = clean(output)
+    return output
 
 
 def match_expected(output: str, expected: str) -> bool:
@@ -63,7 +64,7 @@ def match_expected(output: str, expected: str) -> bool:
     matches ignoring trailing whitespace
 
     """
-    output = strip_output(output)
+    output = clean_output(output)
 
     if output.strip() != expected.strip():
         print("==== EXPECTED ====")

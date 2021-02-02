@@ -38,7 +38,7 @@ steps:
     expected_out: local-config-some-new-results-gitlab-json.out
     returncode: 1
   - name: local-config-some-new-results-github-env-json
-    description: expected some new findings in latest commit
+    description: baseline ref should be used in github actions context
     command:
       - bash
       - -c
@@ -47,7 +47,7 @@ steps:
     expected_out: local-config-some-new-results-github-env-json.out
     returncode: 1
   - name: local-config-some-new-results-gitlab-env-json
-    description: expected some new findings in latest commit
+    description: baseline ref should be used in gitlab ci context
     command:
       - bash
       - -c
