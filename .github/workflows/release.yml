@@ -8,15 +8,13 @@ on:
     tags:
       - "*"
 
-env:
-  DOCKER_SECRETS_AVAILABLE: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
   # taken from https://github.com/docker/build-push-action/blob/master/UPGRADE.md#tags-with-ref-and-git-labels
   docker:
     name: Publish Docker image
     runs-on: ubuntu-latest
-    if: ${{ env.DOCKER_SECRETS_AVAILABLE }}
+    if: github.repository_owner == 'returntocorp'
     steps:
       - uses: actions/checkout@v2
       - id: prep
