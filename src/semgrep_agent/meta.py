@@ -325,11 +325,11 @@ class GitlabMeta(GitMeta):
 def generate_meta_from_environment(baseline_ref: Optional[str]) -> GitMeta:
     # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables
     if os.getenv("GITHUB_ACTIONS") == "true":
-        return GithubMeta()
+        return GithubMeta(baseline_ref)
 
     # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
     elif os.getenv("GITLAB_CI") == "true":
-        return GitlabMeta()
+        return GitlabMeta(baseline_ref)
 
     else:  # nosem
         if not baseline_ref:
