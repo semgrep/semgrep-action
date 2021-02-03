@@ -17,8 +17,10 @@ from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
+from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import maybe_print_debug_info
+from semgrep_agent.utils import print_sh_error_info
 
 
 def url(string: str) -> str:
@@ -150,14 +152,30 @@ def main(
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
 
-    results = semgrep.scan(
-        config,
-        committed_datetime,
-        meta.base_commit_ref,
-        meta.head_ref,
-        semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
-        sapp.is_configured,
-    )
+    try:
+        results = semgrep.scan(
+            config,
+            committed_datetime,
+            meta.base_commit_ref,
+            meta.head_ref,
+            semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
+            sapp.is_configured,
+        )
+    except SemgrepError as error:
+        print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
+
+        # If logged in handle exception
+        if sapp.is_configured:
+            exit_code = sapp.report_failure(error)
+            if exit_code == 0:
+                click.echo(
+                    f"Semgrep returned an error (return code {error.exit_code}). However, this project's policy on {sapp.url} is configured to pass the build on Semgrep errors. This CI job will exit with a successful return code 0.",
+                    err=True,
+                )
+            sys.exit(exit_code)
+        else:
+            sys.exit(error.exit_code)
+
     new_findings = results.findings.new
 
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
