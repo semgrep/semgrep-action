@@ -108,6 +108,30 @@ commit your own `.semgrepignore`.
 Note that `.semgrepignore` is picked up only by the action,
 and will not be honored when running `semgrep` manually.
 
+### Audit mode
+
+If you want to see findings from your whole repo
+instead of just the changed files that would be scanned
+whenever a pull request comes in,
+you'd normally set up scans on pushes to your main branch.
+This can prove difficult when you already have existing issues
+that Semgrep finds on the main branch
+— you probably don't want CI to fail all builds on the main branch
+until every single finding is addressed.
+
+For this case, we recommend using audit mode.
+In audit mode, Semgrep will collect findings data for you to review,
+but will never fail the build due to findings.
+
+To enable audit mode on pushes in GitHub Actions,
+set the option `auditOn: push` in your workflow file.
+
+On the command line, set the `--audit-on event_name` flag.
+
+The most common event names on GitHub are `push` and `pull_request`.
+In other cases, you can find the correct event name
+in the first few lines of the agent's log output.
+
 ## Technical details
 
 Semgrep-action scans files in the current directory with [semgrep](https://github.com/returntocorp/semgrep), and exits with a non-zero exit code if blocking issues are found.

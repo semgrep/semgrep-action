@@ -6,6 +6,7 @@ from pathlib import Path
 from textwrap import dedent
 from typing import NoReturn
 from typing import Optional
+from typing import Sequence
 
 import click
 import sh
@@ -49,6 +50,7 @@ def get_aligned_command(title: str, subtext: str) -> str:
 @click.option(
     "--gitlab-json", "gitlab_output", envvar="SEMGREP_GITLAB_JSON", is_flag=True
 )
+@click.option("--audit-on", envvar="INPUT_AUDITON", multiple=True, type=str)
 def main(
     config: str,
     baseline_ref: str,
@@ -57,6 +59,7 @@ def main(
     publish_deployment: int,
     json_output: bool,
     gitlab_output: bool,
+    audit_on: Sequence[str],
 ) -> NoReturn:
     click.echo(
         get_aligned_command(
@@ -210,7 +213,14 @@ def main(
     if sapp.is_configured:
         sapp.report_results(results)
 
-    exit_code = 1 if blocking_findings else 0
+    audit_mode = meta.event_name in audit_on
+    if blocking_findings and audit_mode:
+        click.echo(
+            f"| audit mode is on for {meta.event_name}, so the findings won't cause failure",
+            err=True,
+        )
+
+    exit_code = 1 if blocking_findings and not audit_mode else 0
     click.echo(
         f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
         err=True,
