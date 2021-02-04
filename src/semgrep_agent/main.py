@@ -31,7 +31,7 @@ ALL_MANUAL_ENV_VARS = {
     "SEMGREP_PR_ID": "The pull or merge request ID, if any",
     "SEMGREP_PR_TITLE": "The pull or merge request title, if any",
     "SEMGREP_REPO_NAME": "The name of this repository",
-    "SEMGREP_REPO_URL": "This repository's code URL",
+    "SEMGREP_REPO_URL": "This URL at which this repository's code is located",
 }
 
 
