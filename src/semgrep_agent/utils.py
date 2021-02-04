@@ -104,8 +104,9 @@ def fix_head_for_github(
     try:
         if base_ref is not None:
             click.echo("| scanning only the following commits:", err=True)
+            merge_base = git(["merge-base"], base_ref, "HEAD").rstrip()
             # fmt:off
-            log = git.log(["--oneline", "--graph", f"{base_ref}..HEAD"]).stdout  # type:ignore
+            log = git.log(["--oneline", "--graph", f"{merge_base}..HEAD"], f"{merge_base}..{base_ref}").stdout  # type:ignore
             # fmt: on
             rr = cast(bytes, log).decode("utf-8").rstrip().split("\n")
             r = "\n|   ".join(rr)
