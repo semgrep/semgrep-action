@@ -11,6 +11,7 @@ from typing import Iterator
 from typing import List
 from typing import NoReturn
 from typing import Optional
+from typing import Sequence
 from typing import TYPE_CHECKING
 
 import click
@@ -68,6 +69,13 @@ def validate_publish_token(token: str) -> bool:
     return constants.PUBLISH_TOKEN_VALIDATOR.match(token) is not None
 
 
+def print_git_log(log_cmd: str) -> None:
+    log = git.log(["--oneline", "--graph", log_cmd]).stdout  # type:ignore
+    rr = cast(bytes, log).decode("utf-8").rstrip().split("\n")
+    r = "\n|   ".join(rr)
+    click.echo("|   " + r, err=True)
+
+
 @contextmanager
 def fix_head_for_github(
     base_commit_ref: Optional[str] = None,
@@ -103,13 +111,16 @@ def fix_head_for_github(
 
     try:
         if base_ref is not None:
-            click.echo("| scanning only the following commits:", err=True)
+            merge_base = git("merge-base", base_ref, "HEAD").rstrip()
             # fmt:off
-            log = git.log(["--oneline", "--graph", f"{base_ref}..HEAD"]).stdout  # type:ignore
+            click.echo("| reporting findings introduced by these commits:", err=True)
+            print_git_log(f"{merge_base}..HEAD")
+            if merge_base != git("rev-parse", base_ref).rstrip():
+                click.echo("| also reporting findings fixed by these commits from the baseline branch:", err=True)
+                print_git_log(f"{merge_base}..{base_ref}")
+                click.echo("| to exclude these latter commits, run with", err=True)
+                click.echo(f"|   --baseline-ref $(git merge-base {base_commit_ref} HEAD)", err=True)
             # fmt: on
-            rr = cast(bytes, log).decode("utf-8").rstrip().split("\n")
-            r = "\n|   ".join(rr)
-            click.echo("|   " + r, err=True)
 
         yield base_ref
     finally:
