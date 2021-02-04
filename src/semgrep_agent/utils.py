@@ -119,7 +119,7 @@ def fix_head_for_github(
                 click.echo("| also reporting findings fixed by these commits from the baseline branch:", err=True)
                 print_git_log(f"{merge_base}..{base_ref}")
                 click.echo("| to exclude these latter commits, run with", err=True)
-                click.echo(f"|   --baseline-ref $(git merge-base {base_commit_ref} head)", err=True)
+                click.echo(f"|   --baseline-ref $(git merge-base {base_commit_ref} HEAD)", err=True)
             # fmt: on
 
         yield base_ref
