@@ -4,7 +4,7 @@
 === setting up agent configuration
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
 | using default path ignore rules of common test and dependency directories
-| scanning only the following commits:
+| reporting findings introduced by these commits:
 |   * aaaaaaa add finding
 | looking at 1 changed path
 | found 1 file in the paths to be scanned
