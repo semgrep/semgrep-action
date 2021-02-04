@@ -57,7 +57,7 @@ class GitMeta:
 
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
-        return self.repo.head.commit.hexsha  # type: ignore
+        return os.getenv("SEMGREP_COMMIT") or self.repo.head.commit.hexsha
 
     @cachedproperty
     def head_ref(self) -> Optional[str]:
