@@ -1,0 +1,27 @@
+steps:
+  - include: generic.yaml
+  - name: fix finding on main branch
+    description: remove the file that used to have issues
+    command:
+      - bash
+      - -c
+      - echo "print()" > clean_foo.py && git add clean_foo.py && rm foo.py && git rm foo.py && git commit -m "fix finding"
+    returncode: 0
+  - name: create new branch with a new finding
+    description: create a new file with findings
+    command:
+      - bash
+      - -c
+      - git checkout HEAD^ && git checkout -b pr-branch && echo "15 == 15" > baz.py && git add baz.py && git commit -m 'add pr finding'
+  - name: new log
+    description: git log with commits
+    command: git log --stat
+    returncode: 0
+    expected_out: new-log.out
+    expected_err: new-log.err
+  - name: new agent
+    description: run agent on a single new file
+    command: semgrep-agent --baseline-ref main --config p/r2c-ci
+    returncode: 1
+    expected_out: new-agent.out
+    expected_err: new-agent.err

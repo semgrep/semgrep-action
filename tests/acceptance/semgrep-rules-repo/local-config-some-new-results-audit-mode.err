@@ -4,7 +4,7 @@
 === setting up agent configuration
 | using semgrep rules from python/django/security/audit/xss/template-translate-as-no-escape.yaml
 | using default path ignore rules of common test and dependency directories
-| scanning only the following commits:
+| reporting findings introduced by these commits:
 |   * aaaaaaa XSS via translate filters in Django Templates (#1071)
 | looking at 6 changed paths
 | found 6 files in the paths to be scanned
