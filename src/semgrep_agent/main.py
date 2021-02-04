@@ -24,6 +24,22 @@ from semgrep_agent.utils import maybe_print_debug_info
 from semgrep_agent.utils import print_sh_error_info
 
 
+ALL_MANUAL_ENV_VARS = {
+    "SEMGREP_BRANCH": "The scanned branch ref",
+    "SEMGREP_COMMIT": "The scanned commit SHA",
+    "SEMGREP_JOB_URL": "The URL of the CI job that ran this scan, if any",
+    "SEMGREP_PR_ID": "The pull or merge request ID, if any",
+    "SEMGREP_PR_TITLE": "The pull or merge request title, if any",
+    "SEMGREP_REPO_NAME": "The name of this repository",
+    "SEMGREP_REPO_URL": "This URL at which this repository's code is located",
+}
+
+
+ENV_VAR_HELP_TEXT = "\n        ".join(
+    f"{k}: {v}\n" for k, v in ALL_MANUAL_ENV_VARS.items()
+)
+
+
 def url(string: str) -> str:
     return string.rstrip("/")
 
@@ -32,25 +48,69 @@ def get_aligned_command(title: str, subtext: str) -> str:
     return f"| {title.ljust(17)} - {subtext}"
 
 
-@click.command()
-@click.option("--config", envvar="INPUT_CONFIG", type=str)
+@click.command(
+    help=f"""
+    Scans a repository for findings using Semgrep with rules from semgrep.dev.
+
+    For usage, see https://semgrep.dev/docs/integrations.
+
+    In its most basic form, semgrep-agent is used by calling:
+
+    $ semgrep-agent --config p/r2c-ci
+
+    which will scan a repository using the r2c-ci ruleset.
+
+    In addition to the options below, the following environment variables can be used to configure the data sent by
+    semgrep-agent to semgrep.dev:
+
+        {ENV_VAR_HELP_TEXT}
+"""
+)
+@click.option(
+    "--config",
+    envvar="INPUT_CONFIG",
+    type=str,
+    help="Define a rule, ruleset, or snippet used to scan this repository",
+)
 @click.option(
     "--baseline-ref",
     envvar="BASELINE_REF",
     type=str,
     default=None,
     show_default="detected from CI env",
+    help="Only show findings introduced since this Git ref",
 )
 @click.option(
-    "--publish-url", envvar="INPUT_PUBLISHURL", type=url, default="https://semgrep.dev"
+    "--publish-token",
+    envvar="INPUT_PUBLISHTOKEN",
+    type=str,
+    help="Your semgrep.dev API token (only needed if specifying a publish organization)",
 )
-@click.option("--publish-token", envvar="INPUT_PUBLISHTOKEN", type=str)
-@click.option("--publish-deployment", envvar="INPUT_PUBLISHDEPLOYMENT", type=int)
+@click.option(
+    "--publish-deployment",
+    envvar="INPUT_PUBLISHDEPLOYMENT",
+    type=int,
+    help="You semgrep.dev organization ID (requires --publish-token)",
+)
+@click.option(
+    "--publish-url",
+    envvar="INPUT_PUBLISHURL",
+    type=url,
+    default="https://semgrep.dev",
+    help="The URL of the Semgrep app",
+    hidden=True,
+)
 @click.option("--json", "json_output", hidden=True, is_flag=True)
 @click.option(
-    "--gitlab-json", "gitlab_output", envvar="SEMGREP_GITLAB_JSON", is_flag=True
+    "--gitlab-json",
+    "gitlab_output",
+    envvar="SEMGREP_GITLAB_JSON",
+    is_flag=True,
+    hidden=True,
 )
-@click.option("--audit-on", envvar="INPUT_AUDITON", multiple=True, type=str)
+@click.option(
+    "--audit-on", envvar="INPUT_AUDITON", multiple=True, type=str, hidden=True
+)
 def main(
     config: str,
     baseline_ref: str,
@@ -97,14 +157,7 @@ def main(
     else:
         click.echo(get_aligned_command("manage", f"not logged in"), err=True)
 
-    for env_var in [
-        "SEMGREP_REPO_NAME",
-        "SEMGREP_REPO_URL",
-        "SEMGREP_JOB_URL",
-        "SEMGREP_BRANCH",
-        "SEMGREP_PR_ID",
-        "SEMGREP_PR_TITLE",
-    ]:
+    for env_var in ALL_MANUAL_ENV_VARS.keys():
         if os.getenv(env_var):
             click.echo(get_aligned_command(env_var, str(os.getenv(env_var))))
 
