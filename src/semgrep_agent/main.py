@@ -6,6 +6,7 @@ from pathlib import Path
 from textwrap import dedent
 from typing import NoReturn
 from typing import Optional
+from typing import Sequence
 
 import click
 import sh
@@ -17,8 +18,10 @@ from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
+from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import maybe_print_debug_info
+from semgrep_agent.utils import print_sh_error_info
 
 
 def url(string: str) -> str:
@@ -47,6 +50,7 @@ def get_aligned_command(title: str, subtext: str) -> str:
 @click.option(
     "--gitlab-json", "gitlab_output", envvar="SEMGREP_GITLAB_JSON", is_flag=True
 )
+@click.option("--audit-on", envvar="INPUT_AUDITON", multiple=True, type=str)
 def main(
     config: str,
     baseline_ref: str,
@@ -55,6 +59,7 @@ def main(
     publish_deployment: int,
     json_output: bool,
     gitlab_output: bool,
+    audit_on: Sequence[str],
 ) -> NoReturn:
     click.echo(
         get_aligned_command(
@@ -150,14 +155,30 @@ def main(
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
 
-    results = semgrep.scan(
-        config,
-        committed_datetime,
-        meta.base_commit_ref,
-        meta.head_ref,
-        semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
-        sapp.is_configured,
-    )
+    try:
+        results = semgrep.scan(
+            config,
+            committed_datetime,
+            meta.base_commit_ref,
+            meta.head_ref,
+            semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
+            sapp.is_configured,
+        )
+    except SemgrepError as error:
+        print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
+
+        # If logged in handle exception
+        if sapp.is_configured:
+            exit_code = sapp.report_failure(error)
+            if exit_code == 0:
+                click.echo(
+                    f"Semgrep returned an error (return code {error.exit_code}). However, this project's policy on {sapp.url} is configured to pass the build on Semgrep errors. This CI job will exit with a successful return code 0.",
+                    err=True,
+                )
+            sys.exit(exit_code)
+        else:
+            sys.exit(error.exit_code)
+
     new_findings = results.findings.new
 
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
@@ -192,7 +213,14 @@ def main(
     if sapp.is_configured:
         sapp.report_results(results)
 
-    exit_code = 1 if blocking_findings else 0
+    audit_mode = meta.event_name in audit_on
+    if blocking_findings and audit_mode:
+        click.echo(
+            f"| audit mode is on for {meta.event_name}, so the findings won't cause failure",
+            err=True,
+        )
+
+    exit_code = 1 if blocking_findings and not audit_mode else 0
     click.echo(
         f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
         err=True,

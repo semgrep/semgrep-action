@@ -2,10 +2,9 @@
 
 [![r2c community slack](https://img.shields.io/badge/r2c_slack-join-brightgreen?style=for-the-badge&logo=slack&labelColor=4A154B)](https://join.slack.com/t/r2c-community/shared_invite/enQtNjU0NDYzMjAwODY4LWE3NTg1MGNhYTAwMzk5ZGRhMjQ2MzVhNGJiZjI1ZWQ0NjQ2YWI4ZGY3OGViMGJjNzA4ODQ3MjEzOWExNjZlNTA)
 
-This GitHub Action reviews pull requests with [Semgrep](https://github.com/returntocorp/semgrep)
-whenever a new commit is added to them.
-It reports as failed if there are any new bugs
-that first appeared in that pull request.
+Semgrep Action is a wrapper around [Semgrep](https://github.com/returntocorp/semgrep) for running as a GitHub Action, in Gitlab, and in other CI providers and interfacing with [https://semgrep.dev](https://semgrep.dev).
+
+It reviews only the changed files in pull requests with Semgrep whenever a new commit is added to them, and reports only issues that are newly introduced in that pull request.
 
 ## Usage
 
@@ -108,6 +107,30 @@ commit your own `.semgrepignore`.
 
 Note that `.semgrepignore` is picked up only by the action,
 and will not be honored when running `semgrep` manually.
+
+### Audit mode
+
+If you want to see findings from your whole repo
+instead of just the changed files that would be scanned
+whenever a pull request comes in,
+you'd normally set up scans on pushes to your main branch.
+This can prove difficult when you already have existing issues
+that Semgrep finds on the main branch
+— you probably don't want CI to fail all builds on the main branch
+until every single finding is addressed.
+
+For this case, we recommend using audit mode.
+In audit mode, Semgrep will collect findings data for you to review,
+but will never fail the build due to findings.
+
+To enable audit mode on pushes in GitHub Actions,
+set the option `auditOn: push` in your workflow file.
+
+On the command line, set the `--audit-on event_name` flag.
+
+The most common event names on GitHub are `push` and `pull_request`.
+In other cases, you can find the correct event name
+in the first few lines of the agent's log output.
 
 ## Technical details
 
