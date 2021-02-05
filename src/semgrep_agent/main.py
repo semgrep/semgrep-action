@@ -50,7 +50,7 @@ def get_aligned_command(title: str, subtext: str) -> str:
 
 @click.command(
     help=f"""
-    Scans a repository for findings using Semgrep with rules from semgrep.dev.
+    Hi demos!
 
     For usage, see https://semgrep.dev/docs/integrations.
 
