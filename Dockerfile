@@ -8,12 +8,14 @@ ENV INSTALLED_SEMGREP_VERSION=0.39.1
 
 RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &&\
     apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
-    pip install --no-cache-dir poetry==1.0.10 &&\
+    # Need to pin cryptography version to avoid Rust compiler dependency
+    pip install --no-cache-dir cryptography==3.3.2 poetry==1.0.10 &&\
     pip install --no-cache-dir pipx &&\
     pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
-    poetry config virtualenvs.create false &&\
-    # Don't install dev dependencies or semgrep-agent
-    poetry install --no-dev --no-root &&\
+    poetry config virtualenvs.create false
+
+# Don't install dev dependencies or semgrep-agent
+RUN poetry install --no-dev --no-root &&\
     pip uninstall -y poetry &&\
     apk del .build-deps &&\
     rm -rf /root/.cache/* /tmp/*
