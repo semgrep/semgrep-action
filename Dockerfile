@@ -16,6 +16,7 @@ RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &
     pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
     poetry config virtualenvs.create false &&\
     # Don't install dev dependencies or semgrep-agent
+    poetry install --no-dev --no-root &&\
     pip uninstall -y poetry &&\
     apk del .build-deps &&\
     rm -rf /root/.cache/* /tmp/*
