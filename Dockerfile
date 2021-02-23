@@ -9,7 +9,7 @@ ENV INSTALLED_SEMGREP_VERSION=0.40.0
 # This is all in one run command in order to save disk space.
 # Note that there's a tradeoff here for debuggability.
 RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &&\
-    apk add --no-cache --virtual=.run-deps bash git less libffi openssl ssh &&\
+    apk add --no-cache --virtual=.run-deps bash git less libffi openssl openssh &&\
     # Need to pin cryptography version to avoid Rust compiler dependency
     pip install --no-cache-dir cryptography==3.3.2 poetry==1.0.10 &&\
     pip install --no-cache-dir pipx &&\
