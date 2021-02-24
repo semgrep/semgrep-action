@@ -1,5 +1,7 @@
 # Contributing
 
+Woop woop.
+
 ## Development setup
 
 Install the correct version of poetry:
