@@ -206,8 +206,7 @@ def main(
             == [ERROR] you didn't set a token for authentication to semgrep.dev.
 
             You tried logging in as deployment ID #{publish_deployment}, but the deployment's API token is {token_state}.
-            If you're using a CI secret management feature to set it,
-            please ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job.
+            If you're using a CI secret management feature to set it, please ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job.
 
             You can find more details about authentication at
             https://semgrep.dev/docs/semgrep-ci/#connecting-to-semgrep-app
