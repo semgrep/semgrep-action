@@ -15,14 +15,25 @@ steps:
     returncode: 1
     expected_out: missing-deployment-token.out
     expected_err: missing-deployment-token.err
-  - name: empty token
+  - name: empty token via env
     description: >
-      run agent with deployment ID but token set to empty string,
+      run agent with deployment ID but token set to empty string in the env,
       such as when a CI secret doesn't propagate correctly
     command:
       - bash
       - -c
       - INPUT_PUBLISHDEPLOYMENT="0" INPUT_PUBLISHTOKEN="" semgrep-agent
     returncode: 1
-    expected_out: empty-deployment-token.out
-    expected_err: empty-deployment-token.err
+    expected_out: empty-deployment-token-env.out
+    expected_err: empty-deployment-token-env.err
+  - name: empty token via flag
+    description: >
+      run agent with deployment ID but token set to empty string in the command,
+      such as when a CI secret doesn't propagate correctly
+    command:
+      - semgrep-agent
+      - --publish-deployment=0
+      - --publish-token
+    returncode: 2
+    expected_out: empty-deployment-token-flag.out
+    expected_err: empty-deployment-token-flag.err
