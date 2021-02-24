@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: returntocorp/semgrep-action@v1
+      - uses: returntocorp/semgrep-action/tests/local-image-action@bence/pr-target
         with:
           publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
           publishDeployment: "1"
