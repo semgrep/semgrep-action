@@ -1,0 +1,13 @@
+| versions          - semgrep x.y.z on Python x.y.z
+Note that no baseline-ref was passed and detected environment is not Github or Gitlab to will default to perfoming a full scan. If you want semgrep to only report on new findings from a pull request please set baseline-ref
+| environment       - running in environment git, triggering event is 'unknown'
+| manage            - not logged in
+=== setting up agent configuration
+== [ERROR] you didn't set a token for authentication to semgrep.dev.
+
+You tried logging in as deployment ID #0, but the deployment's API token is set to '' (an empty string).
+If you're using a CI secret management feature to set it,
+please ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job.
+
+You can find more details about authentication at
+https://semgrep.dev/docs/semgrep-ci/#connecting-to-semgrep-app

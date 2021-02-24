@@ -194,13 +194,33 @@ def main(
             "| using semgrep rules from the committed .semgrep/ directory", err=True
         )
         config = ".semgrep/"
+    elif publish_deployment is not None and not publish_token:
+        token_state = (
+            # can't check without hardcoding the environment variable name
+            # https://github.com/pallets/click/issues/1790
+            "set to '' (an empty string)"
+            if os.getenv("INPUT_PUBLISHTOKEN") == ""
+            else "unset"
+        )
+        message = f"""
+            == [ERROR] you didn't set a token for authentication to semgrep.dev.
+
+            You tried logging in as deployment ID #{publish_deployment}, but the deployment's API token is {token_state}.
+            If you're using a CI secret management feature to set it,
+            please ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job.
+
+            You can find more details about authentication at
+            https://semgrep.dev/docs/semgrep-ci/#connecting-to-semgrep-app
+        """
+        message = dedent(message).strip()
+        click.echo(message, err=True)
+        sys.exit(1)
     else:
         message = """
             == [ERROR] you didn't configure what rules semgrep should scan for.
 
-            Please either set a config in the CI configuration according to
-            https://github.com/returntocorp/semgrep-action#configuration
-            or commit your own rules at the default path of `.semgrep.yml`
+            Please set a config in the CI configuration according to
+            https://semgrep.dev/docs/semgrep-ci/#selecting-rules
         """
         message = dedent(message).strip()
         click.echo(message, err=True)
