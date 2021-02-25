@@ -3,7 +3,7 @@
   command:
     - bash
     - -c
-    - git init --initial-branch=main && git config user.email test@r2c.dev && git config user.name Test
+    - git init && git config user.email test@r2c.dev && git config user.name Test && git checkout -B main
   returncode: 0
 - name: base commit
   description: create a root git commit
