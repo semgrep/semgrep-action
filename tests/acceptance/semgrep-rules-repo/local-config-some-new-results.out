@@ -1,7 +1,7 @@
 python.django.security.audit.xss.template-translate-as-no-escape
      > python/django/security/audit/xss/template-translate-as-no-escape.html:2
      ╷
-    2│   {% translate "Hello world" as the_title %}<div><h1>{{ the_title }}
+    2│   {% translate "Hello world" as the_title %}<div><h1>{{ the_title }}</h1>
      ╵
      = Translated strings will not be escaped when rendered in a template. This
        leads to a vulnerability where translators could include malicious script
@@ -11,7 +11,7 @@ python.django.security.audit.xss.template-translate-as-no-escape
 python.django.security.audit.xss.template-translate-as-no-escape
      > python/django/security/audit/xss/template-translate-as-no-escape.html:8
      ╷
-    8│   {% trans "Hello world" as title %}<p>{{ title }}
+    8│   {% trans "Hello world" as title %}<p>{{ title }}</p>
      ╵
      = Translated strings will not be escaped when rendered in a template. This
        leads to a vulnerability where translators could include malicious script
