@@ -142,6 +142,8 @@ def get_findings(
                 "--skip-unknown-extensions",
                 "--disable-nosem",
                 "--json",
+                "--autofix",
+                "--dryrun",
                 *rewrite_args,
                 *config_args,
             ]
@@ -191,8 +193,6 @@ def get_findings(
                 args = [
                     "--skip-unknown-extensions",
                     "--json",
-                    "--autofix",
-                    "--dryrun",
                     *rewrite_args,
                     *config_args,
                 ]
