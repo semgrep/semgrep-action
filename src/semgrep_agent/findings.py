@@ -9,6 +9,7 @@ from typing import Any
 from typing import Collection
 from typing import Dict
 from typing import Iterable
+from typing import List
 from typing import Mapping
 from typing import NamedTuple
 from typing import Optional
@@ -17,6 +18,8 @@ from typing import Set
 import attr
 import click
 import pymmh3
+
+from semgrep_agent import constants
 
 
 NOSEM_COMMENT_RE = re.compile(r"[:#/]+\s*nosem.*$", re.IGNORECASE)
@@ -42,6 +45,7 @@ class Finding:
     message = attr.ib(type=str, hash=None, eq=False)
     severity = attr.ib(type=int, hash=None, eq=False)
     syntactic_context = attr.ib(type=str, converter=normalize_syntactic_context)
+    fixed_lines = attr.ib(type=Optional[List[str]])
     index = attr.ib(type=int, default=0)
     end_line = attr.ib(
         type=Optional[int], default=None, hash=None, eq=False, kw_only=True
@@ -101,11 +105,14 @@ class Finding:
             message=result["extra"]["message"],
             severity=cls.semgrep_severity_to_int(result["extra"]["severity"]),
             syntactic_context=result["extra"]["lines"],
+            fixed_lines=result["extra"].get("fixed_lines"),
             commit_date=committed_datetime,
             metadata=result["extra"]["metadata"],
         )
 
-    def to_dict(self, omit: Set[str]) -> Mapping[str, Any]:
+    def to_dict(
+        self, omit: Set[str] = constants.PRIVACY_SENSITIVE_FIELDS
+    ) -> Mapping[str, Any]:
         d = attr.asdict(self)
         d = {k: v for k, v in d.items() if v is not None and k not in omit}
         d["syntactic_id"] = self.syntactic_identifier_str()
