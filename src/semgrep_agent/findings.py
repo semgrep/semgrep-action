@@ -100,7 +100,7 @@ class Finding:
             path=result["path"],
             line=result["start"]["line"],
             column=result["start"]["col"],
-            end_line=result["end"]["col"],
+            end_line=result["end"]["line"],
             end_column=result["end"]["col"],
             message=result["extra"]["message"],
             severity=cls.semgrep_severity_to_int(result["extra"]["severity"]),
