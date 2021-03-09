@@ -15,6 +15,7 @@ import attr
 import click
 import sh
 from boltons.iterutils import bucketize
+from boltons.iterutils import partition
 from boltons.strutils import unit_len
 from sh.contrib import git
 
@@ -287,8 +288,13 @@ class TargetFileManager:
 
         current_tree = git("write-tree").stdout.decode().strip()
         try:
-            for a in self._status.added:
-                a.unlink()
+            added_files, added_dirs = partition(
+                self._status.added, lambda path: path.is_file()
+            )
+            for added_file in added_files:
+                added_file.unlink()
+            for added_dir in added_dirs:
+                added_dir.rmdir()
             git.checkout(self._base_commit, "--", ".")
             yield
         finally:

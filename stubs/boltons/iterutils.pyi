@@ -1,4 +1,14 @@
-from typing import Any, Callable, Dict, Hashable, Iterable, List, Optional, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+)
 
 Item = TypeVar("Item")
 Items = Iterable[Item]
@@ -15,3 +25,6 @@ def bucketize(
     value_transform: Optional[Callable[[SourceItem_co], BucketItem_co]] = None,
     key_filter: Optional[Callable[[BucketKey_co], bool]] = None,
 ) -> Dict[BucketKey_co, List[BucketItem_co]]: ...
+def partition(
+    src: Iterable[SourceItem_co], key: Callable[[SourceItem_co], bool] = ...
+) -> Tuple[List[SourceItem_co], List[SourceItem_co]]: ...
