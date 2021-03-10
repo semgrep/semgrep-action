@@ -137,6 +137,11 @@ class GithubMeta(GitMeta):
         return {}
 
     @cachedproperty
+    def is_pull_request_event(self) -> bool:
+        """Return if running on a PR, even for variant types such as `pull_request_target`."""
+        return self.event_name in {"pull_request", "pull_request_target"}
+
+    @cachedproperty
     def repo_name(self) -> Optional[str]:
         return os.getenv("GITHUB_REPOSITORY", "[unknown]")
 
@@ -148,7 +153,7 @@ class GithubMeta(GitMeta):
 
     @cachedproperty
     def commit_sha(self) -> Optional[str]:
-        if self.event_name == "pull_request":
+        if self.is_pull_request_event:
             # https://github.community/t/github-sha-not-the-same-as-the-triggering-commit/18286/2
             return self.glom_event(T["pull_request"]["head"]["sha"])  # type: ignore
         if self.event_name == "push":
@@ -157,7 +162,7 @@ class GithubMeta(GitMeta):
 
     @cachedproperty
     def head_ref(self) -> Optional[str]:
-        if self.event_name == "pull_request":
+        if self.is_pull_request_event:
             return self.commit_sha  # type: ignore
         else:
             return None
@@ -202,7 +207,7 @@ class GithubMeta(GitMeta):
     def base_commit_ref(self) -> Optional[str]:
         if self.cli_baseline_ref:
             return self.cli_baseline_ref
-        if self.event_name == "pull_request" and self.head_ref is not None:
+        if self.is_pull_request_event and self.head_ref is not None:
             # The pull request "base" that GitHub sends us is not necessarily the merge base,
             # so we need to get the merge-base from Git
             return self._find_branchoff_point()
@@ -238,7 +243,7 @@ class GithubMeta(GitMeta):
         return str(pr_title) if pr_title else None
 
     def initialize_repo(self) -> None:
-        if self.event_name == "pull_request" and self.head_ref is not None:
+        if self.is_pull_request_event and self.head_ref is not None:
             self._find_branchoff_point()
         return
 
