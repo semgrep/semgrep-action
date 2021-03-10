@@ -142,6 +142,8 @@ def get_findings(
                 "--skip-unknown-extensions",
                 "--disable-nosem",
                 "--json",
+                "--autofix",
+                "--dryrun",
                 *rewrite_args,
                 *config_args,
             ]

@@ -153,14 +153,20 @@ class Sapp:
     def report_results(self, results: Results) -> None:
         debug_echo(f"=== reporting results to semgrep app at {self.url}")
 
+        fields_to_omit = constants.PRIVACY_SENSITIVE_FIELDS.copy()
+
+        if "pr-comment-autofix" in os.getenv("SEMGREP_AGENT_OPT_IN_FEATURES", ""):
+            fields_to_omit.remove("fixed_lines")
+
         response: Optional["requests.Response"] = None
 
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/findings",
             json={
+                # send a backup token in case the app is not available
                 "token": os.getenv("GITHUB_TOKEN"),
                 "findings": [
-                    finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
+                    finding.to_dict(omit=fields_to_omit)
                     for finding in results.findings.new
                 ],
             },
@@ -181,10 +187,7 @@ class Sapp:
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/ignores",
             json={
-                "findings": [
-                    finding.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS)
-                    for finding in results.findings.ignored
-                ],
+                "findings": [finding.to_dict() for finding in results.findings.ignored],
             },
             timeout=30,
         )
