@@ -163,7 +163,8 @@ class Sapp:
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/findings",
             json={
-                "token": os.getenv("GITHUB_TOKEN"),  # backup token in case the app is not available
+                # send a backup token in case the app is not available
+                "token": os.getenv("GITHUB_TOKEN"),
                 "findings": [
                     finding.to_dict(omit=fields_to_omit)
                     for finding in results.findings.new
