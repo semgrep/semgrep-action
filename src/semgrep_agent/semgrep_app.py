@@ -125,7 +125,7 @@ class Sapp:
         rules_path.write_text(rules)
         return rules_path, len(parsed["rules"])
 
-    def report_failure(self, error: SemgrepError) -> int:
+    def report_failure(self, stderr: str, exit_code: int) -> int:
         """
         Send semgrep cli non-zero exit code information to server
         and return what exit code semgrep should exit with.
@@ -135,8 +135,8 @@ class Sapp:
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/error",
             json={
-                "exit_code": error.exit_code,
-                "stderr": error.stderr,
+                "exit_code": exit_code,
+                "stderr": stderr,
             },
             timeout=30,
         )

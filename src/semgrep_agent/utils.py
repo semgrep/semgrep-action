@@ -1,17 +1,13 @@
 import json
 import os
 import sys
-import urllib.parse
-from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
 from typing import cast
-from typing import Iterator
 from typing import List
 from typing import NoReturn
 from typing import Optional
-from typing import Sequence
 from typing import TYPE_CHECKING
 
 import click
@@ -74,59 +70,6 @@ def print_git_log(log_cmd: str) -> None:
     rr = cast(bytes, log).decode("utf-8").rstrip().split("\n")
     r = "\n|   ".join(rr)
     click.echo("|   " + r, err=True)
-
-
-@contextmanager
-def fix_head_for_github(
-    base_commit_ref: Optional[str] = None,
-    head_ref: Optional[str] = None,
-) -> Iterator[Optional[str]]:
-    """
-    GHA can checkout the incorrect commit for a PR (it will create a fake merge commit),
-    so we need to reset the head to the actual PR branch head before continuing.
-
-    Note that this code is written in a generic manner, so that it becomes a no-op when
-    the CI system has not artifically altered the HEAD ref.
-
-    :return: The baseline ref as a commit hash
-    """
-
-    stashed_rev: Optional[str] = None
-    base_ref: Optional[str] = base_commit_ref
-
-    if get_git_repo() is None:
-        yield base_ref
-        return
-
-    if base_ref:
-        # Preserve location of head^ after we possibly change location below
-        base_ref = git(["rev-parse", base_ref]).stdout.decode("utf-8").rstrip()
-
-    if head_ref:
-        stashed_rev = git(["branch", "--show-current"]).stdout.decode("utf-8").rstrip()
-        if not stashed_rev:
-            stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
-        click.echo(f"| not on head ref {head_ref}; checking that out now...", err=True)
-        git.checkout([head_ref])
-
-    try:
-        if base_ref is not None:
-            merge_base = git("merge-base", base_ref, "HEAD").rstrip()
-            # fmt:off
-            click.echo("| reporting findings introduced by these commits:", err=True)
-            print_git_log(f"{merge_base}..HEAD")
-            if merge_base != git("rev-parse", base_ref).rstrip():
-                click.echo("| also reporting findings fixed by these commits from the baseline branch:", err=True)
-                print_git_log(f"{merge_base}..{base_ref}")
-                click.echo("| to exclude these latter commits, run with", err=True)
-                click.echo(f"|   --baseline-ref $(git merge-base {base_commit_ref} HEAD)", err=True)
-            # fmt: on
-
-        yield base_ref
-    finally:
-        if stashed_rev is not None:
-            click.echo(f"| returning to original head revision {stashed_rev}", err=True)
-            git.checkout([stashed_rev])
 
 
 def print_sh_error_info(stdout: str, stderr: str, command: str, exit_code: int) -> None:
