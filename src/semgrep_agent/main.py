@@ -250,9 +250,7 @@ def main(
 
     if json_output:
         # Output all new findings as json
-        json_contents = [
-            f.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS) for f in new_findings
-        ]
+        json_contents = [f.to_dict(omit=set()) for f in new_findings]
         click.echo(json.dumps(json_contents))
     elif gitlab_output:
         # output all new findings in Gitlab format
