@@ -5,6 +5,7 @@ import sys
 import tempfile
 import time
 import urllib.parse
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -28,13 +29,15 @@ from boltons.iterutils import chunked_iter
 from boltons.strutils import unit_len
 from sh.contrib import git
 
+from semgrep_agent.exc import ActionFailure
 from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import exit_with_sh_error
-from semgrep_agent.utils import fix_head_for_github
+from semgrep_agent.utils import get_git_repo
+from semgrep_agent.utils import print_git_log
 
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
@@ -118,7 +121,7 @@ def get_findings(
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
-    with fix_head_for_github(base_commit_ref, head_ref) as base_ref:
+    with _fix_head_for_github(base_commit_ref, head_ref) as base_ref:
         workdir = Path.cwd()
         targets = TargetFileManager(
             base_path=workdir,
@@ -142,6 +145,8 @@ def get_findings(
                 "--skip-unknown-extensions",
                 "--disable-nosem",
                 "--json",
+                "--autofix",
+                "--dryrun",
                 *rewrite_args,
                 *config_args,
             ]
@@ -297,3 +302,60 @@ def scan(
     after = time.time()
 
     return Results(findings, after - before)
+
+
+@contextmanager
+def _fix_head_for_github(
+    base_commit_ref: Optional[str] = None,
+    head_ref: Optional[str] = None,
+) -> Iterator[Optional[str]]:
+    """
+    GHA can checkout the incorrect commit for a PR (it will create a fake merge commit),
+    so we need to reset the head to the actual PR branch head before continuing.
+
+    Note that this code is written in a generic manner, so that it becomes a no-op when
+    the CI system has not artifically altered the HEAD ref.
+
+    :return: The baseline ref as a commit hash
+    """
+
+    stashed_rev: Optional[str] = None
+    base_ref: Optional[str] = base_commit_ref
+
+    if get_git_repo() is None:
+        yield base_ref
+        return
+
+    if base_ref:
+        # Preserve location of head^ after we possibly change location below
+        try:
+            process = git(["rev-parse", base_ref])
+            base_ref = process.stdout.decode("utf-8").rstrip()
+        except sh.ErrorReturnCode as ex:
+            raise ActionFailure(f"There is a problem with your git project:{ex}")
+
+    if head_ref:
+        stashed_rev = git(["branch", "--show-current"]).stdout.decode("utf-8").rstrip()
+        if not stashed_rev:
+            stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
+        click.echo(f"| not on head ref {head_ref}; checking that out now...", err=True)
+        git.checkout([head_ref])
+
+    try:
+        if base_ref is not None:
+            merge_base = git("merge-base", base_ref, "HEAD").rstrip()
+            # fmt:off
+            click.echo("| reporting findings introduced by these commits:", err=True)
+            print_git_log(f"{merge_base}..HEAD")
+            if merge_base != git("rev-parse", base_ref).rstrip():
+                click.echo("| also reporting findings fixed by these commits from the baseline branch:", err=True)
+                print_git_log(f"{merge_base}..{base_ref}")
+                click.echo("| to exclude these latter commits, run with", err=True)
+                click.echo(f"|   --baseline-ref $(git merge-base {base_commit_ref} HEAD)", err=True)
+            # fmt: on
+
+        yield base_ref
+    finally:
+        if stashed_rev is not None:
+            click.echo(f"| returning to original head revision {stashed_rev}", err=True)
+            git.checkout([stashed_rev])

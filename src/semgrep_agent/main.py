@@ -16,6 +16,7 @@ from boltons.strutils import unit_len
 from semgrep_agent import constants
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
+from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
@@ -238,18 +239,10 @@ def main(
         )
     except SemgrepError as error:
         print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
-
-        # If logged in handle exception
-        if sapp.is_configured:
-            exit_code = sapp.report_failure(error)
-            if exit_code == 0:
-                click.echo(
-                    f"Semgrep returned an error (return code {error.exit_code}). However, this project's policy on {sapp.url} is configured to pass the build on Semgrep errors. This CI job will exit with a successful return code 0.",
-                    err=True,
-                )
-            sys.exit(exit_code)
-        else:
-            sys.exit(error.exit_code)
+        _handle_error(error.stderr, error.exit_code, sapp)
+    except ActionFailure as error:
+        click.secho(str(error), err=True, fg="red")
+        _handle_error(str(error), 2, sapp)
 
     new_findings = results.findings.new
 
@@ -257,9 +250,7 @@ def main(
 
     if json_output:
         # Output all new findings as json
-        json_contents = [
-            f.to_dict(omit=constants.PRIVACY_SENSITIVE_FIELDS) for f in new_findings
-        ]
+        json_contents = [f.to_dict(omit=set()) for f in new_findings]
         click.echo(json.dumps(json_contents))
     elif gitlab_output:
         # output all new findings in Gitlab format
@@ -298,3 +289,17 @@ def main(
         err=True,
     )
     sys.exit(exit_code)
+
+
+def _handle_error(stderr: str, exit_code: int, sapp: Sapp) -> None:
+    # If logged in handle exception
+    if sapp.is_configured:
+        new_exit_code = sapp.report_failure(stderr, exit_code)
+        if new_exit_code == 0:
+            click.echo(
+                f"Semgrep returned an error (return code {exit_code}). However, this project's policy on {sapp.url} is configured to pass the build on Semgrep errors. This CI job will exit with a successful return code 0.",
+                err=True,
+            )
+        sys.exit(new_exit_code)
+    else:
+        sys.exit(exit_code)

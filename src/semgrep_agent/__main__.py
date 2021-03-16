@@ -11,7 +11,7 @@ def error_guard() -> None:
         main()
     except ActionFailure as ex:
         click.secho(ex.message, fg="red", err=True)
-        sys.exit(1)
+        sys.exit(2)
 
 
 if __name__ == "__main__":
