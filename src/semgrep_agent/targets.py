@@ -78,14 +78,14 @@ class TargetFileManager:
     _dirty_paths_by_status = attr.ib(type=Dict[str, List[Path]], init=False)
 
     def _fname_to_path(self, repo: "gitpython.Repo", fname: str) -> Path:  # type: ignore
-        debug_echo(f"_fname_to_path: {repo.working_tree_dir}, {fname}")
-        debug_echo(f"{(Path(repo.working_tree_dir) / fname).resolve()}")
         return (Path(repo.working_tree_dir) / fname).resolve()
 
     @_status.default
     def get_git_status(self) -> GitStatus:
         """
         Returns Absolute Paths to all files that are staged
+
+        Ignores files that are symlinks to directories
         """
         import gitdb.exc  # type: ignore
 
@@ -121,29 +121,36 @@ class TargetFileManager:
             fname = status_output[1]
             trim_size = 2
 
-            debug_echo(f"Code: {code}, Fname: {fname}")
-
             if not code.strip():
                 continue
             if code == StatusCode.Untracked or code == StatusCode.Ignored:
                 continue
 
-            # The following detection for unmerged codes comes from `man git-status`
-            if code == StatusCode.Unmerged:
-                unmerged.append(self._fname_to_path(repo, fname))
-            if (
-                code[0] == StatusCode.Renamed
-            ):  # code is RXXX, where XXX is percent similarity
-                removed.append(self._fname_to_path(repo, fname))
-                fname = status_output[2]
-                trim_size += 1
-                added.append(self._fname_to_path(repo, fname))
-            if code == StatusCode.Added:
-                added.append(self._fname_to_path(repo, fname))
-            if code == StatusCode.Modified:
-                modified.append(self._fname_to_path(repo, fname))
-            if code == StatusCode.Deleted:
-                removed.append(self._fname_to_path(repo, fname))
+            resolved_name = self._fname_to_path(repo, fname)
+
+            # If file is symlink to directory, skip
+            absolute_name = Path(repo.working_tree_dir) / fname
+            if absolute_name.is_symlink() and resolved_name.is_dir():
+                click.echo(
+                    f"| Skipping {absolute_name} since it is a symlink to a directory: {resolved_name}"
+                )
+            else:
+                # The following detection for unmerged codes comes from `man git-status`
+                if code == StatusCode.Unmerged:
+                    unmerged.append(resolved_name)
+                if (
+                    code[0] == StatusCode.Renamed
+                ):  # code is RXXX, where XXX is percent similarity
+                    removed.append(resolved_name)
+                    fname = status_output[2]
+                    trim_size += 1
+                    added.append(resolved_name)
+                if code == StatusCode.Added:
+                    added.append(resolved_name)
+                if code == StatusCode.Modified:
+                    modified.append(resolved_name)
+                if code == StatusCode.Deleted:
+                    removed.append(resolved_name)
 
             status_output = status_output[trim_size:]
         debug_echo(
