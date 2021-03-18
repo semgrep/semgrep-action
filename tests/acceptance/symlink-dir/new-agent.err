@@ -6,7 +6,7 @@
 | using default path ignore rules of common test and dependency directories
 | reporting findings introduced by these commits:
 |   * aaaaaaa Add symlink to dir
-| Skipping /private/var/folders/3l/1s2rfj610zs6kzh89s4bnrpc0000gn/T/tmpfq7vh7a9/bar/foo since it is a symlink to a directory: /private/var/folders/3l/1s2rfj610zs6kzh89s4bnrpc0000gn/T/tmpfq7vh7a9/foo
+| Skipping bar/foo since it is a symlink to a directory: foo
 | looking at No changed paths
 | found No files in the paths to be scanned
 === looking for current issues in No files
