@@ -1,0 +1,27 @@
+steps:
+  - include: generic.yaml
+  - name: new dir with finding
+    description: create a new file with findings in subdir foo
+    command:
+      - bash
+      - -c
+      - mkdir foo && echo "2 == 2" > foo/bar.py && git add foo/bar.py && git commit -m 'add finding'
+  - name: create other directory
+    description: Create directory with no finding
+    command:
+      - bash
+      - -c
+      - mkdir bar && touch bar/baz.py && git add bar/baz.py && git commit -m 'add no finding'
+  - name: create symlink
+    description: Create directory with no finding
+    command:
+      - bash
+      - -c
+      - cd bar && ln -s '../foo' 'foo' && git add foo && git commit -m "Add symlink to dir" && ls -a
+    returncode: 0
+  - name: new agent
+    description: run agent should not error out cause of symlink and should not report findings
+    command: semgrep-agent --baseline-ref HEAD~1 --config p/r2c-ci
+    returncode: 0
+    expected_out: new-agent.out
+    expected_err: new-agent.err

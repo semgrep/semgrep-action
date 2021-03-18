@@ -132,7 +132,8 @@ class TargetFileManager:
             absolute_name = Path(repo.working_tree_dir) / fname
             if absolute_name.is_symlink() and resolved_name.is_dir():
                 click.echo(
-                    f"| Skipping {absolute_name} since it is a symlink to a directory: {resolved_name}"
+                    f"| Skipping {absolute_name} since it is a symlink to a directory: {resolved_name}",
+                    err=True,
                 )
             else:
                 # The following detection for unmerged codes comes from `man git-status`
