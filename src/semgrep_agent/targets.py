@@ -78,6 +78,8 @@ class TargetFileManager:
     _dirty_paths_by_status = attr.ib(type=Dict[str, List[Path]], init=False)
 
     def _fname_to_path(self, repo: "gitpython.Repo", fname: str) -> Path:  # type: ignore
+        debug_echo(f"_fname_to_path: {repo.working_tree_dir}, {fname}")
+        debug_echo(f"{(Path(repo.working_tree_dir) / fname).resolve()}")
         return (Path(repo.working_tree_dir) / fname).resolve()
 
     @_status.default
@@ -118,6 +120,8 @@ class TargetFileManager:
             code = status_output[0]
             fname = status_output[1]
             trim_size = 2
+
+            debug_echo(f"Code: {code}, Fname: {fname}")
 
             if not code.strip():
                 continue
