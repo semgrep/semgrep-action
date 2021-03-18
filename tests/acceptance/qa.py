@@ -35,6 +35,9 @@ PIPE_OUTPUT: Mapping[str, Callable[[subprocess.CompletedProcess], str]] = {
     "expected_out": lambda r: cast(str, r.stdout),
     "expected_err": lambda r: cast(str, r.stderr),
 }
+SYMLINK_SKIP_MSG = re.compile(
+    r"Skipping .*bar/foo since it is a symlink to a directory: .*foo", re.MULTILINE
+)
 
 
 def write_expected_file(filename: str, output: str) -> None:
@@ -48,6 +51,11 @@ CLEANING_FUNCS: Sequence[Callable[[str], str]] = [
     lambda s: re.sub(DATE_STR, r"Date:   YYYY-MM-DD", s),
     lambda s: re.sub(ENV_VERSIONS, r"\1x.y.z\2x.y.z", s),
     lambda s: re.sub(GITHUB_ACTIONS_DEBUG, "", s),
+    lambda s: re.sub(
+        SYMLINK_SKIP_MSG,
+        "Skipping bar/foo since it is a symlink to a directory: foo",
+        s,
+    ),
 ]
 
 
