@@ -36,6 +36,8 @@ class GitMeta:
 
     @cachedproperty
     def event_name(self) -> str:
+        if self.pr_id:
+            return "pull-request"
         return "unknown"
 
     @cachedproperty
