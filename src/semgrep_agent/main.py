@@ -21,9 +21,9 @@ from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
+from semgrep_agent.utils import get_aligned_command
 from semgrep_agent.utils import maybe_print_debug_info
 from semgrep_agent.utils import print_sh_error_info
-
 
 ALL_MANUAL_ENV_VARS = {
     "SEMGREP_BRANCH": "The scanned branch ref",
@@ -43,10 +43,6 @@ ENV_VAR_HELP_TEXT = "\n        ".join(
 
 def url(string: str) -> str:
     return string.rstrip("/")
-
-
-def get_aligned_command(title: str, subtext: str) -> str:
-    return f"| {title.ljust(17)} - {subtext}"
 
 
 @click.command(
