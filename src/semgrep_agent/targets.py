@@ -143,9 +143,9 @@ class TargetFileManager:
                     code[0] == StatusCode.Renamed
                 ):  # code is RXXX, where XXX is percent similarity
                     removed.append(resolved_name)
-                    fname = status_output[2]
+                    # next column is the new file name
+                    added.append(self._fname_to_path(repo, status_output[2]))
                     trim_size += 1
-                    added.append(resolved_name)
                 if code == StatusCode.Added:
                     added.append(resolved_name)
                 if code == StatusCode.Modified:
