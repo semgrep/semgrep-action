@@ -28,7 +28,7 @@ jobs:
           echo ::set-output name=custom_tags::${CUSTOM_TAGS}
       - name: Docker meta
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1.11.0
+        uses: crazy-max/ghaction-docker-meta@v1.12.0
         with:
           images: returntocorp/semgrep-action,returntocorp/semgrep-agent
           tag-sha: ${{ github.event_name != 'pull_request' }}
