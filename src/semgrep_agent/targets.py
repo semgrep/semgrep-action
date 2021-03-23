@@ -145,7 +145,7 @@ class TargetFileManager:
                     removed.append(resolved_name)
                     fname = status_output[2]
                     trim_size += 1
-                    added.append(resolved_name)
+                    added.append(self._fname_to_path(repo, fname))
                 if code == StatusCode.Added:
                     added.append(resolved_name)
                 if code == StatusCode.Modified:
