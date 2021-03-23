@@ -344,7 +344,7 @@ def generate_meta_from_environment(baseline_ref: Optional[str]) -> GitMeta:
             click.echo(
                 get_aligned_command(
                     "scan type",
-                    "full scan (if you want Semgrep to only report new findings, set baseline-ref)",
+                    "full scan (set --baseline-ref to scan changed files only)",
                 ),
                 err=True,
             )
