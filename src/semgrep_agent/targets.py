@@ -300,11 +300,12 @@ class TargetFileManager:
         current_tree = git("write-tree").stdout.decode().strip()
         try:
             for a in self._status.added:
-                a.unlink()
+                try:
+                    a.unlink()
+                except FileNotFoundError:
+                    click.echo(f"| {a} was not found when trying to delete", err=True)
+                    yield
             git.checkout(self._base_commit, "--", ".")
-            yield
-        except FileNotFoundError:
-            click.echo(f"| {a} was not found when trying to delete", err=True)
             yield
         finally:
             # git checkout will fail if the checked-out index deletes all files in the repo
