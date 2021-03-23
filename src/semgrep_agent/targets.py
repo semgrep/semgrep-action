@@ -300,7 +300,7 @@ class TargetFileManager:
         current_tree = git("write-tree").stdout.decode().strip()
         try:
             for a in self._status.added:
-                a.unlink()
+                a.unlink(missing_ok=True)
             git.checkout(self._base_commit, "--", ".")
             yield
         finally:
