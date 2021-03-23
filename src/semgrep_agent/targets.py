@@ -300,7 +300,10 @@ class TargetFileManager:
         current_tree = git("write-tree").stdout.decode().strip()
         try:
             for a in self._status.added:
-                a.unlink()
+                try:
+                    a.unlink()
+                except FileNotFoundError:
+                    click.echo(f"| {a} was not found when trying to delete", err=True)
             git.checkout(self._base_commit, "--", ".")
             yield
         finally:
