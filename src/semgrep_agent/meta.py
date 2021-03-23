@@ -24,6 +24,7 @@ from sh.contrib import git
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import exit_with_sh_error
+from semgrep_agent.utils import get_aligned_command
 
 
 @dataclass
@@ -35,6 +36,8 @@ class GitMeta:
 
     @cachedproperty
     def event_name(self) -> str:
+        if self.pr_id:
+            return "pull-request"
         return "unknown"
 
     @cachedproperty
@@ -339,7 +342,10 @@ def generate_meta_from_environment(baseline_ref: Optional[str]) -> GitMeta:
     else:  # nosem
         if not baseline_ref:
             click.echo(
-                "Note that no baseline-ref was passed and detected environment is not Github or Gitlab to will default to perfoming a full scan. If you want semgrep to only report on new findings from a pull request please set baseline-ref ",
+                get_aligned_command(
+                    "scan type",
+                    "full scan (set --baseline-ref to scan changed files only)",
+                ),
                 err=True,
             )
         return GitMeta(baseline_ref)

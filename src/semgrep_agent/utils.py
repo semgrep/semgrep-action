@@ -61,6 +61,10 @@ def zsplit(s: str) -> List[str]:
         return []
 
 
+def get_aligned_command(title: str, subtext: str) -> str:
+    return f"| {title.ljust(17)} - {subtext}"
+
+
 def validate_publish_token(token: str) -> bool:
     return constants.PUBLISH_TOKEN_VALIDATOR.match(token) is not None
 
