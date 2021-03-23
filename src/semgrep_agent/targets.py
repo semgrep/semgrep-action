@@ -304,7 +304,6 @@ class TargetFileManager:
                     a.unlink()
                 except FileNotFoundError:
                     click.echo(f"| {a} was not found when trying to delete", err=True)
-                    yield
             git.checkout(self._base_commit, "--", ".")
             yield
         finally:
