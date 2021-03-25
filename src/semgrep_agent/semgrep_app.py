@@ -14,6 +14,7 @@ import requests
 from glom import glom
 from glom import T
 from ruamel.yaml import YAML  # type: ignore
+from urllib3.util.retry import Retry
 
 from semgrep_agent import constants
 from semgrep_agent.exc import ActionFailure
@@ -22,6 +23,11 @@ from semgrep_agent.semgrep import Results
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import validate_publish_token
+
+# 4, 8, 16 seconds
+RETRYING_ADAPTER = requests.adapters.HTTPAdapter(
+    max_retries=Retry(total=3, backoff_factor=4, method_whitelist=["GET", "POST"])
+)
 
 yaml = YAML(typ="rt")
 
@@ -50,6 +56,7 @@ class Sapp:
                 f"Please check your publish token."
             )
         self.session = requests.Session()
+        self.session.mount("https://", RETRYING_ADAPTER)
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
     def report_start(self, meta: GitMeta) -> str:
