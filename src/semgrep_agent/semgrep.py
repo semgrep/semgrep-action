@@ -49,12 +49,9 @@ PATHS_CHUNK_SIZE = 500
 
 def resolve_config_shorthand(config: str) -> str:
     maybe_prefix = config[:2]
-    if maybe_prefix in {"p/", "r/"}:
+    if maybe_prefix in {"p/", "r/", "s/"}:
         return f"https://semgrep.dev/c/{config}"
-    elif maybe_prefix == "s/":
-        return f"https://semgrep.dev/c/{config[2:]}"
-    else:
-        return config
+    return config
 
 
 def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
