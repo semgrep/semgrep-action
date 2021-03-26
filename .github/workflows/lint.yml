@@ -3,7 +3,6 @@ name: Linters
 on:
   pull_request:
   push:
-    branches: [develop]
 
 jobs:
   pre-commit:
