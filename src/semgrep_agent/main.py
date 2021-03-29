@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import sys
 from dataclasses import dataclass
@@ -119,7 +118,6 @@ def main(
     gitlab_output: bool,
     audit_on: Sequence[str],
 ) -> NoReturn:
-
     click.echo(
         get_aligned_command(
             "versions",
@@ -226,11 +224,6 @@ def main(
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
 
-    # Fail-open is only used to catch errors after this point because the scan must
-    # exist in order to post to /api/agent/scan/{self.scan.id}/error right now. At
-    # a later date, we may want to catch errors above this point and configure
-    # fail-open at an org-wide level, with opportunity to override at a more granular level
-    # Then we could catch all errors in main() for fail-open
     try:
         results = semgrep.scan(
             config,
@@ -245,12 +238,6 @@ def main(
         _handle_error(error.stderr, error.exit_code, sapp)
     except ActionFailure as error:
         click.secho(str(error), err=True, fg="red")
-        _handle_error(str(error), 2, sapp)
-    except Exception as error:
-        # Handles all other errors like FileNotFound, EOF, etc.
-        # https://docs.python.org/3.9/library/exceptions.html#exception-hierarchy
-        click.secho(f"An unexpected error occurred", err=True, fg="red")
-        logging.exception(error)
         _handle_error(str(error), 2, sapp)
 
     new_findings = results.findings.new
@@ -306,7 +293,7 @@ def _handle_error(stderr: str, exit_code: int, sapp: Sapp) -> None:
         new_exit_code = sapp.report_failure(stderr, exit_code)
         if new_exit_code == 0:
             click.echo(
-                f"Semgrep returned an error (return code {exit_code}). However, this project on {sapp.url} is configured to pass the build on Semgrep errors (fail open). Exiting with a successful return code 0.",
+                f"Semgrep returned an error (return code {exit_code}). However, this project's policy on {sapp.url} is configured to pass the build on Semgrep errors. This CI job will exit with a successful return code 0.",
                 err=True,
             )
         sys.exit(new_exit_code)
