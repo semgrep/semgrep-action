@@ -107,9 +107,9 @@ def url(string: str) -> str:
 @click.option(
     "--timeout",
     envvar="SEMGREP_TIMEOUT",
-    default=300,
+    default=600,
     type=int,
-    help="Maximum number of seconds to allow Semgrep to run (per file batch; default is 300; set to 0 to disable)",
+    help="Maximum number of seconds to allow Semgrep to run (per file batch; default is 600; set to 0 to disable)",
     hidden=True,
 )
 def main(
