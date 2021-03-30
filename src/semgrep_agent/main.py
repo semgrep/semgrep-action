@@ -248,6 +248,13 @@ def main(
     except SemgrepError as error:
         print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
         _handle_error(error.stderr, error.exit_code, sapp)
+    except sh.TimeoutException as error:
+        click.secho(
+            f"Semgrep took longer than {timeout} seconds to run; canceling this run",
+            err=True,
+            fg="red",
+        )
+        _handle_error(str(error), 2, sapp)
     except ActionFailure as error:
         click.secho(str(error), err=True, fg="red")
         _handle_error(str(error), 2, sapp)

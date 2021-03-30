@@ -38,5 +38,9 @@ class RunningCommand(str, GitSubcommandsMixin):
     @property
     def exit_code(self) -> int: ...
 
+class TimeoutException(Exception):
+    def __init__(self, exit_code: Any, full_cmd: Any) -> None:
+        ...
+
 semgrep: Command
 python: Command
