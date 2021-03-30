@@ -1,29 +1,20 @@
 import io
 import json
 import os
-import sys
 import tempfile
 import time
-import urllib.parse
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from textwrap import dedent
-from textwrap import indent
 from typing import Any
-from typing import cast
 from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import Optional
 from typing import TextIO
-from typing import TYPE_CHECKING
-from typing import Union
 
-import attr
 import click
-import requests
 import sh
 from boltons.iterutils import chunked_iter
 from boltons.strutils import unit_len
@@ -32,10 +23,8 @@ from sh.contrib import git
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
-from semgrep_agent.meta import GitMeta
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
-from semgrep_agent.utils import exit_with_sh_error
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import print_git_log
 
@@ -115,6 +104,8 @@ def get_findings(
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
+    *,
+    timeout: Optional[int],
 ) -> FindingSets:
     debug_echo("=== adding semgrep configuration")
 
@@ -147,7 +138,9 @@ def get_findings(
                 *rewrite_args,
                 *config_args,
             ]
-            semgrep_results = invoke_semgrep(args, [str(p) for p in paths])["results"]
+            semgrep_results = invoke_semgrep(
+                args, [str(p) for p in paths], timeout=timeout
+            )["results"]
 
             findings.current.update_findings(
                 Finding.from_semgrep_result(result, committed_datetime)
@@ -196,7 +189,9 @@ def get_findings(
                     *rewrite_args,
                     *config_args,
                 ]
-                semgrep_results = invoke_semgrep(args, paths_to_check)["results"]
+                semgrep_results = invoke_semgrep(args, paths_to_check, timeout=timeout)[
+                    "results"
+                ]
                 findings.baseline.update_findings(
                     Finding.from_semgrep_result(result, committed_datetime)
                     for result in semgrep_results
@@ -214,13 +209,15 @@ def get_findings(
             args = ["--sarif", *rewrite_args, *config_args]
             for path in paths:
                 args.extend(["--include", str(path)])
-            semgrep_exec(*args, _out=sarif_file)
+            semgrep_exec(*args, _out=sarif_file, _timeout=timeout)
         rewrite_sarif_file(sarif_path)
 
     return findings
 
 
-def invoke_semgrep(semgrep_args: List[str], targets: List[str]) -> Dict[str, List[Any]]:
+def invoke_semgrep(
+    semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
+) -> Dict[str, List[Any]]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
 
@@ -240,7 +237,7 @@ def invoke_semgrep(semgrep_args: List[str], targets: List[str]) -> Dict[str, Lis
             for c in chunk:
                 args.append(c)
 
-            _ = semgrep_exec(*(args))
+            _ = semgrep_exec(*(args), _timeout=timeout)
             with open(
                 output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
             ) as f:
@@ -283,6 +280,8 @@ def scan(
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
+    *,
+    timeout: Optional[int],
 ) -> Results:
     before = time.time()
     try:
@@ -293,6 +292,7 @@ def scan(
             head_ref,
             semgrep_ignore,
             uses_managed_policy,
+            timeout=timeout,
         )
     except sh.ErrorReturnCode as error:
         raise SemgrepError(error)
