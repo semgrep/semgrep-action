@@ -2,24 +2,19 @@ import json
 import logging
 import os
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
 from typing import NoReturn
-from typing import Optional
 from typing import Sequence
 
 import click
 import sh
-from boltons import ecoutils
 from boltons.strutils import unit_len
 
-from semgrep_agent import constants
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
-from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import get_aligned_command
@@ -109,6 +104,14 @@ def url(string: str) -> str:
 @click.option(
     "--audit-on", envvar="INPUT_AUDITON", multiple=True, type=str, hidden=True
 )
+@click.option(
+    "--timeout",
+    envvar="SEMGREP_TIMEOUT",
+    default=1800,
+    type=int,
+    help="Maximum number of seconds to allow Semgrep to run (per file batch; default is 1800 seconds; set to 0 to disable)",
+    hidden=True,
+)
 def main(
     config: str,
     baseline_ref: str,
@@ -118,6 +121,7 @@ def main(
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
+    timeout: int,
 ) -> NoReturn:
 
     click.echo(
@@ -239,10 +243,18 @@ def main(
             meta.head_ref,
             semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
             sapp.is_configured,
+            timeout=(timeout if timeout > 0 else None),
         )
     except SemgrepError as error:
         print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
         _handle_error(error.stderr, error.exit_code, sapp)
+    except sh.TimeoutException as error:
+        click.secho(
+            f"Semgrep took longer than {timeout} seconds to run; canceling this run",
+            err=True,
+            fg="red",
+        )
+        _handle_error(str(error), 2, sapp)
     except ActionFailure as error:
         click.secho(str(error), err=True, fg="red")
         _handle_error(str(error), 2, sapp)
