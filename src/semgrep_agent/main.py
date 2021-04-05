@@ -124,6 +124,13 @@ def main(
     audit_on: Sequence[str],
     timeout: int,
 ) -> NoReturn:
+    click.echo(
+        get_aligned_command(
+            "versions",
+            f"semgrep {sh.semgrep(version=True).strip()} on {sh.python(version=True).strip()}",
+        ),
+        err=True,
+    )
     # Get metadata from environment variables
     meta = generate_meta_from_environment(baseline_ref)
     sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
@@ -166,13 +173,6 @@ def protected_main(
     sapp: Sapp,
     meta: GitMeta,
 ) -> NoReturn:
-    click.echo(
-        get_aligned_command(
-            "versions",
-            f"semgrep {sh.semgrep(version=True).strip()} on {sh.python(version=True).strip()}",
-        ),
-        err=True,
-    )
     meta.initialize_repo()
     maybe_print_debug_info(meta)
     click.echo(
