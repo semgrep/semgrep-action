@@ -15,6 +15,7 @@ from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
+from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import get_aligned_command
@@ -123,7 +124,48 @@ def main(
     audit_on: Sequence[str],
     timeout: int,
 ) -> NoReturn:
+    # Get metadata from environment variables
+    meta = generate_meta_from_environment(baseline_ref)
+    sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
+    # Everything below here is covered by fail-open feature
+    try:
+        protected_main(**locals())
+    except SemgrepError as error:
+        print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
+        _handle_error(error.stderr, error.exit_code, sapp, meta)
+    except sh.TimeoutException as error:
+        click.secho(
+            f"Semgrep took longer than {timeout} seconds to run; canceling this run",
+            err=True,
+            fg="red",
+        )
+        _handle_error(str(error), 2, sapp, meta)
+    except ActionFailure as error:
+        click.secho(str(error), err=True, fg="red")
+        _handle_error(str(error), 2, sapp, meta)
+    except Exception as error:
+        # Handles all other errors like FileNotFound, EOF, etc.
+        # https://docs.python.org/3.9/library/exceptions.html#exception-hierarchy
+        click.secho(f"An unexpected error occurred", err=True, fg="red")
+        logging.exception(error)
+        _handle_error(str(error), 2, sapp, meta)
+    # Should never get here, as all sub-functions contain a sys.exit
+    sys.exit(0)
 
+
+def protected_main(
+    config: str,
+    baseline_ref: str,
+    publish_url: str,
+    publish_token: str,
+    publish_deployment: int,
+    json_output: bool,
+    gitlab_output: bool,
+    audit_on: Sequence[str],
+    timeout: int,
+    sapp: Sapp,
+    meta: GitMeta,
+) -> NoReturn:
     click.echo(
         get_aligned_command(
             "versions",
@@ -131,11 +173,7 @@ def main(
         ),
         err=True,
     )
-
-    # Get Metadata
-    meta = generate_meta_from_environment(baseline_ref)
     meta.initialize_repo()
-
     maybe_print_debug_info(meta)
     click.echo(
         get_aligned_command(
@@ -146,7 +184,6 @@ def main(
     )
 
     # Setup URL/Token
-    sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
     if sapp.is_configured:
         policy = sapp.report_start(meta)
         to_server = "" if publish_url == "https://semgrep.dev" else f" to {publish_url}"
@@ -230,40 +267,15 @@ def main(
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
 
-    # Fail-open is only used to catch errors after this point because the scan must
-    # exist in order to post to /api/agent/scan/{self.scan.id}/error right now. At
-    # a later date, we may want to catch errors above this point and configure
-    # fail-open at an org-wide level, with opportunity to override at a more granular level
-    # Then we could catch all errors in main() for fail-open
-    try:
-        results = semgrep.scan(
-            config,
-            committed_datetime,
-            meta.base_commit_ref,
-            meta.head_ref,
-            semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
-            sapp.is_configured,
-            timeout=(timeout if timeout > 0 else None),
-        )
-    except SemgrepError as error:
-        print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
-        _handle_error(error.stderr, error.exit_code, sapp)
-    except sh.TimeoutException as error:
-        click.secho(
-            f"Semgrep took longer than {timeout} seconds to run; canceling this run",
-            err=True,
-            fg="red",
-        )
-        _handle_error(str(error), 2, sapp)
-    except ActionFailure as error:
-        click.secho(str(error), err=True, fg="red")
-        _handle_error(str(error), 2, sapp)
-    except Exception as error:
-        # Handles all other errors like FileNotFound, EOF, etc.
-        # https://docs.python.org/3.9/library/exceptions.html#exception-hierarchy
-        click.secho(f"An unexpected error occurred", err=True, fg="red")
-        logging.exception(error)
-        _handle_error(str(error), 2, sapp)
+    results = semgrep.scan(
+        config,
+        committed_datetime,
+        meta.base_commit_ref,
+        meta.head_ref,
+        semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
+        sapp.is_configured,
+        timeout=(timeout if timeout > 0 else None),
+    )
 
     new_findings = results.findings.new
 
@@ -312,10 +324,14 @@ def main(
     sys.exit(exit_code)
 
 
-def _handle_error(stderr: str, exit_code: int, sapp: Sapp) -> None:
+def _handle_error(stderr: str, exit_code: int, sapp: Sapp, meta: GitMeta) -> None:
     # If logged in handle exception
     if sapp.is_configured:
-        new_exit_code = sapp.report_failure(stderr, exit_code)
+        new_exit_code = (
+            sapp.report_failure(stderr, exit_code)
+            if sapp.scan.id > 0
+            else sapp.fail_open_exit_code(meta, exit_code)
+        )
         if new_exit_code == 0:
             click.echo(
                 f"Semgrep returned an error (return code {exit_code}). However, this project on {sapp.url} is configured to pass the build on Semgrep errors (fail open). Exiting with a successful return code 0.",
