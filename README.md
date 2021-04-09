@@ -60,7 +60,7 @@ See how to do that by setting up a project on <https://semgrep.dev/manage/projec
 
 #### Inline PR Comments
 
-This integration supports leaving inline PR comments via the Semgrep App. To learn more, please the our [documentation](https://semgrep.dev/docs/integrations/#pull-request-comments).
+This integration supports leaving inline PR comments via the Semgrep App. To learn more, please see our [documentation](https://semgrep.dev/docs/integrations/#pull-request-comments).
 
 ## Configuration
 
