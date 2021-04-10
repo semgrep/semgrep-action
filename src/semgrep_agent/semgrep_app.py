@@ -59,6 +59,16 @@ class Sapp:
         self.session.mount("https://", RETRYING_ADAPTER)
         self.session.headers["Authorization"] = f"Bearer {self.token}"
 
+    def fail_open_exit_code(self, meta: GitMeta, exit_code: int) -> int:
+        response = self.session.get(
+            f"{self.url}/api/agent/deployment/{self.deployment_id}/repos/{meta.repo_name}",
+            json={},
+            timeout=30,
+        )
+        repo_data = response.json()
+        fail_open = repo_data.get("repo").get("fail_open")
+        return 0 if fail_open else exit_code
+
     def report_start(self, meta: GitMeta) -> str:
         """
         Get scan id and file ignores

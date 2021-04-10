@@ -60,15 +60,7 @@ See how to do that by setting up a project on <https://semgrep.dev/manage/projec
 
 #### Inline PR Comments
 
-If you would like inline PR comments to get posted by Semgrep (GitHub only), set the environment variable `GITHUB_TOKEN` as well in `.github/workflows/semgrep.yml`.
-You can either use the GitHub App installation access token `secrets.GITHUB_TOKEN`, or a personal access token that has access to repositories.
-
-```yaml
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-To set a personal access token, go to your [developer settings](https://github.com/settings/tokens), and generate a new token with "repo" (if your repository is private) or "public_repo" (if your repository is public) checked.
+This integration supports leaving inline PR comments via the Semgrep App. To learn more, please see our [documentation](https://semgrep.dev/docs/integrations/#pull-request-comments).
 
 ## Configuration
 
