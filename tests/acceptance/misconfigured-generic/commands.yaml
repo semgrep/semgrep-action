@@ -26,6 +26,28 @@ steps:
     returncode: 1
     expected_out: empty-deployment-token-env.out
     expected_err: empty-deployment-token-env.err
+  - name: empty token via env in GitHub Actions
+    description: >
+      run agent with deployment ID but token set to empty string in the env,
+      such as when GitHub Actions doesn't propagate correctly
+    command:
+      - bash
+      - -c
+      - GITHUB_ACTIONS="true" INPUT_PUBLISHDEPLOYMENT="0" INPUT_PUBLISHTOKEN="" semgrep-agent
+    returncode: 1
+    expected_out: empty-deployment-token-env-gha.out
+    expected_err: empty-deployment-token-env-gha.err
+  - name: empty token via env in GitHub Actions for Dependabot
+    description: >
+      run agent with deployment ID but token set to empty string in the env,
+      such as when Dependabot secrets in GitHub Actions don't propagate correctly
+    command:
+      - bash
+      - -c
+      - GITHUB_ACTIONS="true" GITHUB_ACTOR="dependabot[bot]" INPUT_PUBLISHDEPLOYMENT="0" INPUT_PUBLISHTOKEN="" semgrep-agent
+    returncode: 1
+    expected_out: empty-deployment-token-env-gha-dependabot.out
+    expected_err: empty-deployment-token-env-gha-dependabot.err
   - name: empty token via flag
     description: >
       run agent with deployment ID but token set to empty string in the command,
