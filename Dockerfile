@@ -1,10 +1,10 @@
-FROM python:3.9.2-alpine
+FROM python:3.9.3-alpine
 
 WORKDIR /app
 COPY poetry.lock ./
 COPY pyproject.toml ./
 
-ENV INSTALLED_SEMGREP_VERSION=0.45.0
+ENV INSTALLED_SEMGREP_VERSION=0.46.0
 
 # This is all in one run command in order to save disk space.
 # Note that there's a tradeoff here for debuggability.
