@@ -316,6 +316,11 @@ def protected_main(
             err=True,
         )
 
+    if sapp.is_configured:
+        click.echo(
+            f"| to see your findings in the app, go to {publish_url}/manage/findings?repo={meta.repo_name}"
+        )
+
     exit_code = 1 if blocking_findings and not audit_mode else 0
     click.echo(
         f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
