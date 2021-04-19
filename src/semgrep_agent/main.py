@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 from textwrap import dedent
+from typing import cast
 from typing import NoReturn
 from typing import Sequence
 
@@ -15,6 +16,7 @@ from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
+from semgrep_agent.meta import GithubMeta
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
@@ -242,11 +244,23 @@ def protected_main(
             if os.getenv("INPUT_PUBLISHTOKEN") == ""
             else "unset"
         )
+
+        advice_line = "If you're using a CI secret management feature to set it, please ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job."
+        if meta.environment == "github-actions":
+            meta = cast(GithubMeta, meta)
+
+            advice_line = f"Please go to {meta.repo_url}/settings/secrets/actions and ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job as a GitHub Actions secret."
+            if meta.ci_actor in {
+                "dependabot[bot]",
+                "dependabot-preview[bot]",
+            }:
+                advice_line = f"Dependabot cannot access your usual repository secrets. Please go to {meta.repo_url}/settings/secrets/dependabot and ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job as a Dependabot secret."
+
         message = f"""
             == [ERROR] you didn't set a token for authentication to semgrep.dev.
 
             You tried logging in as deployment ID #{publish_deployment}, but the deployment's API token is {token_state}.
-            If you're using a CI secret management feature to set it, please ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job.
+            {advice_line}
 
             You can find more details about authentication at
             https://semgrep.dev/docs/semgrep-ci/#connecting-to-semgrep-app
@@ -314,6 +328,11 @@ def protected_main(
         click.echo(
             f"| audit mode is on for {meta.event_name}, so the findings won't cause failure",
             err=True,
+        )
+
+    if sapp.is_configured:
+        click.echo(
+            f"| to see your findings in the app, go to {publish_url}/manage/findings?repo={meta.repo_name}"
         )
 
     exit_code = 1 if blocking_findings and not audit_mode else 0
