@@ -17,15 +17,15 @@ RUN apk add --no-cache --virtual=.build-deps build-base libffi-dev openssl-dev &
     poetry config virtualenvs.create false &&\
     # Don't install dev dependencies or semgrep-agent
     poetry install --no-dev --no-root &&\
-    pip uninstall -y poetry &&\
     apk del .build-deps &&\
     rm -rf /root/.cache/* /tmp/*
 
 COPY ./src/semgrep_agent /app/semgrep_agent
-ENV PATH=/root/.local/bin:${PATH} \
-    PYTHONPATH=/app:${PYTHONPATH}
+RUN poetry install --no-dev
 
-CMD ["python", "-m", "semgrep_agent"]
+ENV PATH=/root/.local/bin:${PATH}
+
+CMD ["semgrep-agent"]
 
 ENV SEMGREP_ACTION=true\
     SEMGREP_ACTION_VERSION=v1\
