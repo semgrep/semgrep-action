@@ -209,7 +209,7 @@ def protected_main(
         config = semgrep.resolve_config_shorthand(config)
         click.echo(f"| using semgrep rules from {config}", err=True)
     elif sapp.is_configured:
-        local_config_path, num_rules = sapp.download_rules()
+        local_config_path, num_rules, cai_rules = sapp.download_rules()
         if num_rules == 0:
             message = """
             == [ERROR] This policy will not run any rules
@@ -228,6 +228,8 @@ def protected_main(
         click.echo(
             f"| using {num_rules} semgrep rules configured on the web UI", err=True
         )
+        if cai_rules:
+            click.echo(f"| using {cai_rules} code asset inventory rules")
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
         config = ".semgrep.yml"

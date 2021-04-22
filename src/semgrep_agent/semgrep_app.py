@@ -126,13 +126,11 @@ class Sapp:
         # Can remove once server guarantees will always have at least one rule
         parsed = yaml.load(response.text)
         if not parsed["rules"]:
-            raise ActionFailure(
-                "No rules returned by server for this scan. Note that if a rule is not set to notify or block it is not returned by the server."
-            )
+            raise ActionFailure("No rules returned by server for this scan.")
         else:
             return response.text
 
-    def download_rules(self) -> Tuple[Path, int]:
+    def download_rules(self) -> Tuple[Path, int, int]:
         """Save the rules configured on semgrep app to a temporary file"""
         # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
         rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
@@ -140,7 +138,10 @@ class Sapp:
         rules = self.fetch_rules_text()
         parsed = yaml.load(rules)
         rules_path.write_text(rules)
-        return rules_path, len(parsed["rules"])
+        num_cai_rules = len(
+            [r for r in parsed["rules"] if "r2c-internal-cai" in r["id"]]
+        )
+        return rules_path, len(parsed["rules"]) - num_cai_rules, num_cai_rules
 
     def report_failure(self, stderr: str, exit_code: int) -> int:
         """
