@@ -11,6 +11,7 @@ from typing import Sequence
 import click
 import sh
 from boltons.strutils import unit_len
+from git import InvalidGitRepositoryError
 
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
@@ -151,6 +152,9 @@ def main(
         _handle_error(str(error), 2, sapp, meta)
     except ActionFailure as error:
         click.secho(str(error), err=True, fg="red")
+        _handle_error(str(error), 2, sapp, meta)
+    except InvalidGitRepositoryError as error:
+        click.secho("Current directory is not a github repository", err=True, fg="red")
         _handle_error(str(error), 2, sapp, meta)
     except Exception as error:
         # Handles all other errors like FileNotFound, EOF, etc.
