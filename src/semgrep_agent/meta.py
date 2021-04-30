@@ -118,7 +118,13 @@ class GitMeta:
             "pull_request_author_image_url": None,
             "pull_request_id": self.pr_id,
             "pull_request_title": self.pr_title,
+            "scan_environment": self.environment,
         }
+
+
+@dataclass
+class LocalScanMeta(GitMeta):
+    environment: str = field(default="local", init=False)
 
 
 @dataclass
@@ -330,7 +336,9 @@ class GitlabMeta(GitMeta):
         return os.getenv("CI_MERGE_REQUEST_TITLE")
 
 
-def generate_meta_from_environment(baseline_ref: Optional[str]) -> GitMeta:
+def generate_meta_from_environment(
+    baseline_ref: Optional[str], scan_environment: Optional[str]
+) -> GitMeta:
     # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables
     if os.getenv("GITHUB_ACTIONS") == "true":
         return GithubMeta(baseline_ref)
@@ -348,4 +356,7 @@ def generate_meta_from_environment(baseline_ref: Optional[str]) -> GitMeta:
                 ),
                 err=True,
             )
+        if scan_environment == "local":
+            return LocalScanMeta(baseline_ref)
+
         return GitMeta(baseline_ref)
