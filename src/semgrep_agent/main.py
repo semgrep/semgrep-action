@@ -115,6 +115,12 @@ def url(string: str) -> str:
     help="Maximum number of seconds to allow Semgrep to run (per file batch; default is 1800 seconds; set to 0 to disable)",
     hidden=True,
 )
+@click.option(
+    "--scan-environment",
+    default="",
+    type=str,
+    hidden=True,
+)
 def main(
     config: str,
     baseline_ref: str,
@@ -125,6 +131,7 @@ def main(
     gitlab_output: bool,
     audit_on: Sequence[str],
     timeout: int,
+    scan_environment: str,
 ) -> NoReturn:
     click.echo(
         get_aligned_command(
@@ -134,7 +141,7 @@ def main(
         err=True,
     )
     # Get metadata from environment variables
-    meta = generate_meta_from_environment(baseline_ref)
+    meta = generate_meta_from_environment(baseline_ref, scan_environment)
     sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
     # Everything below here is covered by fail-open feature
     try:
@@ -172,6 +179,7 @@ def protected_main(
     gitlab_output: bool,
     audit_on: Sequence[str],
     timeout: int,
+    scan_environment: str,
     sapp: Sapp,
     meta: GitMeta,
 ) -> NoReturn:
