@@ -1,4 +1,4 @@
-FROM python:3.9.4-alpine
+FROM python:3.9.5-alpine
 
 WORKDIR /app
 COPY poetry.lock ./
