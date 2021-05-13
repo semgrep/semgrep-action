@@ -26,7 +26,12 @@ from semgrep_agent.utils import validate_publish_token
 
 # 4, 8, 16 seconds
 RETRYING_ADAPTER = requests.adapters.HTTPAdapter(
-    max_retries=Retry(total=3, backoff_factor=4, method_whitelist=["GET", "POST"])
+    max_retries=Retry(
+        total=3,
+        backoff_factor=4,
+        method_whitelist=["GET", "POST"],
+        status_forcelist=(500, 502, 503),
+    ),
 )
 
 yaml = YAML(typ="rt")
