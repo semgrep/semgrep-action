@@ -11,7 +11,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.7"
 requests = "^2.24.0"
-click = "^7.1.2"
+click = ">=7.1.2,<9.0.0"
 sh = "^1.13.1"
 boltons = ">=20.2.1,<22.0.0"
 glom = "^20.8.0"
