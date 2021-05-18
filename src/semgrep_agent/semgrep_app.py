@@ -30,7 +30,7 @@ RETRYING_ADAPTER = requests.adapters.HTTPAdapter(
         total=3,
         backoff_factor=4,
         method_whitelist=["GET", "POST"],
-        status_forcelist=(500, 502, 503),
+        status_forcelist=(413, 429, 500, 502, 503),
     ),
 )
 
