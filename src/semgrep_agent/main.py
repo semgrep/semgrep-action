@@ -67,7 +67,7 @@ def url(string: str) -> str:
     "--config",
     envvar="INPUT_CONFIG",
     type=str,
-    help="Define a rule, ruleset, or snippet used to scan this repository",
+    help="Define a rule, ruleset, or snippet used to scan this repository. You can pass in multiple `--config`s",
     multiple=True,
 )
 @click.option(
@@ -88,7 +88,7 @@ def url(string: str) -> str:
     "--publish-deployment",
     envvar="INPUT_PUBLISHDEPLOYMENT",
     type=int,
-    help="You semgrep.dev organization ID (requires --publish-token)",
+    help="Your semgrep.dev organization ID (requires --publish-token)",
 )
 @click.option(
     "--publish-url",

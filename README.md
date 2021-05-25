@@ -53,7 +53,7 @@ jobs:
 ```
 
 Note that the `p/r2c` config value
-will enable a default set of checks from [our registry](https://semgrep.live/explore).
+will enable a default set of checks from [our registry](https://semgrep.dev/explore).
 
 You will probably want to configure a specific set of checks instead.
 See how to do that by setting up a project on <https://semgrep.dev/manage/projects>
@@ -66,15 +66,15 @@ This integration supports leaving inline PR comments via the Semgrep App. To lea
 
 ### Selecting Rules
 
-The `config` value lets you choose what rules and patterns semgrep should scan for.
-You can set specify rules in one of the following ways:
+The `config` values let you choose what rules and patterns semgrep should scan for.
+You can specify rules in any of the following ways:
 
-- **semgrep.live registry ID**: `config: r/python.flask`  
-  referring to a subset of the [semgrep.live registry](https://semgrep.live/r)
-- **semgrep.live ruleset ID**: `config: p/r2c`  
-  referring to a ruleset created on [semgrep.live's rulesets page](https://semgrep.live/rulesets)
-- **semgrep.live snippet ID**: `config: s/xYz` or `config: s/john:named-rule`
-  referring to a rule published from the [semgrep.live editor](https://semgrep.live)
+- **semgrep.dev registry ID**: `config: r/python.flask`
+  referring to a subset of the [semgrep.dev registry](https://semgrep.dev/r)
+- **semgrep.dev ruleset ID**: `config: p/r2c`
+  referring to a ruleset created on [semgrep.dev's rulesets page](https://semgrep.dev/rulesets)
+- **semgrep.dev snippet ID**: `config: s/xYz` or `config: s/john:named-rule`
+  referring to a rule published from the [semgrep.dev editor](https://semgrep.dev)
 
 If `config` is unset,
 the default behavior is to look for rules
