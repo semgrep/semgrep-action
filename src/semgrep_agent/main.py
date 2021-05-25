@@ -240,7 +240,7 @@ def protected_main(
             message = dedent(message).strip()
             click.echo(message, err=True)
             sys.exit(1)
-        config = (str(local_config_path))
+        config = (str(local_config_path),)
         click.echo(
             f"| using {num_rules} semgrep rules configured on the web UI", err=True
         )
