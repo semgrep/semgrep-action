@@ -66,7 +66,7 @@ This integration supports leaving inline PR comments via the Semgrep App. To lea
 
 ### Selecting Rules
 
-The `config` values let you choose what rules and patterns semgrep should scan for.
+The `config` values (one or more) let you choose what rules and patterns semgrep should scan for.
 You can specify rules in any of the following ways:
 
 - **semgrep.dev registry ID**: `config: r/python.flask`
