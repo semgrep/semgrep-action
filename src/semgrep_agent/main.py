@@ -82,7 +82,7 @@ def url(string: str) -> str:
     "--publish-token",
     envvar="INPUT_PUBLISHTOKEN",
     type=str,
-    help="Your semgrep.dev API token (only needed if specifying a publish organization)",
+    help="Your semgrep.dev API token (only needed if specifying a publish deployment)",
 )
 @click.option(
     "--publish-deployment",
