@@ -1,0 +1,16 @@
+| versions          - semgrep x.y.z on Python x.y.z
+| environment       - running in environment git, triggering event is 'unknown'
+| manage            - not logged in
+=== setting up agent configuration
+| using semgrep rules from https://semgrep.dev/c/p/r2c-ci
+| using semgrep rules from https://semgrep.dev/c/p/r2c
+| using default path ignore rules of common test and dependency directories
+| reporting findings introduced by these commits:
+|   * aaaaaaa add finding
+| looking at 1 changed path
+| found 1 file in the paths to be scanned
+=== looking for current issues in 1 file
+| 1 current issue found
+| No ignored issues found
+=== not looking at pre-existing issues since all files with current issues are newly created
+=== exiting with failing status

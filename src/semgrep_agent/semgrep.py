@@ -12,6 +12,7 @@ from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import Optional
+from typing import Sequence
 from typing import TextIO
 
 import click
@@ -98,7 +99,7 @@ def rewrite_sarif_file(sarif_path: Path) -> None:
 
 
 def get_findings(
-    config_specifier: str,
+    config_specifier: Sequence[str],
     committed_datetime: Optional[datetime],
     base_commit_ref: Optional[str],
     head_ref: Optional[str],
@@ -118,7 +119,9 @@ def get_findings(
             ignore_rules_file=semgrep_ignore,
         )
 
-        config_args = ["--config", config_specifier]
+        config_args = []
+        for conf in config_specifier:
+            config_args.extend(["--config", conf])
         rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
 
         debug_echo("=== seeing if there are any findings")
@@ -274,7 +277,7 @@ class SemgrepError(Exception):
 
 
 def scan(
-    config_specifier: str,
+    config_specifier: Sequence[str],
     committed_datetime: Optional[datetime],
     base_commit_ref: Optional[str],
     head_ref: Optional[str],

@@ -67,7 +67,8 @@ def url(string: str) -> str:
     "--config",
     envvar="INPUT_CONFIG",
     type=str,
-    help="Define a rule, ruleset, or snippet used to scan this repository",
+    help="Define a rule, ruleset, or snippet used to scan this repository. You can pass in multiple `--config`s",
+    multiple=True,
 )
 @click.option(
     "--baseline-ref",
@@ -81,13 +82,13 @@ def url(string: str) -> str:
     "--publish-token",
     envvar="INPUT_PUBLISHTOKEN",
     type=str,
-    help="Your semgrep.dev API token (only needed if specifying a publish organization)",
+    help="Your semgrep.dev API token (only needed if specifying a publish deployment)",
 )
 @click.option(
     "--publish-deployment",
     envvar="INPUT_PUBLISHDEPLOYMENT",
     type=int,
-    help="You semgrep.dev organization ID (requires --publish-token)",
+    help="Your semgrep.dev deployment ID (requires --publish-token)",
 )
 @click.option(
     "--publish-url",
@@ -161,7 +162,7 @@ def main(
         click.secho(str(error), err=True, fg="red")
         _handle_error(str(error), 2, sapp, meta)
     except InvalidGitRepositoryError as error:
-        click.secho("Current directory is not a github repository", err=True, fg="red")
+        click.secho("Current directory is not a git repository", err=True, fg="red")
         _handle_error(str(error), 2, sapp, meta)
     except Exception as error:
         # Handles all other errors like FileNotFound, EOF, etc.
@@ -174,7 +175,7 @@ def main(
 
 
 def protected_main(
-    config: str,
+    config: Sequence[str],
     baseline_ref: str,
     publish_url: str,
     publish_token: str,
@@ -218,8 +219,12 @@ def protected_main(
     # Setup Config
     click.echo("=== setting up agent configuration", err=True)
     if config:
-        config = semgrep.resolve_config_shorthand(config)
-        click.echo(f"| using semgrep rules from {config}", err=True)
+        resolved_config = []
+        for conf in config:
+            resolved = semgrep.resolve_config_shorthand(conf)
+            resolved_config.append(resolved)
+            click.echo(f"| using semgrep rules from {resolved}", err=True)
+        config = resolved_config
     elif sapp.is_configured:
         local_config_path, num_rules, cai_rules = sapp.download_rules()
         if num_rules == 0:
@@ -236,7 +241,7 @@ def protected_main(
             message = dedent(message).strip()
             click.echo(message, err=True)
             sys.exit(1)
-        config = str(local_config_path)
+        config = (str(local_config_path),)
         click.echo(
             f"| using {num_rules} semgrep rules configured on the web UI", err=True
         )
@@ -244,12 +249,12 @@ def protected_main(
             click.echo(f"| using {cai_rules} code asset inventory rules")
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
-        config = ".semgrep.yml"
+        config = (".semgrep.yml",)
     elif Path(".semgrep").is_dir():
         click.echo(
             "| using semgrep rules from the committed .semgrep/ directory", err=True
         )
-        config = ".semgrep/"
+        config = (".semgrep/",)
     elif publish_deployment is not None and not publish_token:
         token_state = (
             # can't check without hardcoding the environment variable name
