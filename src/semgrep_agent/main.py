@@ -221,8 +221,9 @@ def protected_main(
     if config:
         resolved_config = []
         for conf in config:
-            resolved_config.append(semgrep.resolve_config_shorthand(conf))
-            click.echo(f"| using semgrep rules from {conf}", err=True)
+            resolved = semgrep.resolve_config_shorthand(conf)
+            resolved_config.append(resolved)
+            click.echo(f"| using semgrep rules from {resolved}", err=True)
         config = resolved_config
     elif sapp.is_configured:
         local_config_path, num_rules, cai_rules = sapp.download_rules()
