@@ -68,6 +68,7 @@ def url(string: str) -> str:
     envvar="INPUT_CONFIG",
     type=str,
     help="Define a rule, ruleset, or snippet used to scan this repository",
+    multiple=True,
 )
 @click.option(
     "--baseline-ref",
@@ -174,7 +175,7 @@ def main(
 
 
 def protected_main(
-    config: str,
+    config: Sequence[str],
     baseline_ref: str,
     publish_url: str,
     publish_token: str,
@@ -218,8 +219,11 @@ def protected_main(
     # Setup Config
     click.echo("=== setting up agent configuration", err=True)
     if config:
-        config = semgrep.resolve_config_shorthand(config)
-        click.echo(f"| using semgrep rules from {config}", err=True)
+        resolved_config = []
+        for conf in config:
+            resolved_config.append(semgrep.resolve_config_shorthand(conf))
+            click.echo(f"| using semgrep rules from {conf}", err=True)
+        config = resolved_config
     elif sapp.is_configured:
         local_config_path, num_rules, cai_rules = sapp.download_rules()
         if num_rules == 0:
@@ -236,7 +240,7 @@ def protected_main(
             message = dedent(message).strip()
             click.echo(message, err=True)
             sys.exit(1)
-        config = str(local_config_path)
+        config = (str(local_config_path))
         click.echo(
             f"| using {num_rules} semgrep rules configured on the web UI", err=True
         )
@@ -244,12 +248,12 @@ def protected_main(
             click.echo(f"| using {cai_rules} code asset inventory rules")
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
-        config = ".semgrep.yml"
+        config = (".semgrep.yml",)
     elif Path(".semgrep").is_dir():
         click.echo(
             "| using semgrep rules from the committed .semgrep/ directory", err=True
         )
-        config = ".semgrep/"
+        config = (".semgrep/",)
     elif publish_deployment is not None and not publish_token:
         token_state = (
             # can't check without hardcoding the environment variable name
