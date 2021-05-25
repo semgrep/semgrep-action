@@ -88,7 +88,7 @@ def url(string: str) -> str:
     "--publish-deployment",
     envvar="INPUT_PUBLISHDEPLOYMENT",
     type=int,
-    help="Your semgrep.dev organization ID (requires --publish-token)",
+    help="Your semgrep.dev deployment ID (requires --publish-token)",
 )
 @click.option(
     "--publish-url",
