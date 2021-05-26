@@ -12,11 +12,15 @@ Scan data provide information on the environment and performance of Semgrep. The
 - Scan metadata, including type of scan and scan parameters (e.g. files or branches to ignore)
 - Review and review-requester identifying data (e.g pull-request ID, branch, merge base, request author)
 - Semgrep environment (e.g. version, interpreter, timestamp)
+- Semgrep performance (scan duration and one-way hashes of rules that ran)
+- Project size in bytes
+- Errors (compile-time errors and return codes)
 
 ## Findings data
 
 Findings data are used to provide human readable content for notifications and integrations, as well tracking results as new, fixed, or duplicate. The classes of data included are:
 - Check ID and metadata (as defined in the rule definition; e.g. OWASP category, message, severity)
 - Code location, including file path, that triggered finding
+- A one-way hash of rule definitions that yield findings
 - A one-way hash of a unique code identifier that includes the triggering code content
 - **Code content is not collected**
