@@ -125,7 +125,12 @@ def get_findings(
         )
 
         config_args = []
+        local_configs = (
+            set()
+        )  # Keep track of which config specifiers are local files/dirs
         for conf in config_specifier:
+            if Path(conf).exists():
+                local_configs.add(conf)
             config_args.extend(["--config", conf])
         rewrite_args = [] if rewrite_rule_ids else ["--no-rewrite-rule-ids"]
         metrics_args = ["--enable-metrics"] if enable_metrics else []
@@ -179,6 +184,19 @@ def get_findings(
         )
     else:
         with targets.baseline_paths() as paths:
+
+            config_args = []
+            for conf in config_specifier:
+                # If a local config existed with initial scan but doesn't exist
+                # in baseline, treat as if no issues found in baseline with that config
+                if conf in local_configs and not Path(conf).exists():
+                    click.echo(
+                        f"{conf} file not found in baseline, skipping scanning for baseline",
+                        err=True,
+                    )
+                    continue
+                config_args.extend(["--config", conf])
+
             paths_with_findings = {finding.path for finding in findings.current}
             paths_to_check = list(
                 set(str(path) for path in paths) & paths_with_findings
