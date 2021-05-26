@@ -124,7 +124,7 @@ def get_findings(
         for conf in config_specifier:
             config_args.extend(["--config", conf])
         rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
-        metrics_args = ["--enable-metrics"] if not disable_metrics else []
+        metrics_args = [] if disable_metrics else ["--enable-metrics"]
         debug_echo("=== seeing if there are any findings")
         findings = FindingSets()
 
