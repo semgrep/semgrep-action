@@ -1,0 +1,16 @@
+| versions          - semgrep x.y.z on Python x.y.z
+| environment       - running in environment git, triggering event is 'unknown'
+| manage            - not logged in
+=== setting up agent configuration
+| using semgrep rules from .semgrep.yml
+| using default path ignore rules of common test and dependency directories
+| reporting findings introduced by these commits:
+|   * aaaaaaa add rules
+| looking at 2 changed paths
+| found 2 files in the paths to be scanned
+=== looking for current issues in 2 files
+| 1 current issue found
+| No ignored issues found
+.semgrep.yml file not found in baseline, skipping scanning for baseline
+=== not looking at pre-exiting issues since after filtering out local files that don't exist in baseline, no configs left to run
+=== exiting with failing status

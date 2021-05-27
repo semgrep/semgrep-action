@@ -206,6 +206,11 @@ def get_findings(
                     "=== not looking at pre-existing issues since all files with current issues are newly created",
                     err=True,
                 )
+            elif config_args == []:
+                click.echo(
+                    "=== not looking at pre-exiting issues since after filtering out local files that don't exist in baseline, no configs left to run",
+                    err=True,
+                )
             else:
                 click.echo(
                     "=== looking for pre-existing issues in "
