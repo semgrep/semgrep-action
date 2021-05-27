@@ -105,7 +105,7 @@ def get_findings(
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
-    disable_metrics: bool,
+    enable_metrics: bool,
     *,
     timeout: Optional[int],
 ) -> FindingSets:
@@ -124,7 +124,7 @@ def get_findings(
         for conf in config_specifier:
             config_args.extend(["--config", conf])
         rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
-        metrics_args = [] if disable_metrics else ["--enable-metrics"]
+        metrics_args = ["--enable-metrics"] if enable_metrics else []
         debug_echo("=== seeing if there are any findings")
         findings = FindingSets()
 
@@ -286,7 +286,7 @@ def scan(
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
     uses_managed_policy: bool,
-    disable_metrics: bool,
+    enable_metrics: bool,
     *,
     timeout: Optional[int],
 ) -> Results:
@@ -299,7 +299,7 @@ def scan(
             head_ref,
             semgrep_ignore,
             uses_managed_policy,
-            disable_metrics,
+            enable_metrics,
             timeout=timeout,
         )
     except sh.ErrorReturnCode as error:

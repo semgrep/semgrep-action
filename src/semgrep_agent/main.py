@@ -93,10 +93,9 @@ def url(string: str) -> str:
 @click.option(
     "--enable-metrics/--disable-metrics",
     envvar="ENABLE_METRICS",
-    default=False
-    envvar="DISABLE_METRICS",
+    default=True,
     is_flag=True,
-    help="Disable anonymized metrics collection (such as scan duration), used to improve Semgrep",
+    help="Enable (default) or disable anonymized metrics used to improve Semgrep",
 )
 @click.option(
     "--publish-url",
@@ -137,7 +136,7 @@ def main(
     publish_url: str,
     publish_token: str,
     publish_deployment: int,
-    disable_metrics: bool,
+    enable_metrics: bool,
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
@@ -189,7 +188,7 @@ def protected_main(
     publish_url: str,
     publish_token: str,
     publish_deployment: int,
-    disable_metrics: bool,
+    enable_metrics: bool,
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
@@ -208,7 +207,7 @@ def protected_main(
         err=True,
     )
 
-    if disable_metrics:
+    if not enable_metrics:
         click.echo(
             get_aligned_command("metrics", "disabled"),
             err=True,
@@ -315,7 +314,6 @@ def protected_main(
         sys.exit(1)
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
-
     results = semgrep.scan(
         config,
         committed_datetime,
@@ -323,7 +321,7 @@ def protected_main(
         meta.head_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
         sapp.is_configured,
-        disable_metrics,
+        enable_metrics,
         timeout=(timeout if timeout > 0 else None),
     )
 
