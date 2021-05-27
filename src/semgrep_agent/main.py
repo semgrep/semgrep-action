@@ -91,7 +91,9 @@ def url(string: str) -> str:
     help="Your semgrep.dev deployment ID (requires --publish-token)",
 )
 @click.option(
-    "--disable-metrics",
+    "--enable-metrics/--disable-metrics",
+    envvar="ENABLE_METRICS",
+    default=False
     envvar="DISABLE_METRICS",
     is_flag=True,
     help="Disable anonymized metrics collection (such as scan duration), used to improve Semgrep",
