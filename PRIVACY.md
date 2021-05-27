@@ -18,7 +18,7 @@ These principles inform our decisions around data collection:
 
 Collected data
 
-Semgrep CI collects opt-out non-identifiable aggregate metrics for improving the user experience, guiding Semgrep feature development, and identifying regressions. It relies on Semgrep CLI’s metric collection, which is discussed in detail in that project’s PRIVACY.md (https://github.com/returntocorp/semgrep/blob/develop/PRIVACY.md).
+Semgrep CI collects opt-out non-identifiable aggregate metrics for improving the user experience, guiding Semgrep feature development, and identifying regressions. It relies on Semgrep CLI’s metric collection, which is discussed in detail in that project’s [PRIVACY.md](https://github.com/returntocorp/semgrep/blob/develop/PRIVACY.md).
 
 Opt-out behavior
 
