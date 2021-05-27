@@ -1,6 +1,6 @@
 # Semgrep CI Privacy Policy
 
-Metrics
+## Metrics
 
 Semgrep CI (also known as semgrep-action or semgrep-agent) may collect non-identifiable aggregate metrics to help improve the product. This document describes:
 
@@ -8,7 +8,7 @@ Semgrep CI (also known as semgrep-action or semgrep-agent) may collect non-ident
 - the breakdown of the data that are and are not collected
 - how to opt-out of Semgrep CI’s metrics
 
-Principles
+## Principles
 
 These principles inform our decisions around data collection:
 
@@ -16,22 +16,22 @@ These principles inform our decisions around data collection:
 2. *User control*: Put users in control of their data at all times
 3. *Limited data*: Collect what is needed, de-identify where possible, and delete when no longer necessary
 
-Collected data
+## Collected data
 
 Semgrep CI collects opt-out non-identifiable aggregate metrics for improving the user experience, guiding Semgrep feature development, and identifying regressions. It relies on Semgrep CLI’s metric collection, which is discussed in detail in that project’s [PRIVACY.md](https://github.com/returntocorp/semgrep/blob/develop/PRIVACY.md).
 
-Opt-out behavior
+## Opt-out behavior
 
 Semgrep CI’s metrics can be disabled by setting the environment variable SEMGREP_SEND_METRICS=0 or using the flag --disable-metrics. If this environment variable or flag is not set, aggregate metrics are enabled.
 
 
-Data with Semgrep App only
+## Data with Semgrep App only
 
 For Semgrep App users running Semgrep CI with a SEMGREP_APP_TOKEN set, data is sent to power your dashboard, notification, and finding features. These data are ONLY sent when using Semgrep CI in an App-connected mode and are default-disabled for Semgrep CI users.
 
 Two types of data are sent to r2c servers for this logged-in use case: scan data and findings data. 
 
-Scan data
+### Scan data
 
 Scan data provide information on the environment and performance of Semgrep. They power dashboards, identify anomalies with the product, and are needed for billing. The classes of data included are:
 
@@ -46,7 +46,7 @@ Scan data provide information on the environment and performance of Semgrep. The
 - Project size in bytes
 - Errors (compile-time errors and return codes)
 
-Findings data
+### Findings data
 
 Findings data are used to provide human readable content for notifications and integrations, as well tracking results as new, fixed, or duplicate. The classes of data included are:
 
