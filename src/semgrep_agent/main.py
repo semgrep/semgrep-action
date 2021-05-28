@@ -92,7 +92,7 @@ def url(string: str) -> str:
 )
 @click.option(
     "--enable-metrics/--disable-metrics",
-    envvar="ENABLE_METRICS",
+    envvar="SEMGREP_SEND_METRICS",
     default=True,
     is_flag=True,
     help="Enable (default) or disable anonymized metrics used to improve Semgrep",

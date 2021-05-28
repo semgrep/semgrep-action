@@ -29,22 +29,19 @@ Semgrep CI’s metrics can be disabled by setting the environment variable SEMGR
 
 For Semgrep App users running Semgrep CI with a SEMGREP_APP_TOKEN set, data is sent to power your dashboard, notification, and finding features. These data are ONLY sent when using Semgrep CI in an App-connected mode and are default-disabled for Semgrep CI users.
 
-Two types of data are sent to r2c servers for this logged-in use case: scan data and findings data. 
+Two types of data are sent to r2c servers for this logged-in use case: scan data and findings data.
 
 ### Scan data
 
 Scan data provide information on the environment and performance of Semgrep. They power dashboards, identify anomalies with the product, and are needed for billing. The classes of data included are:
 
-- Project identity (e.g., name, URL)
-- Scan environment (e.g., CI provider, OS)
-- Author identity (e.g., committer email)
-- Commit metadata (e.g., commit hash)
-- Scan metadata, including type of scan and scan parameters (e.g., files or branches to ignore)
+- Project identity (e.g. name, URL)
+- Scan environment (e.g. CI provider, OS)
+- Author identity (e.g. committer email)
+- Commit metadata (e.g. commit hash)
+- Scan metadata, including type of scan and scan parameters (e.g. files or branches to ignore)
 - Review and review-requester identifying data (e.g., pull-request ID, branch, merge base, request author)
-- Semgrep environment (e.g., version, interpreter, timestamp)
-- Semgrep performance (scan duration and one-way hashes of rules that ran)
-- Project size in bytes
-- Errors (compile-time errors and return codes)
+- Semgrep environment (e.g. version, interpreter, timestamp)
 
 ### Findings data
 
@@ -52,7 +49,5 @@ Findings data are used to provide human readable content for notifications and i
 
 - Check ID and metadata (as defined in the rule definition, e.g., OWASP category, message, severity)
 - Code location, including file path, that triggered findings
-- A one-way hash of rule definitions that yield findings
 - A one-way hash of a unique code identifier that includes the triggering code content
 - Code content is not collected
-
