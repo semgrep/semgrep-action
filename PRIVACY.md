@@ -12,9 +12,9 @@ Semgrep CI (also known as semgrep-action or semgrep-agent) may collect non-ident
 
 These principles inform our decisions around data collection:
 
-1. *Transparency*: Collect and use data in a way that is clearly explained to the user and benefits them
-2. *User control*: Put users in control of their data at all times
-3. *Limited data*: Collect what is needed, de-identify where possible, and delete when no longer necessary
+1. **Transparency**: Collect and use data in a way that is clearly explained to the user and benefits them
+2. **User control**: Put users in control of their data at all times
+3. **Limited data**: Collect what is needed, de-identify where possible, and delete when no longer necessary
 
 ## Collected data
 
