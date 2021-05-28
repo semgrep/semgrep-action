@@ -47,7 +47,7 @@ Scan data provide information on the environment and performance of Semgrep. The
 
 Findings data are used to provide human readable content for notifications and integrations, as well tracking results as new, fixed, or duplicate. The classes of data included are:
 
-- Check ID and metadata (as defined in the rule definition, e.g. OWASP category, message, severity)
+- Check ID and metadata (as defined in the rule definition; e.g. OWASP category, message, severity)
 - Code location, including file path, that triggered findings
 - A one-way hash of a unique code identifier that includes the triggering code content
 - Code content is not collected
