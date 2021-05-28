@@ -27,7 +27,7 @@ Semgrep CI’s metrics can be disabled by setting the environment variable `SEMG
 
 ## Data with Semgrep App only
 
-For Semgrep App users running Semgrep CI with a SEMGREP_APP_TOKEN set, data is sent to power your dashboard, notification, and finding features. These data are ONLY sent when using Semgrep CI in an App-connected mode and are default-disabled for Semgrep CI users.
+For Semgrep App users running Semgrep CI with a `SEMGREP_APP_TOKEN` set, data is sent to power your dashboard, notification, and finding features. These data are ONLY sent when using Semgrep CI in an App-connected mode and are default-disabled for Semgrep CI users.
 
 Two types of data are sent to r2c servers for this logged-in use case: scan data and findings data.
 
