@@ -22,7 +22,7 @@ Semgrep CI collects opt-out non-identifiable aggregate metrics for improving the
 
 ## Opt-out behavior
 
-Semgrep CI’s metrics can be disabled by setting the environment variable SEMGREP_SEND_METRICS=0 or using the flag --disable-metrics. If this environment variable or flag is not set, aggregate metrics are enabled.
+Semgrep CI’s metrics can be disabled by setting the environment variable `SEMGREP_SEND_METRICS=0` or using the flag `--disable-metrics`. If this environment variable or flag is not set, aggregate metrics are enabled.
 
 
 ## Data with Semgrep App only
