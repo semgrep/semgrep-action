@@ -91,6 +91,13 @@ def url(string: str) -> str:
     help="Your semgrep.dev deployment ID (requires --publish-token)",
 )
 @click.option(
+    "--enable-metrics/--disable-metrics",
+    envvar="SEMGREP_SEND_METRICS",
+    default=True,
+    is_flag=True,
+    help="Enable (default) or disable anonymized metrics used to improve Semgrep",
+)
+@click.option(
     "--publish-url",
     envvar="INPUT_PUBLISHURL",
     type=url,
@@ -129,6 +136,7 @@ def main(
     publish_url: str,
     publish_token: str,
     publish_deployment: int,
+    enable_metrics: bool,
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
@@ -180,6 +188,7 @@ def protected_main(
     publish_url: str,
     publish_token: str,
     publish_deployment: int,
+    enable_metrics: bool,
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
@@ -197,6 +206,12 @@ def protected_main(
         ),
         err=True,
     )
+
+    if not enable_metrics:
+        click.echo(
+            get_aligned_command("metrics", "disabled"),
+            err=True,
+        )
 
     # Setup URL/Token
     if sapp.is_configured:
@@ -299,7 +314,6 @@ def protected_main(
         sys.exit(1)
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
-
     results = semgrep.scan(
         config,
         committed_datetime,
@@ -307,6 +321,7 @@ def protected_main(
         meta.head_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
         sapp.is_configured,
+        enable_metrics,
         timeout=(timeout if timeout > 0 else None),
     )
 
