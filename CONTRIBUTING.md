@@ -68,12 +68,10 @@ them!
 
 ## Release
 
-Let CI pass on GitHub Actions before releasing.
+Let CI pass on GitHub Actions before releasing. 
+After you merge your PR, check out develop and pull to get your latest changes.
 The following command will change all action runs to use your current `HEAD`:
-```make release```
-
-### Publishing to pypi
 
 ```
-poetry publish
+make release
 ```
