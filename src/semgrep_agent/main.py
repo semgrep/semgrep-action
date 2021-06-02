@@ -65,7 +65,7 @@ def url(string: str) -> str:
 )
 @click.option(
     "--config",
-    envvar="INPUT_CONFIG",
+    envvar=["INPUT_CONFIG", "SEMGREP_RULES"],
     type=str,
     help="Define a rule, ruleset, or snippet used to scan this repository. You can pass in multiple `--config`s",
     multiple=True,
