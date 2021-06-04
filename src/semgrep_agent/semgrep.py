@@ -123,11 +123,7 @@ def get_findings(
         config_args = []
         for conf in config_specifier:
             config_args.extend(["--config", conf])
-        rewrite_args = (
-            []
-            if ".semgrep/" in config_specifier and rewrite_rule_ids
-            else ["--no-rewrite-rule-ids"]
-        )
+        rewrite_args = [] if rewrite_rule_ids else ["--no-rewrite-rule-ids"]
         metrics_args = ["--enable-metrics"] if enable_metrics else []
         debug_echo("=== seeing if there are any findings")
         findings = FindingSets()

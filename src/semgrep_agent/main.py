@@ -329,7 +329,7 @@ def protected_main(
         meta.base_commit_ref,
         meta.head_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
-        rewrite_rule_ids,
+        rewrite_rule_ids and not sapp.is_configured,
         enable_metrics,
         timeout=(timeout if timeout > 0 else None),
     )
