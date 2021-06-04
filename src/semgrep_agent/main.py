@@ -231,19 +231,18 @@ def protected_main(
         if os.getenv(env_var):
             click.echo(get_aligned_command(env_var, str(os.getenv(env_var))))
 
-    if config and sapp.is_configured:
-        click.secho(
-            f"\nDetected a config flag: no longer using rules configured on the web.",
-            fg="yellow",
-        )
-        click.echo(
-            f"If you wish to use Semgrep Cloud features, please remove the config flag\n"
-            "and add rules and rulesets to your policies instead.\n"
-        )
-
     # Setup Config
     click.echo("=== setting up agent configuration", err=True)
     if config:
+        if sapp.is_configured:
+            click.secho(
+                f"\nDetected a config flag: no longer using rules configured on the web.",
+                fg="yellow",
+            )
+            click.echo(
+                f"If you wish to use Semgrep Cloud features, please remove the config flag\n"
+                "and add rules and rulesets to your policies instead.\n"
+            )
         resolved_config = []
         for conf in config:
             resolved = semgrep.resolve_config_shorthand(conf)
