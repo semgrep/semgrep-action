@@ -235,14 +235,17 @@ def protected_main(
     click.echo("=== setting up agent configuration", err=True)
     if config:
         if sapp.is_configured:
-            click.secho(
-                f"\nDetected a config flag: no longer using rules configured on the web.",
-                fg="yellow",
-            )
-            click.echo(
-                f"If you wish to use Semgrep Cloud features, please remove the config flag\n"
-                "and add rules and rulesets to your policies instead.\n"
-            )
+            message = """
+            === [ERROR] Detected config flag while logged in
+
+            Semgrep will only run rules with the Semgrep Cloud features
+            if they are in your policy (see semgrep.dev/manage/policies).
+            If you intended to use Semgrep Cloud, please remove the config
+            flag and add rules/rulesets to your policies instead.
+            """
+            message = dedent(message).strip()
+            click.secho(message, err=True, fg="red")
+            sys.exit(1)
         resolved_config = []
         for conf in config:
             resolved = semgrep.resolve_config_shorthand(conf)
@@ -253,7 +256,7 @@ def protected_main(
         local_config_path, num_rules, cai_rules = sapp.download_rules()
         if num_rules == 0:
             message = """
-            == [ERROR] This policy will not run any rules
+            === [ERROR] This policy will not run any rules
 
             Semgrep will only run rules in your policy that
             have an action associated with them (notify or block).
@@ -263,7 +266,7 @@ def protected_main(
             channels on the notifications tab
             """
             message = dedent(message).strip()
-            click.echo(message, err=True)
+            click.secho(message, err=True, fg="red")
             sys.exit(1)
         config = (str(local_config_path),)
         click.echo(
