@@ -21,7 +21,7 @@ Semgrep CI (aka Semgrep Action or semgrep-agent) is a specialized Docker image f
 - **Block new bugs.** You shouldn’t have to fix existing bugs just to adopt a tool. Semgrep CI reports newly introduced issues on pull and merge requests, scanning them at their base and HEAD commits to compare findings. Developers are signficantly more likely to fix the issues they introduced themselves on PRs and MRs.
 - **Get findings where you work.** Semgrep CI can connect to Semgrep App to present findings in Slack, on PRs and MRs via inline comments, email, and through 3rd party services.
 
-_Semgrep CI runs fully in your build environment: code is never sent anywhere._
+> Semgrep CI runs fully in your build environment: code is never sent anywhere.
 
 ## Getting started
 
@@ -42,6 +42,14 @@ Once Semgrep CI is running, [explore the Semgrep Registry](https://semgrep.dev/e
 ## Configuration
 
 See [Advanced Configuration documentation](https://semgrep.dev/docs/semgrep-ci/#advanced-configuration) for further customizations, such as scanning with custom rules, ignoring files, and tuning performance.
+
+## Metrics
+
+Semgrep CI collects opt-out non-identifiable aggregate metrics for improving the user experience, guiding Semgrep feature development, and identifying regressions.
+
+The [`PRIVACY.md`](PRIVACY.md) file describes the principles that guide our data-collection decisions, the breakdown of the data that are and are not collected, and how to opt-out of Semgrep CI’s metrics.
+
+> Semgrep CI never sends your source code anywhere.
 
 ## Technical details
 
