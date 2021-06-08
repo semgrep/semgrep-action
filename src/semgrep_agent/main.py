@@ -49,7 +49,7 @@ def url(string: str) -> str:
     help=f"""
     Scans a repository for findings using Semgrep with rules from semgrep.dev.
 
-    For usage, see https://semgrep.dev/docs/integrations.
+    For usage, see https://semgrep.dev/docs/semgrep-ci.
 
     In its most basic form, semgrep-agent is used by calling:
 
