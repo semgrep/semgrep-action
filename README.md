@@ -15,7 +15,7 @@
   </a>
 </p>
 
-[Semgrep CI](https://github.com/returntocorp/semgrep-action) (aka Semgrep Action or `semgrep-agent`) is a specialized Docker image for running [Semgrep](https://github.com/returntocorp/semgrep) in CI environments. It can also optionally connect to [Semgrep App](https://semgrep.dev/login) for centralized rule and findings management.
+Semgrep CI (aka Semgrep Action or `semgrep-agent`) is a specialized Docker image for running [Semgrep](https://github.com/returntocorp/semgrep) in CI environments. It can also optionally connect to [Semgrep App](https://semgrep.dev/login) for centralized rule and findings management.
 
 - **Scan every commit.** Semgrep CI rapidly scans modified files on pull and merge requests, protecting developer productivity. Longer full project scans are configurable on merges to specific branches.
 - **Block new bugs.** You shouldn’t have to fix existing bugs just to adopt a tool. Semgrep CI reports newly introduced issues on pull and merge requests, scanning them at their base and HEAD commits to compare findings. Developers are signficantly more likely to fix the issues they introduced themselves on PRs and MRs.
