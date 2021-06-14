@@ -81,7 +81,7 @@ class Sapp:
         returns name of policy used to scan
         """
         debug_echo(f"=== reporting start to semgrep app at {self.url}")
-
+        debug_echo(str(meta.to_dict()))
         response = self.session.post(
             f"{self.url}/api/agent/deployment/{self.deployment_id}/scan",
             json={"meta": meta.to_dict()},

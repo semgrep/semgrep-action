@@ -37,7 +37,7 @@ class GitMeta:
     @cachedproperty
     def event_name(self) -> str:
         if self.pr_id:
-            return "pull-request"
+            return "pull_request"
         return "unknown"
 
     @cachedproperty
@@ -325,7 +325,10 @@ class GitlabMeta(GitMeta):
 
     @cachedproperty
     def event_name(self) -> str:
-        return os.getenv("CI_PIPELINE_SOURCE", "unknown")
+        gitlab_event_name = os.getenv("CI_PIPELINE_SOURCE", "unknown")
+        if gitlab_event_name in ["merge_request_event", "external_pull_request_event"]:
+            return "pull_request"
+        return gitlab_event_name
 
     @cachedproperty
     def pr_id(self) -> Optional[str]:
