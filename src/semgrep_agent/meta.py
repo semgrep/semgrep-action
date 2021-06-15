@@ -344,8 +344,6 @@ class GitlabMeta(GitMeta):
             "branch": self.commit_ref,
             "base_sha": self.base_commit_ref,
             "start_sha": os.getenv("CI_MERGE_REQUEST_DIFF_BASE_SHA"),
-            "source_sha": os.getenv("CI_MERGE_REQUEST_SOURCE_BRANCH_SHA"),
-            "target_sha": os.getenv("CI_MERGE_REQUEST_TARGET_BRANCH_SHA"),
         }
 
 
