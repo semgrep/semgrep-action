@@ -1,7 +1,6 @@
 import json
 import os
 import tempfile
-import time
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -189,7 +188,7 @@ class Sapp:
             json={
                 # send a backup token in case the app is not available
                 "token": os.getenv("GITHUB_TOKEN"),
-                "gitlab_token": os.getenv("CI_JOB_TOKEN"),
+                "gitlab_token": os.getenv("GITLAB_TOKEN"),
                 "findings": [
                     finding.to_dict(omit=fields_to_omit)
                     for finding in results.findings.new
@@ -197,7 +196,6 @@ class Sapp:
             },
             timeout=30,
         )
-        time.sleep(1200)
         debug_echo(f"=== POST .../findings responded: {response!r}")
         try:
             response.raise_for_status()
