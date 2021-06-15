@@ -188,6 +188,7 @@ class Sapp:
             json={
                 # send a backup token in case the app is not available
                 "token": os.getenv("GITHUB_TOKEN"),
+                "gitlab_token": os.getenv("CI_JOB_TOKEN"),
                 "findings": [
                     finding.to_dict(omit=fields_to_omit)
                     for finding in results.findings.new
