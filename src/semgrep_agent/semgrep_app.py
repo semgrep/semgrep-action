@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+import time
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
@@ -196,6 +197,7 @@ class Sapp:
             },
             timeout=30,
         )
+        time.sleep(1200)
         debug_echo(f"=== POST .../findings responded: {response!r}")
         try:
             response.raise_for_status()
