@@ -338,6 +338,16 @@ class GitlabMeta(GitMeta):
     def pr_title(self) -> Optional[str]:
         return os.getenv("CI_MERGE_REQUEST_TITLE")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "branch": self.commit_ref,
+            "base_sha": self.base_commit_ref,
+            "start_sha": os.getenv("CI_MERGE_REQUEST_DIFF_BASE_SHA"),
+            "source_sha": os.getenv("CI_MERGE_REQUEST_SOURCE_BRANCH_SHA"),
+            "target_sha": os.getenv("CI_MERGE_REQUEST_TARGET_BRANCH_SHA"),
+        }
+
 
 def generate_meta_from_environment(
     baseline_ref: Optional[str], scan_environment: Optional[str]
