@@ -335,8 +335,20 @@ class GitlabMeta(GitMeta):
         return os.getenv("CI_MERGE_REQUEST_IID")
 
     @cachedproperty
+    def start_sha(self) -> Optional[str]:
+        return os.getenv("CI_MERGE_REQUEST_DIFF_BASE_SHA")
+
+    @cachedproperty
     def pr_title(self) -> Optional[str]:
         return os.getenv("CI_MERGE_REQUEST_TITLE")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            **super().to_dict(),
+            "branch": self.commit_ref,
+            "base_sha": self.base_commit_ref,
+            "start_sha": self.start_sha,
+        }
 
 
 def generate_meta_from_environment(
