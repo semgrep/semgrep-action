@@ -7,8 +7,8 @@ ENV INSTALLED_SEMGREP_VERSION=0.55.1
 
 # This is all in one run command in order to save disk space.
 # Note that there's a tradeoff here for debuggability.
-RUN apk add --no-cache --virtual=.build-deps build-base cargo libffi-dev openssl-dev &&\
-    apk add --no-cache --virtual=.run-deps bash git less libffi openssl &&\
+RUN apk add --no-cache --virtual=.build-deps build-base cargo libffi-dev openssl-dev yaml-dev &&\
+    apk add --no-cache --virtual=.run-deps bash git less libffi openssl yaml &&\
     pip install --no-cache-dir pipx~=0.16.3 &&\
     pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
     (pip freeze | xargs pip uninstall -y) &&\
