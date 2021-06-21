@@ -53,7 +53,7 @@ def url(string: str) -> str:
 
     In its most basic form, semgrep-agent is used by calling:
 
-    $ semgrep-agent --config p/r2c-ci
+    $ semgrep-agent --config p/security-audit --config p/secrets
 
     which will scan a repository using the r2c-ci ruleset.
 
@@ -72,7 +72,7 @@ def url(string: str) -> str:
 )
 @click.option(
     "--baseline-ref",
-    envvar="BASELINE_REF",
+    envvar=["BASELINE_REF", "SEMGREP_BASELINE_REF"],
     type=str,
     default=None,
     show_default="detected from CI env",
@@ -80,13 +80,13 @@ def url(string: str) -> str:
 )
 @click.option(
     "--publish-token",
-    envvar="INPUT_PUBLISHTOKEN",
+    envvar=["INPUT_PUBLISHTOKEN", "SEMGREP_APP_TOKEN"],
     type=str,
     help="Your semgrep.dev API token (only needed if specifying a publish deployment)",
 )
 @click.option(
     "--publish-deployment",
-    envvar="INPUT_PUBLISHDEPLOYMENT",
+    envvar=["INPUT_PUBLISHDEPLOYMENT", "SEMGREP_APP_DEPLOYMENT_ID"],
     type=int,
     help="Your semgrep.dev deployment ID (requires --publish-token)",
 )
@@ -99,7 +99,7 @@ def url(string: str) -> str:
 )
 @click.option(
     "--publish-url",
-    envvar="INPUT_PUBLISHURL",
+    envvar=["INPUT_PUBLISHURL", "SEMGREP_APP_URL"],
     type=url,
     default="https://semgrep.dev",
     help="The URL of the Semgrep app",
@@ -111,10 +111,13 @@ def url(string: str) -> str:
     "gitlab_output",
     envvar="SEMGREP_GITLAB_JSON",
     is_flag=True,
-    hidden=True,
 )
 @click.option(
-    "--audit-on", envvar="INPUT_AUDITON", multiple=True, type=str, hidden=True
+    "--audit-on",
+    envvar=["INPUT_AUDITON", "SEMGREP_AUDIT_ON"],
+    multiple=True,
+    type=str,
+    hidden=True,
 )
 @click.option(
     "--timeout",
