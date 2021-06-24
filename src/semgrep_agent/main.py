@@ -98,6 +98,14 @@ def url(string: str) -> str:
     help="Enable (default) or disable anonymized metrics used to improve Semgrep",
 )
 @click.option(
+    "--rewrite-rule-ids/--no-rewrite-rule-ids",
+    envvar="REWRITE_RULE_IDS",
+    default=True,
+    is_flag=True,
+    help="Specify whether semgrep should or should not rewrite rule-ids based on directory structure (MAY BE DEPRECATED ONCE ANY ARBITRARY SEMGREP CLI FLAG CAN BE PASSED IN)",
+    hidden=True,
+)
+@click.option(
     "--publish-url",
     envvar=["INPUT_PUBLISHURL", "SEMGREP_APP_URL"],
     type=url,
@@ -140,6 +148,7 @@ def main(
     publish_token: str,
     publish_deployment: int,
     enable_metrics: bool,
+    rewrite_rule_ids: bool,
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
@@ -192,6 +201,7 @@ def protected_main(
     publish_token: str,
     publish_deployment: int,
     enable_metrics: bool,
+    rewrite_rule_ids: bool,
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
@@ -335,7 +345,7 @@ def protected_main(
         meta.base_commit_ref,
         meta.head_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
-        sapp.is_configured,
+        rewrite_rule_ids and not sapp.is_configured,
         enable_metrics,
         timeout=(timeout if timeout > 0 else None),
     )

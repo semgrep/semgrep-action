@@ -104,7 +104,7 @@ def get_findings(
     base_commit_ref: Optional[str],
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
-    uses_managed_policy: bool,
+    rewrite_rule_ids: bool,
     enable_metrics: bool,
     *,
     timeout: Optional[int],
@@ -123,7 +123,7 @@ def get_findings(
         config_args = []
         for conf in config_specifier:
             config_args.extend(["--config", conf])
-        rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
+        rewrite_args = [] if rewrite_rule_ids else ["--no-rewrite-rule-ids"]
         metrics_args = ["--enable-metrics"] if enable_metrics else []
         debug_echo("=== seeing if there are any findings")
         findings = FindingSets()
@@ -285,7 +285,7 @@ def scan(
     base_commit_ref: Optional[str],
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
-    uses_managed_policy: bool,
+    rewrite_rule_ids: bool,
     enable_metrics: bool,
     *,
     timeout: Optional[int],
@@ -298,7 +298,7 @@ def scan(
             base_commit_ref,
             head_ref,
             semgrep_ignore,
-            uses_managed_policy,
+            rewrite_rule_ids,
             enable_metrics,
             timeout=timeout,
         )
