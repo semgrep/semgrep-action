@@ -102,7 +102,8 @@ def url(string: str) -> str:
     envvar="REWRITE_RULE_IDS",
     default=True,
     is_flag=True,
-    help="Specify whether semgrep should or should not rewrite rule-ids based on directory structure",
+    help="Specify whether semgrep should or should not rewrite rule-ids based on directory structure (MAY BE DEPRECATED ONCE ANY ARBITRARY SEMGREP CLI FLAG CAN BE PASSED IN)",
+    hidden=True,
 )
 @click.option(
     "--publish-url",
