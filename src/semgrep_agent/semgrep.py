@@ -132,6 +132,9 @@ def get_findings(
             click.echo(
                 "=== looking for current issues in " + unit_len(paths, "file"), err=True
             )
+            if len(paths) < 100:
+                for path in paths:
+                    debug_echo(f"searching {str(path)}")
 
             args = [
                 "--skip-unknown-extensions",

@@ -227,6 +227,9 @@ class TargetFileManager:
                 f"| skipping {unit_len(ignored_paths, 'file')} based on path ignore rules",
                 err=True,
             )
+            if len(patterns) < 100:
+                for p in patterns:
+                    debug_echo(f"skipping {p}")
 
         relative_survived_paths = [
             path.relative_to(self._base_path) for path in survived_paths
