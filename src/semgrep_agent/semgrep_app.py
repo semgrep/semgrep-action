@@ -193,6 +193,7 @@ class Sapp:
                     finding.to_dict(omit=fields_to_omit)
                     for finding in results.findings.new
                 ],
+                "searched_paths": list(results.findings.searched_paths),
             },
             timeout=30,
         )
@@ -212,7 +213,6 @@ class Sapp:
             f"{self.url}/api/agent/scan/{self.scan.id}/ignores",
             json={
                 "findings": [finding.to_dict() for finding in results.findings.ignored],
-                "ignored_paths": list(results.findings.ignored_paths),
             },
             timeout=30,
         )

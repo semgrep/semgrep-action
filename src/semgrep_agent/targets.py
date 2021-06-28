@@ -392,10 +392,10 @@ class TargetFileManager:
         yield self._paths.targeted
 
     @property
-    def ignored_paths(self) -> List[Path]:
+    def searched_paths(self) -> List[Path]:
         """
         Return list of paths that have been ignored.
 
         :return: A list of paths
         """
-        return self._paths.ignored
+        return self._paths.targeted

@@ -126,7 +126,7 @@ def get_findings(
         rewrite_args = [] if rewrite_rule_ids else ["--no-rewrite-rule-ids"]
         metrics_args = ["--enable-metrics"] if enable_metrics else []
         debug_echo("=== seeing if there are any findings")
-        findings = FindingSets(ignored_paths=set(targets.ignored_paths))
+        findings = FindingSets(searched_paths=set(targets.searched_paths))
 
         with targets.current_paths() as paths:
             click.echo(

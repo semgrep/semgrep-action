@@ -213,7 +213,7 @@ class FindingSets:
     baseline: FindingSet = field(default_factory=FindingSet)
     current: FindingSet = field(default_factory=FindingSet)
     ignored: FindingSet = field(default_factory=FindingSet)
-    ignored_paths: Set[Path] = field(default_factory=set)
+    searched_paths: Set[Path] = field(default_factory=set)
 
     @property
     def new(self) -> Set[Finding]:
