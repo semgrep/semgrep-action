@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
@@ -29,6 +30,7 @@ def is_debug() -> Optional[str]:
     return os.getenv("SEMGREP_AGENT_DEBUG")
 
 
+@contextmanager
 def debug_file_descriptor() -> Iterator[Optional[IO]]:
     if not is_debug():
         yield None

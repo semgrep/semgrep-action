@@ -235,7 +235,7 @@ def invoke_semgrep(
     """
     output: Dict[str, List[Any]] = {"results": [], "errors": []}
 
-    for err_write in debug_file_descriptor():
+    with debug_file_descriptor() as err_write:
         for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
             with tempfile.NamedTemporaryFile("w") as output_json_file:
                 args = semgrep_args.copy()
