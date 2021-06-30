@@ -397,8 +397,8 @@ class TargetFileManager:
     @property
     def searched_paths(self) -> List[Path]:
         """
-        Return list of paths that have been ignored.
+        The list of paths that have been searched with Semgrep
 
-        :return: A list of paths
+        :return: A list of paths NOT ignored, all relative to root directory
         """
         return self._paths.targeted
