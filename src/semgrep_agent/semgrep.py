@@ -1,6 +1,8 @@
+import asyncio
 import io
 import json
 import os
+import sys
 import tempfile
 import time
 from contextlib import contextmanager
@@ -26,7 +28,9 @@ from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
+from semgrep_agent.utils import debug_file_descriptor
 from semgrep_agent.utils import get_git_repo
+from semgrep_agent.utils import is_debug
 from semgrep_agent.utils import print_git_log
 
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
@@ -234,26 +238,30 @@ def invoke_semgrep(
     """
     output: Dict[str, List[Any]] = {"results": [], "errors": []}
 
-    for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
-        with tempfile.NamedTemporaryFile("w") as output_json_file:
-            args = semgrep_args.copy()
-            args.extend(
-                [
-                    "-o",
-                    output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-                ]
-            )
-            for c in chunk:
-                args.append(c)
+    with debug_file_descriptor() as err_write:
+        for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
+            with tempfile.NamedTemporaryFile("w") as output_json_file:
+                args = semgrep_args.copy()
+                if is_debug():
+                    args.extend(["--debug"])
+                args.extend(
+                    [
+                        "-o",
+                        output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+                    ]
+                )
+                for c in chunk:
+                    args.append(c)
 
-            _ = semgrep_exec(*(args), _timeout=timeout)
-            with open(
-                output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-            ) as f:
-                parsed_output = json.load(f)
+                _ = semgrep_exec(*(args), _timeout=timeout, _err=err_write)
 
-            output["results"].extend(parsed_output["results"])
-            output["errors"].extend(parsed_output["errors"])
+                with open(
+                    output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+                ) as f:
+                    parsed_output = json.load(f)
+
+                output["results"].extend(parsed_output["results"])
+                output["errors"].extend(parsed_output["errors"])
 
     return output
 

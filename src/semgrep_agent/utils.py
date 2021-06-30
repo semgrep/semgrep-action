@@ -1,10 +1,14 @@
 import json
 import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
+from threading import Thread
 from typing import cast
+from typing import IO
+from typing import Iterator
 from typing import List
 from typing import NoReturn
 from typing import Optional
@@ -22,9 +26,35 @@ if TYPE_CHECKING:
     from semgrep_agent.meta import GitMeta
 
 
+def is_debug() -> Optional[str]:
+    return os.getenv("SEMGREP_AGENT_DEBUG")
+
+
+@contextmanager
+def debug_file_descriptor() -> Iterator[Optional[IO]]:
+    if not is_debug():
+        yield None
+    else:
+        read_fd, write_fd = os.pipe()
+
+        def reroute_output() -> None:
+            with open(read_fd) as f:
+                for line in f:
+                    debug_echo(line)
+
+        th = Thread(target=reroute_output)
+        th.start()
+
+        try:
+            with open(write_fd) as err_write:
+                yield err_write
+        finally:
+            th.join()
+
+
 def debug_echo(text: str) -> None:
     """Print debug messages with context-specific debug formatting."""
-    if os.getenv("SEMGREP_AGENT_DEBUG"):
+    if is_debug():
         prefix = "=== [DEBUG] "
     elif os.getenv("GITHUB_ACTIONS"):
         prefix = "::debug::"
