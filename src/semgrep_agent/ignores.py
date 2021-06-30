@@ -119,7 +119,6 @@ class FileIgnore(Mapping[Path, Entry]):
                     yield Entry(Path(e.path), False)
 
     def _init_cache(self) -> None:
-        debug_echo(f"Ignored patterns are:\n{self.patterns}")
         before = time.time()
         self._walk_cache = {}
         for target in self.target_paths:

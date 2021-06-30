@@ -193,6 +193,7 @@ class Sapp:
                     finding.to_dict(omit=fields_to_omit)
                     for finding in results.findings.new
                 ],
+                "searched_paths": [str(p) for p in results.findings.searched_paths],
             },
             timeout=30,
         )
