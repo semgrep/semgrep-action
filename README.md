@@ -120,7 +120,7 @@ You can add a `.semgrepconfig.yml` that looks like this:
 overrides:
   - if.path: "tests/*" # the first two lines in this example are "conditions"
     if.rule_id: "secrets.*aws*"
-    mute: true # the last line in this example is an "action"
+    mute: true # this last line in this example is an "action"
 
   - if.policy_slug: "*important*"
     if.severity_in: ["ERROR"]
