@@ -118,13 +118,14 @@ You can add a `.semgrepconfig.yml` that looks like this:
 
 ```yaml
 overrides:
-  - if.path: "tests/*" # the first four lines in this example are "conditions"
+  - if.path: "tests/*" # the first two lines in this example are "conditions"
     if.rule_id: "secrets.*aws*"
-    if.ruleset_id: "secrets"
-    if.policy_slug: "security*"
-    if.severity_in: ["INFO", "WARNING"]
-    severity: INFO # the last two lines in this example are "actions"
-    mute: true
+    mute: true # the last line in this example is an "action"
+
+  - if.policy_slug: "*important*"
+    if.severity_in: ["ERROR"]
+    unmute: true # report issues even if they were muted with # nosemgrep
+    set_severity: WARNING # but lower their severity a bit
 ```
 
 Every finding will be checked against these override definitions one by one.
@@ -144,11 +145,11 @@ An override's actions are applied when all `if.` conditions are true. If an over
 
 ### Available actions
 
-| key        | example value | description                                     |
-| ---------- | ------------- | ----------------------------------------------- |
-| `mute`     | `true`        | acts as if the line had a `# nosemgrep` comment |
-| `unmute`   | `true`        | ignores any `# nosemgrep` comments              |
-| `severity` | `"INFO"`      | changes the reported severity of the issue      |
+| key            | example value | description                                     |
+| -------------- | ------------- | ----------------------------------------------- |
+| `mute`         | `true`        | acts as if the line had a `# nosemgrep` comment |
+| `unmute`       | `true`        | ignores any `# nosemgrep` comments              |
+| `set_severity` | `"INFO"`      | changes the reported severity of the issue      |
 
 ## Contributing
 
