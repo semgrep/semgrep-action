@@ -135,7 +135,7 @@ class Sapp:
         else:
             return response.text
 
-    def download_rules(self) -> Tuple[Path, int, int]:
+    def download_rules(self) -> Tuple[Path, List[str], List[str]]:
         """Save the rules configured on semgrep app to a temporary file"""
         # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
         rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
@@ -143,10 +143,11 @@ class Sapp:
         rules = self.fetch_rules_text()
         parsed = yaml.load(rules)
         rules_path.write_text(rules)
-        num_cai_rules = len(
-            [r for r in parsed["rules"] if "r2c-internal-cai" in r["id"]]
-        )
-        return rules_path, len(parsed["rules"]) - num_cai_rules, num_cai_rules
+        rule_ids = [
+            r["id"] for r in parsed["rules"] if "r2c-internal-cai" not in r["id"]
+        ]
+        cai_ids = [r["id"] for r in parsed["rules"] if "r2c-internal-cai" in r["id"]]
+        return rules_path, rule_ids, cai_ids
 
     def report_failure(self, stderr: str, exit_code: int) -> int:
         """
@@ -173,7 +174,9 @@ class Sapp:
         exit_code = int(response.json()["exit_code"])
         return exit_code
 
-    def report_results(self, results: Results) -> None:
+    def report_results(
+        self, results: Results, rule_ids: List[str], cai_ids: List[str]
+    ) -> None:
         debug_echo(f"=== reporting results to semgrep app at {self.url}")
 
         fields_to_omit = constants.PRIVACY_SENSITIVE_FIELDS.copy()
@@ -194,6 +197,8 @@ class Sapp:
                     for finding in results.findings.new
                 ],
                 "searched_paths": [str(p) for p in results.findings.searched_paths],
+                "rule_ids": rule_ids,
+                "cai_ids": cai_ids,
             },
             timeout=30,
         )

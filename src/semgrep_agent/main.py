@@ -266,8 +266,8 @@ def protected_main(
             click.echo(f"| using semgrep rules from {resolved}", err=True)
         config = resolved_config
     elif sapp.is_configured:
-        local_config_path, num_rules, cai_rules = sapp.download_rules()
-        if num_rules == 0:
+        local_config_path, rule_ids, cai_ids = sapp.download_rules()
+        if len(rule_ids) + len(cai_ids) == 0:
             message = """
             === [ERROR] This policy will not run any rules
 
@@ -283,10 +283,9 @@ def protected_main(
             sys.exit(1)
         config = (str(local_config_path),)
         click.echo(
-            f"| using {num_rules} semgrep rules configured on the web UI", err=True
+            f"| using {len(rule_ids)} semgrep rules configured on the web UI", err=True
         )
-        if cai_rules:
-            click.echo(f"| using {cai_rules} code asset inventory rules")
+        click.echo(f"| using {len(cai_ids)} code asset inventory rules")
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
         config = (".semgrep.yml",)
@@ -380,7 +379,7 @@ def protected_main(
         )
 
     if sapp.is_configured:
-        sapp.report_results(results)
+        sapp.report_results(results, rule_ids, cai_ids)
 
     audit_mode = meta.event_name in audit_on
     if blocking_findings and audit_mode:
