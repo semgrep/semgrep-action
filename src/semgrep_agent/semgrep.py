@@ -125,7 +125,12 @@ def get_findings(
         )
 
         config_args = []
+        local_configs = (
+            set()
+        )  # Keep track of which config specifiers are local files/dirs
         for conf in config_specifier:
+            if Path(conf).exists():
+                local_configs.add(conf)
             config_args.extend(["--config", conf])
         rewrite_args = [] if rewrite_rule_ids else ["--no-rewrite-rule-ids"]
         metrics_args = ["--enable-metrics"] if enable_metrics else []
@@ -189,30 +194,48 @@ def get_findings(
                     err=True,
                 )
             else:
-                click.echo(
-                    "=== looking for pre-existing issues in "
-                    + unit_len(paths_to_check, "file"),
-                    err=True,
-                )
+                config_args = []
+                for conf in config_specifier:
+                    # If a local config existed with initial scan but doesn't exist
+                    # in baseline, treat as if no issues found in baseline with that config
+                    if conf in local_configs and not Path(conf).exists():
+                        click.echo(
+                            f"=== {conf} file not found in baseline, skipping scanning for baseline",
+                            err=True,
+                        )
+                        continue
+                    config_args.extend(["--config", conf])
 
-                args = [
-                    "--skip-unknown-extensions",
-                    "--json",
-                    "--disable-metrics",  # only count one semgrep run per semgrep-agent run
-                    *rewrite_args,
-                    *config_args,
-                ]
-                semgrep_results = invoke_semgrep(args, paths_to_check, timeout=timeout)[
-                    "results"
-                ]
-                findings.baseline.update_findings(
-                    Finding.from_semgrep_result(result, committed_datetime)
-                    for result in semgrep_results
-                )
-                click.echo(
-                    f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
-                    err=True,
-                )
+                if config_args == []:
+                    click.echo(
+                        "=== not looking at pre-exiting issues since after filtering out local files that don't exist in baseline, no configs left to run",
+                        err=True,
+                    )
+                else:
+                    click.echo(
+                        "=== looking for pre-existing issues in "
+                        + unit_len(paths_to_check, "file"),
+                        err=True,
+                    )
+
+                    args = [
+                        "--skip-unknown-extensions",
+                        "--json",
+                        "--disable-metrics",  # only count one semgrep run per semgrep-agent run
+                        *rewrite_args,
+                        *config_args,
+                    ]
+                    semgrep_results = invoke_semgrep(
+                        args, paths_to_check, timeout=timeout
+                    )["results"]
+                    findings.baseline.update_findings(
+                        Finding.from_semgrep_result(result, committed_datetime)
+                        for result in semgrep_results
+                    )
+                    click.echo(
+                        f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
+                        err=True,
+                    )
 
     if os.getenv("INPUT_GENERATESARIF"):
         # FIXME: This will crash when running on thousands of files due to command length limit
