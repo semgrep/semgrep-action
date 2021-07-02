@@ -56,7 +56,7 @@ def test_no_notification(capfd):
     results.findings.ignored = []
     results.findings.searched_paths = []
 
-    sapp.report_results(results)
+    sapp.report_results(results, [], [])
 
     # Check Stdout
     out, err = capfd.readouterr()
