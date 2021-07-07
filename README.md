@@ -135,14 +135,14 @@ An override's actions are applied when all `if.` conditions are true. If an over
 
 ### Available conditions
 
-| key              | example value         | `True` if the finding's…                       |
-| ---------------- | --------------------- | ---------------------------------------------- |
-| `if.path`        | `"tests/*"`           | path matches the given glob                    |
-| `if.rule_id`     | `"secrets.*aws*"`     | rule ID matches the given glob                 |
-| `if.ruleset_id`  | `"secrets"`           | rule is from a ruleset matching the given glob |
-| `if.finding_id`  | `"1fd8aac00"`         | finding's `syntactic_id` matches this value    |
-| `if.policy_slug` | `"security*"`         | rule is from a policy matching the given glob  |
-| `if.severity_in` | `["INFO", "WARNING"]` | rule's severity is in the given list           |
+| key              | example value         | `True` if the finding's…                        |
+| ---------------- | --------------------- | ----------------------------------------------- |
+| `if.path`        | `"tests/*"`           | path matches the given glob                     |
+| `if.rule_id`     | `"secrets.*aws*"`     | rule ID matches the given glob                  |
+| `if.ruleset_id`  | `"secrets"`           | rule is from a ruleset matching the given glob  |
+| `if.finding_id`  | `"1fd8aac00"`         | finding's `syntactic_id` starts with this value |
+| `if.policy_slug` | `"security*"`         | rule is from a policy matching the given glob   |
+| `if.severity_in` | `["INFO", "WARNING"]` | rule's severity is in the given list            |
 
 ### Available actions
 
