@@ -28,7 +28,6 @@ from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
-from semgrep_agent.utils import debug_file_descriptor
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import is_debug
 from semgrep_agent.utils import print_git_log
@@ -261,30 +260,29 @@ def invoke_semgrep(
     """
     output: Dict[str, List[Any]] = {"results": [], "errors": []}
 
-    with debug_file_descriptor() as err_write:
-        for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
-            with tempfile.NamedTemporaryFile("w") as output_json_file:
-                args = semgrep_args.copy()
-                if is_debug():
-                    args.extend(["--debug"])
-                args.extend(
-                    [
-                        "-o",
-                        output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-                    ]
-                )
-                for c in chunk:
-                    args.append(c)
+    for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
+        with tempfile.NamedTemporaryFile("w") as output_json_file:
+            args = semgrep_args.copy()
+            if is_debug():
+                args.extend(["--debug"])
+            args.extend(
+                [
+                    "-o",
+                    output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+                ]
+            )
+            for c in chunk:
+                args.append(c)
 
-                _ = semgrep_exec(*(args), _timeout=timeout, _err=err_write)
+            _ = semgrep_exec(*args, _timeout=timeout, _err=debug_echo)
 
-                with open(
-                    output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-                ) as f:
-                    parsed_output = json.load(f)
+            with open(
+                output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+            ) as f:
+                parsed_output = json.load(f)
 
-                output["results"].extend(parsed_output["results"])
-                output["errors"].extend(parsed_output["errors"])
+            output["results"].extend(parsed_output["results"])
+            output["errors"].extend(parsed_output["errors"])
 
     return output
 
@@ -378,7 +376,8 @@ def _fix_head_for_github(
         if not stashed_rev:
             stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
         click.echo(f"| not on head ref {head_ref}; checking that out now...", err=True)
-        git.checkout([head_ref])
+        git.checkout([head_ref], _timeout=300, _out=debug_echo, _err=debug_echo)
+        debug_echo(f"checked out {head_ref}")
 
     try:
         if base_ref is not None:
