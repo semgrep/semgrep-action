@@ -11,6 +11,8 @@ from typing import Optional
 
 from ruamel.yaml import YAML  # type: ignore
 
+from semgrep_agent.findings import Finding
+
 yaml = YAML(typ="rt")
 CONFIG_PATH = Path.cwd() / ".semgrepconfig.yml"
 
@@ -58,6 +60,15 @@ def if_policy_slug(config_value: str, result: Dict[str, Any]) -> bool:
 @register_condition("if.severity_in")
 def if_severity_in(config_value: List[str], result: Dict[str, Any]) -> bool:
     return result.get("extra", {}).get("severity", "") in config_value
+
+
+@register_condition("if.finding_id")
+def if_finding_id(config_value: str, result: Dict[str, Any]) -> bool:
+    return (
+        Finding.from_semgrep_result(result)
+        .syntactic_identifier_str()
+        .startswith(config_value)
+    )
 
 
 @register_action("mute")

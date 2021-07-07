@@ -50,6 +50,20 @@ steps:
     expected_out: if-rule-id-override.out
     expected_err: if-rule-id-override.err
 
+  - name: finding ID override
+    description: create a .semgrepconfig.yml overriding by finding ID
+    command:
+      - bash
+      - -c
+      - >-
+        echo "overrides: [{if.finding_id: 'a179ed11', mute: true}]" > .semgrepconfig.yml && git add .semgrepconfig.yml && git commit --amend --no-edit
+  - name: agent with finding id override
+    description: run agent on a single new file with finding id override
+    command: semgrep-agent --baseline-ref HEAD~1 --config p/r2c-ci
+    returncode: 0
+    expected_out: if-finding-id-override.out
+    expected_err: if-finding-id-override.err
+
   - name: severity override
     description: create a .semgrepconfig.yml overriding by severity
     command:
