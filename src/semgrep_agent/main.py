@@ -113,7 +113,13 @@ def url(string: str) -> str:
     help="The URL of the Semgrep app",
     hidden=True,
 )
-@click.option("--json", "json_output", hidden=True, is_flag=True)
+@click.option(
+    "--json",
+    "json_output",
+    envvar="SEMGREP_JSON_OUTPUT",
+    hidden=True,
+    is_flag=True
+)
 @click.option(
     "--gitlab-json",
     "gitlab_output",
