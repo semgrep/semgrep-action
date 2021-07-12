@@ -1,4 +1,4 @@
-FROM python:3.9.5-alpine
+FROM python:3.9.6-alpine
 
 WORKDIR /app
 COPY poetry.lock pyproject.toml ./
