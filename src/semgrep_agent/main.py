@@ -114,11 +114,7 @@ def url(string: str) -> str:
     hidden=True,
 )
 @click.option(
-    "--json",
-    "json_output",
-    envvar="SEMGREP_JSON_OUTPUT",
-    hidden=True,
-    is_flag=True
+    "--json", "json_output", envvar="SEMGREP_JSON_OUTPUT", hidden=True, is_flag=True
 )
 @click.option(
     "--gitlab-json",
