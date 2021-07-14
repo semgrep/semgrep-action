@@ -3,7 +3,7 @@
 .git/
 :include .gitignore
 
-# Common large directories
+# Common large paths
 node_modules/
 build/
 dist/
@@ -12,11 +12,13 @@ env/
 .env/
 venv/
 .venv/
+.tox/
 *.min.js
 
-# Common test directories
+# Common test paths
 test/
 tests/
+*_test.go
 
 # Semgrep rules folder
 .semgrep

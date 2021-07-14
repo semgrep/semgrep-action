@@ -53,7 +53,7 @@ def url(string: str) -> str:
 
     In its most basic form, semgrep-agent is used by calling:
 
-    $ semgrep-agent --config p/r2c-ci
+    $ semgrep-agent --config p/security-audit --config p/secrets
 
     which will scan a repository using the r2c-ci ruleset.
 
@@ -72,7 +72,7 @@ def url(string: str) -> str:
 )
 @click.option(
     "--baseline-ref",
-    envvar="BASELINE_REF",
+    envvar=["BASELINE_REF", "SEMGREP_BASELINE_REF"],
     type=str,
     default=None,
     show_default="detected from CI env",
@@ -80,13 +80,13 @@ def url(string: str) -> str:
 )
 @click.option(
     "--publish-token",
-    envvar="INPUT_PUBLISHTOKEN",
+    envvar=["INPUT_PUBLISHTOKEN", "SEMGREP_APP_TOKEN"],
     type=str,
     help="Your semgrep.dev API token (only needed if specifying a publish deployment)",
 )
 @click.option(
     "--publish-deployment",
-    envvar="INPUT_PUBLISHDEPLOYMENT",
+    envvar=["INPUT_PUBLISHDEPLOYMENT", "SEMGREP_APP_DEPLOYMENT_ID"],
     type=int,
     help="Your semgrep.dev deployment ID (requires --publish-token)",
 )
@@ -98,23 +98,36 @@ def url(string: str) -> str:
     help="Enable (default) or disable anonymized metrics used to improve Semgrep",
 )
 @click.option(
+    "--rewrite-rule-ids/--no-rewrite-rule-ids",
+    envvar="REWRITE_RULE_IDS",
+    default=True,
+    is_flag=True,
+    help="Specify whether semgrep should or should not rewrite rule-ids based on directory structure (MAY BE DEPRECATED ONCE ANY ARBITRARY SEMGREP CLI FLAG CAN BE PASSED IN)",
+    hidden=True,
+)
+@click.option(
     "--publish-url",
-    envvar="INPUT_PUBLISHURL",
+    envvar=["INPUT_PUBLISHURL", "SEMGREP_APP_URL"],
     type=url,
     default="https://semgrep.dev",
     help="The URL of the Semgrep app",
     hidden=True,
 )
-@click.option("--json", "json_output", hidden=True, is_flag=True)
+@click.option(
+    "--json", "json_output", envvar="SEMGREP_JSON_OUTPUT", hidden=True, is_flag=True
+)
 @click.option(
     "--gitlab-json",
     "gitlab_output",
     envvar="SEMGREP_GITLAB_JSON",
     is_flag=True,
-    hidden=True,
 )
 @click.option(
-    "--audit-on", envvar="INPUT_AUDITON", multiple=True, type=str, hidden=True
+    "--audit-on",
+    envvar=["INPUT_AUDITON", "SEMGREP_AUDIT_ON"],
+    multiple=True,
+    type=str,
+    hidden=True,
 )
 @click.option(
     "--timeout",
@@ -137,6 +150,7 @@ def main(
     publish_token: str,
     publish_deployment: int,
     enable_metrics: bool,
+    rewrite_rule_ids: bool,
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
@@ -189,6 +203,7 @@ def protected_main(
     publish_token: str,
     publish_deployment: int,
     enable_metrics: bool,
+    rewrite_rule_ids: bool,
     json_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
@@ -253,8 +268,8 @@ def protected_main(
             click.echo(f"| using semgrep rules from {resolved}", err=True)
         config = resolved_config
     elif sapp.is_configured:
-        local_config_path, num_rules, cai_rules = sapp.download_rules()
-        if num_rules == 0:
+        local_config_path, rule_ids, cai_ids = sapp.download_rules()
+        if len(rule_ids) + len(cai_ids) == 0:
             message = """
             === [ERROR] This policy will not run any rules
 
@@ -270,10 +285,9 @@ def protected_main(
             sys.exit(1)
         config = (str(local_config_path),)
         click.echo(
-            f"| using {num_rules} semgrep rules configured on the web UI", err=True
+            f"| using {len(rule_ids)} semgrep rules configured on the web UI", err=True
         )
-        if cai_rules:
-            click.echo(f"| using {cai_rules} code asset inventory rules")
+        click.echo(f"| using {len(cai_ids)} code asset inventory rules")
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
         config = (".semgrep.yml",)
@@ -332,7 +346,7 @@ def protected_main(
         meta.base_commit_ref,
         meta.head_ref,
         semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
-        sapp.is_configured,
+        rewrite_rule_ids and not sapp.is_configured,
         enable_metrics,
         timeout=(timeout if timeout > 0 else None),
     )
@@ -367,7 +381,7 @@ def protected_main(
         )
 
     if sapp.is_configured:
-        sapp.report_results(results)
+        sapp.report_results(results, rule_ids, cai_ids)
 
     audit_mode = meta.event_name in audit_on
     if blocking_findings and audit_mode:

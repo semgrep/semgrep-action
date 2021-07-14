@@ -1,6 +1,8 @@
+import asyncio
 import io
 import json
 import os
+import sys
 import tempfile
 import time
 from contextlib import contextmanager
@@ -27,6 +29,7 @@ from semgrep_agent.findings import FindingSets
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
+from semgrep_agent.utils import is_debug
 from semgrep_agent.utils import print_git_log
 
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
@@ -104,7 +107,7 @@ def get_findings(
     base_commit_ref: Optional[str],
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
-    uses_managed_policy: bool,
+    rewrite_rule_ids: bool,
     enable_metrics: bool,
     *,
     timeout: Optional[int],
@@ -116,22 +119,30 @@ def get_findings(
         targets = TargetFileManager(
             base_path=workdir,
             base_commit=base_ref,
-            paths=[workdir],
+            all_paths=[workdir],
             ignore_rules_file=semgrep_ignore,
         )
 
         config_args = []
+        local_configs = (
+            set()
+        )  # Keep track of which config specifiers are local files/dirs
         for conf in config_specifier:
+            if Path(conf).exists():
+                local_configs.add(conf)
             config_args.extend(["--config", conf])
-        rewrite_args = ["--no-rewrite-rule-ids"] if uses_managed_policy else []
+        rewrite_args = [] if rewrite_rule_ids else ["--no-rewrite-rule-ids"]
         metrics_args = ["--enable-metrics"] if enable_metrics else []
         debug_echo("=== seeing if there are any findings")
-        findings = FindingSets()
+        findings = FindingSets(searched_paths=set(targets.searched_paths))
 
         with targets.current_paths() as paths:
             click.echo(
                 "=== looking for current issues in " + unit_len(paths, "file"), err=True
             )
+
+            for path in paths:
+                debug_echo(f"searching {str(path)}")
 
             args = [
                 "--skip-unknown-extensions",
@@ -182,30 +193,48 @@ def get_findings(
                     err=True,
                 )
             else:
-                click.echo(
-                    "=== looking for pre-existing issues in "
-                    + unit_len(paths_to_check, "file"),
-                    err=True,
-                )
+                config_args = []
+                for conf in config_specifier:
+                    # If a local config existed with initial scan but doesn't exist
+                    # in baseline, treat as if no issues found in baseline with that config
+                    if conf in local_configs and not Path(conf).exists():
+                        click.echo(
+                            f"=== {conf} file not found in baseline, skipping scanning for baseline",
+                            err=True,
+                        )
+                        continue
+                    config_args.extend(["--config", conf])
 
-                args = [
-                    "--skip-unknown-extensions",
-                    "--json",
-                    "--disable-metrics",  # only count one semgrep run per semgrep-agent run
-                    *rewrite_args,
-                    *config_args,
-                ]
-                semgrep_results = invoke_semgrep(args, paths_to_check, timeout=timeout)[
-                    "results"
-                ]
-                findings.baseline.update_findings(
-                    Finding.from_semgrep_result(result, committed_datetime)
-                    for result in semgrep_results
-                )
-                click.echo(
-                    f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
-                    err=True,
-                )
+                if config_args == []:
+                    click.echo(
+                        "=== not looking at pre-exiting issues since after filtering out local files that don't exist in baseline, no configs left to run",
+                        err=True,
+                    )
+                else:
+                    click.echo(
+                        "=== looking for pre-existing issues in "
+                        + unit_len(paths_to_check, "file"),
+                        err=True,
+                    )
+
+                    args = [
+                        "--skip-unknown-extensions",
+                        "--json",
+                        "--disable-metrics",  # only count one semgrep run per semgrep-agent run
+                        *rewrite_args,
+                        *config_args,
+                    ]
+                    semgrep_results = invoke_semgrep(
+                        args, paths_to_check, timeout=timeout
+                    )["results"]
+                    findings.baseline.update_findings(
+                        Finding.from_semgrep_result(result, committed_datetime)
+                        for result in semgrep_results
+                    )
+                    click.echo(
+                        f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
+                        err=True,
+                    )
 
     if os.getenv("INPUT_GENERATESARIF"):
         # FIXME: This will crash when running on thousands of files due to command length limit
@@ -234,6 +263,8 @@ def invoke_semgrep(
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
             args = semgrep_args.copy()
+            if is_debug():
+                args.extend(["--debug"])
             args.extend(
                 [
                     "-o",
@@ -243,7 +274,8 @@ def invoke_semgrep(
             for c in chunk:
                 args.append(c)
 
-            _ = semgrep_exec(*(args), _timeout=timeout)
+            _ = semgrep_exec(*args, _timeout=timeout, _err=debug_echo)
+
             with open(
                 output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
             ) as f:
@@ -285,7 +317,7 @@ def scan(
     base_commit_ref: Optional[str],
     head_ref: Optional[str],
     semgrep_ignore: TextIO,
-    uses_managed_policy: bool,
+    rewrite_rule_ids: bool,
     enable_metrics: bool,
     *,
     timeout: Optional[int],
@@ -298,7 +330,7 @@ def scan(
             base_commit_ref,
             head_ref,
             semgrep_ignore,
-            uses_managed_policy,
+            rewrite_rule_ids,
             enable_metrics,
             timeout=timeout,
         )
@@ -344,7 +376,8 @@ def _fix_head_for_github(
         if not stashed_rev:
             stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
         click.echo(f"| not on head ref {head_ref}; checking that out now...", err=True)
-        git.checkout([head_ref])
+        git.checkout([head_ref], _timeout=300, _out=debug_echo, _err=debug_echo)
+        debug_echo(f"checked out {head_ref}")
 
     try:
         if base_ref is not None:

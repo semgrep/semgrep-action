@@ -1,10 +1,14 @@
 import json
 import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
+from threading import Thread
 from typing import cast
+from typing import IO
+from typing import Iterator
 from typing import List
 from typing import NoReturn
 from typing import Optional
@@ -22,9 +26,13 @@ if TYPE_CHECKING:
     from semgrep_agent.meta import GitMeta
 
 
+def is_debug() -> Optional[str]:
+    return os.getenv("SEMGREP_AGENT_DEBUG")
+
+
 def debug_echo(text: str) -> None:
     """Print debug messages with context-specific debug formatting."""
-    if os.getenv("SEMGREP_AGENT_DEBUG"):
+    if is_debug():
         prefix = "=== [DEBUG] "
     elif os.getenv("GITHUB_ACTIONS"):
         prefix = "::debug::"
