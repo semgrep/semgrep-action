@@ -115,6 +115,7 @@ class TargetFileManager:
                 "--diff-filter=ACDMRTUXB",
                 "--ignore-submodules",
                 self._base_commit,
+                _timeout=60,
             ).stdout.decode()
         )
 
@@ -249,7 +250,7 @@ class TargetFileManager:
 
         These can be staged, unstaged, or untracked.
         """
-        output = zsplit(git.status("--porcelain", "-z").stdout.decode())
+        output = zsplit(git.status("--porcelain", "-z", _timeout=60).stdout.decode())
         return bucketize(
             output,
             key=lambda line: line[0],
@@ -320,7 +321,7 @@ class TargetFileManager:
                     a.unlink()
                 except FileNotFoundError:
                     click.echo(f"| {a} was not found when trying to delete", err=True)
-            git.checkout(self._base_commit, "--", ".")
+            git.checkout(self._base_commit, "--", ".", _timeout=60)
             yield
         finally:
             # git checkout will fail if the checked-out index deletes all files in the repo
@@ -328,7 +329,7 @@ class TargetFileManager:
             # Note that we have no good way of detecting this issue without inspecting the checkout output
             # message, which means we are fragile with respect to git version here.
             try:
-                git.checkout(current_tree.strip(), "--", ".")
+                git.checkout(current_tree.strip(), "--", ".", _timeout=60)
             except sh.ErrorReturnCode as error:
                 output = error.stderr.decode()
                 if (
@@ -350,7 +351,7 @@ class TargetFileManager:
                 # in both the base and head. Only call if there are files to delete
                 to_remove = [r for r in self._status.removed if r.exists()]
                 if to_remove:
-                    git.rm("-f", *(str(r) for r in to_remove))
+                    git.rm("-f", *(str(r) for r in to_remove), _timeout=60)
 
     @contextmanager
     def baseline_paths(self) -> Iterator[List[Path]]:

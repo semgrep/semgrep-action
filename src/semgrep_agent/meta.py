@@ -189,8 +189,10 @@ class GithubMeta(GitMeta):
             debug_echo(
                 f"fetching {fetch_depth} commits to find branch-off point of pull request"
             )
-            git.fetch("origin", "--depth", fetch_depth, self.base_branch_tip)
-            git.fetch("origin", "--depth", fetch_depth, self.head_ref)
+            git.fetch(
+                "origin", "--depth", fetch_depth, self.base_branch_tip, _timeout=60
+            )
+            git.fetch("origin", "--depth", fetch_depth, self.head_ref, _timeout=60)
 
         try:  # check if both branches connect to the yet-unknown branch-off point now
             process = git("merge-base", self.base_branch_tip, self.head_ref)
@@ -309,7 +311,7 @@ class GitlabMeta(GitMeta):
         if not target_branch:
             return None
         head_sha = git("rev-parse", "HEAD").stdout.strip()
-        git.fetch(self._get_remote_url(), target_branch)
+        git.fetch(self._get_remote_url(), target_branch, _timeout=60)
         base_sha = (
             git("merge-base", "--all", head_sha, "FETCH_HEAD").stdout.decode().strip()
         )

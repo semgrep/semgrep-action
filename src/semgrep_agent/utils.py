@@ -78,7 +78,7 @@ def validate_publish_token(token: str) -> bool:
 
 
 def print_git_log(log_cmd: str) -> None:
-    log = git.log(["--oneline", "--graph", log_cmd]).stdout  # type:ignore
+    log = git.log(["--oneline", "--graph", log_cmd], _timeout=60).stdout  # type:ignore
     rr = cast(bytes, log).decode("utf-8").rstrip().split("\n")
     r = "\n|   ".join(rr)
     click.echo("|   " + r, err=True)

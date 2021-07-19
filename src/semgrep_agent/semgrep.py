@@ -376,7 +376,7 @@ def _fix_head_for_github(
         if not stashed_rev:
             stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
         click.echo(f"| not on head ref {head_ref}; checking that out now...", err=True)
-        git.checkout([head_ref], _timeout=300, _out=debug_echo, _err=debug_echo)
+        git.checkout([head_ref], _timeout=60, _out=debug_echo, _err=debug_echo)
         debug_echo(f"checked out {head_ref}")
 
     try:
@@ -396,4 +396,4 @@ def _fix_head_for_github(
     finally:
         if stashed_rev is not None:
             click.echo(f"| returning to original head revision {stashed_rev}", err=True)
-            git.checkout([stashed_rev])
+            git.checkout([stashed_rev], _timeout=60)
