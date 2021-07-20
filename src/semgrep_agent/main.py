@@ -402,13 +402,7 @@ def protected_main(
     exit_code = (
         NO_RESULT_EXIT_CODE
         if audit_mode
-        else (
-            ERROR_EXIT_CODE
-            if errors
-            else FINDING_EXIT_CODE
-            if blocking_findings
-            else NO_RESULT_EXIT_CODE
-        )
+        else (FINDING_EXIT_CODE if blocking_findings else NO_RESULT_EXIT_CODE)
     )
     click.echo(
         f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
