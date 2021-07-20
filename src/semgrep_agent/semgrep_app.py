@@ -229,7 +229,6 @@ class Sapp:
             json={
                 "exit_code": results.findings.exit_code,
                 "stats": results.stats,
-                "errors": results.findings.errors,
             },
             timeout=30,
         )

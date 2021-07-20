@@ -85,7 +85,7 @@ class Results:
     def stats(self) -> Dict[str, Any]:
         return {
             "findings": len(self.findings.new),
-            "errors": len(self.findings.errors),
+            "errors": self.findings.errors,
             "total_time": self.total_time,
         }
 
