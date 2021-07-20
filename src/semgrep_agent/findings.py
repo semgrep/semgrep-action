@@ -14,6 +14,7 @@ from typing import List
 from typing import Mapping
 from typing import NamedTuple
 from typing import Optional
+from typing import Sequence
 from typing import Set
 
 import attr
@@ -210,10 +211,13 @@ class FindingSet(Set[Finding]):
 
 @dataclass(frozen=True)
 class FindingSets:
+    # 2 if semgrep has errors, otherwise 1 if semgrep has findings, otherwise 0
+    max_exit_code: int = field()
     baseline: FindingSet = field(default_factory=FindingSet)
     current: FindingSet = field(default_factory=FindingSet)
     ignored: FindingSet = field(default_factory=FindingSet)
     searched_paths: Set[Path] = field(default_factory=set)
+    errors: Sequence[Mapping[str, Any]] = field(default_factory=list)
 
     @property
     def new(self) -> Set[Finding]:

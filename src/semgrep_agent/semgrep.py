@@ -13,9 +13,11 @@ from typing import Any
 from typing import Dict
 from typing import Iterator
 from typing import List
+from typing import Mapping
 from typing import Optional
 from typing import Sequence
 from typing import TextIO
+from typing import Tuple
 
 import click
 import sh
@@ -31,6 +33,7 @@ from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import is_debug
 from semgrep_agent.utils import print_git_log
+from semgrep_agent.utils import render_error
 
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
@@ -82,6 +85,7 @@ class Results:
     def stats(self) -> Dict[str, Any]:
         return {
             "findings": len(self.findings.new),
+            "errors": self.findings.errors,
             "total_time": self.total_time,
         }
 
@@ -134,7 +138,6 @@ def get_findings(
         rewrite_args = [] if rewrite_rule_ids else ["--no-rewrite-rule-ids"]
         metrics_args = ["--enable-metrics"] if enable_metrics else []
         debug_echo("=== seeing if there are any findings")
-        findings = FindingSets(searched_paths=set(targets.searched_paths))
 
         with targets.current_paths() as paths:
             click.echo(
@@ -154,9 +157,16 @@ def get_findings(
                 *rewrite_args,
                 *config_args,
             ]
-            semgrep_results = invoke_semgrep(
+            exit_code, semgrep_output = invoke_semgrep(
                 args, [str(p) for p in paths], timeout=timeout
-            )["results"]
+            )
+            findings = FindingSets(
+                exit_code,
+                searched_paths=set(targets.searched_paths),
+                errors=semgrep_output.get("errors", []),
+            )
+
+            semgrep_results = semgrep_output["results"]
 
             findings.current.update_findings(
                 Finding.from_semgrep_result(result, committed_datetime)
@@ -168,6 +178,14 @@ def get_findings(
                 for result in semgrep_results
                 if result["extra"].get("is_ignored")
             )
+            if findings.errors:
+                click.echo(
+                    f"| Semgrep exited with {unit_len(findings.errors, 'error')}:",
+                    err=True,
+                )
+                for e in findings.errors:
+                    for s in render_error(e):
+                        click.echo(f"|    {s}", err=True)
             click.echo(
                 f"| {unit_len(findings.current, 'current issue')} found", err=True
             )
@@ -224,9 +242,8 @@ def get_findings(
                         *rewrite_args,
                         *config_args,
                     ]
-                    semgrep_results = invoke_semgrep(
-                        args, paths_to_check, timeout=timeout
-                    )["results"]
+                    _, sr = invoke_semgrep(args, paths_to_check, timeout=timeout)
+                    semgrep_results = sr["results"]
                     findings.baseline.update_findings(
                         Finding.from_semgrep_result(result, committed_datetime)
                         for result in semgrep_results
@@ -252,13 +269,15 @@ def get_findings(
 
 def invoke_semgrep(
     semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
-) -> Dict[str, List[Any]]:
+) -> Tuple[int, Mapping[str, List[Any]]]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
 
     Returns json output of semgrep as dict object
     """
     output: Dict[str, List[Any]] = {"results": [], "errors": []}
+
+    max_exit_code = 0
 
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
@@ -274,7 +293,8 @@ def invoke_semgrep(
             for c in chunk:
                 args.append(c)
 
-            _ = semgrep_exec(*args, _timeout=timeout, _err=debug_echo)
+            exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
+            max_exit_code = max(max_exit_code, exit_code)
 
             with open(
                 output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
@@ -284,7 +304,7 @@ def invoke_semgrep(
             output["results"].extend(parsed_output["results"])
             output["errors"].extend(parsed_output["errors"])
 
-    return output
+    return max_exit_code, output
 
 
 class SemgrepError(Exception):

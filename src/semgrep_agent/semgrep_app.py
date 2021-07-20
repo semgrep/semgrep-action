@@ -182,8 +182,6 @@ class Sapp:
         if "pr-comment-autofix" in os.getenv("SEMGREP_AGENT_OPT_IN_FEATURES", ""):
             fields_to_omit.remove("fixed_lines")
 
-        response: Optional["requests.Response"] = None
-
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/findings",
             json={
@@ -228,7 +226,10 @@ class Sapp:
         # mark as complete
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/complete",
-            json={"exit_code": -1, "stats": results.stats},
+            json={
+                "exit_code": results.findings.max_exit_code,
+                "stats": results.stats,
+            },
             timeout=30,
         )
         debug_echo(f"=== POST .../complete responded: {response!r}")

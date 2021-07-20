@@ -6,12 +6,15 @@ from pathlib import Path
 from textwrap import dedent
 from textwrap import indent
 from threading import Thread
+from typing import Any
 from typing import cast
 from typing import IO
 from typing import Iterator
 from typing import List
+from typing import Mapping
 from typing import NoReturn
 from typing import Optional
+from typing import Sequence
 from typing import TYPE_CHECKING
 
 import click
@@ -50,6 +53,14 @@ def maybe_print_debug_info(meta: "GitMeta") -> None:
     debug_echo(json.dumps(ecoutils.get_profile(), indent=2, sort_keys=True))
     debug_echo("\n== meta info:")
     debug_echo(json.dumps(meta.to_dict(), indent=2, sort_keys=True))
+
+
+def render_error(error: Mapping[str, Any]) -> Sequence[str]:
+    spans = error.get("spans")
+    msg = error.get("long_msg", "")
+    if spans:
+        return [f"{s['file']}:{s['start']['line']} {msg}" for s in spans]
+    return [msg]
 
 
 def get_git_repo(path: Optional[Path] = None) -> Optional[gitpython.Repo]:  # type: ignore
