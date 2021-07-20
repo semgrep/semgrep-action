@@ -352,6 +352,7 @@ def protected_main(
     )
 
     new_findings = results.findings.new
+    errors = results.findings.errors
 
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
 
@@ -395,7 +396,7 @@ def protected_main(
             f"| to see your findings in the app, go to {publish_url}/manage/findings?repo={meta.repo_name}"
         )
 
-    exit_code = 1 if blocking_findings and not audit_mode else 0
+    exit_code = 0 if audit_mode else (2 if errors else 1 if blocking_findings else 0)
     click.echo(
         f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
         err=True,
