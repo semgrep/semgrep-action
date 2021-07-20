@@ -227,7 +227,7 @@ class Sapp:
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/complete",
             json={
-                "exit_code": results.findings.exit_code,
+                "exit_code": results.findings.max_exit_code,
                 "stats": results.stats,
             },
             timeout=30,

@@ -15,6 +15,9 @@ from git import InvalidGitRepositoryError
 
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
+from semgrep_agent.constants import ERROR_EXIT_CODE
+from semgrep_agent.constants import FINDING_EXIT_CODE
+from semgrep_agent.constants import NO_RESULT_EXIT_CODE
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GithubMeta
@@ -396,7 +399,17 @@ def protected_main(
             f"| to see your findings in the app, go to {publish_url}/manage/findings?repo={meta.repo_name}"
         )
 
-    exit_code = 0 if audit_mode else (2 if errors else 1 if blocking_findings else 0)
+    exit_code = (
+        NO_RESULT_EXIT_CODE
+        if audit_mode
+        else (
+            ERROR_EXIT_CODE
+            if errors
+            else FINDING_EXIT_CODE
+            if blocking_findings
+            else NO_RESULT_EXIT_CODE
+        )
+    )
     click.echo(
         f"=== exiting with {'failing' if exit_code == 1 else 'success'} status",
         err=True,

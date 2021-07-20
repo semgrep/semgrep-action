@@ -211,7 +211,8 @@ class FindingSet(Set[Finding]):
 
 @dataclass(frozen=True)
 class FindingSets:
-    exit_code: int = field()
+    # 2 if semgrep has errors, otherwise 1 if semgrep has findings, otherwise 0
+    max_exit_code: int = field()
     baseline: FindingSet = field(default_factory=FindingSet)
     current: FindingSet = field(default_factory=FindingSet)
     ignored: FindingSet = field(default_factory=FindingSet)
