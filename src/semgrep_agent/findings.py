@@ -47,8 +47,11 @@ class Finding:
     message = attr.ib(type=str, hash=None, eq=False)
     severity = attr.ib(type=int, hash=None, eq=False)
     syntactic_context = attr.ib(type=str, converter=normalize_syntactic_context)
-    fixed_lines = attr.ib(type=Optional[List[str]])
     index = attr.ib(type=int, default=0)
+    # baseline scans don't calculate autofixes
+    fixed_lines = attr.ib(
+        type=Optional[List[str]], default=None, hash=None, eq=False, kw_only=True
+    )
     end_line = attr.ib(
         type=Optional[int], default=None, hash=None, eq=False, kw_only=True
     )
@@ -58,7 +61,9 @@ class Finding:
     commit_date = attr.ib(
         type=Optional[datetime], default=None, hash=None, eq=False, kw_only=True
     )
-    metadata = attr.ib(type=Mapping[str, Any], hash=None, eq=False, kw_only=True)
+    metadata = attr.ib(
+        type=Mapping[str, Any], factory=dict, hash=None, eq=False, kw_only=True
+    )
 
     def is_blocking(self) -> bool:
         """
