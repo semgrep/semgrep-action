@@ -21,6 +21,7 @@ from glom import T
 from glom.core import TType
 from sh.contrib import git
 
+from semgrep_agent.constants import GIT_SH_TIMEOUT
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import exit_with_sh_error
@@ -190,9 +191,15 @@ class GithubMeta(GitMeta):
                 f"fetching {fetch_depth} commits to find branch-off point of pull request"
             )
             git.fetch(
-                "origin", "--depth", fetch_depth, self.base_branch_tip, _timeout=60
+                "origin",
+                "--depth",
+                fetch_depth,
+                self.base_branch_tip,
+                _timeout=GIT_SH_TIMEOUT,
             )
-            git.fetch("origin", "--depth", fetch_depth, self.head_ref, _timeout=60)
+            git.fetch(
+                "origin", "--depth", fetch_depth, self.head_ref, _timeout=GIT_SH_TIMEOUT
+            )
 
         try:  # check if both branches connect to the yet-unknown branch-off point now
             process = git("merge-base", self.base_branch_tip, self.head_ref)
@@ -311,7 +318,7 @@ class GitlabMeta(GitMeta):
         if not target_branch:
             return None
         head_sha = git("rev-parse", "HEAD").stdout.strip()
-        git.fetch(self._get_remote_url(), target_branch, _timeout=60)
+        git.fetch(self._get_remote_url(), target_branch, _timeout=GIT_SH_TIMEOUT)
         base_sha = (
             git("merge-base", "--all", head_sha, "FETCH_HEAD").stdout.decode().strip()
         )

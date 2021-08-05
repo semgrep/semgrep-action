@@ -17,6 +17,7 @@ from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.constants import ERROR_EXIT_CODE
 from semgrep_agent.constants import FINDING_EXIT_CODE
+from semgrep_agent.constants import GIT_SH_TIMEOUT
 from semgrep_agent.constants import NO_RESULT_EXIT_CODE
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
@@ -178,7 +179,7 @@ def main(
         _handle_error(error.stderr, error.exit_code, sapp, meta)
     except sh.TimeoutException as error:
         click.secho(
-            f"Semgrep took longer than {timeout} seconds to run; canceling this run",
+            f"Semgrep took longer than {timeout} seconds to run or a git command took longer than {GIT_SH_TIMEOUT} seconds; canceling this run",
             err=True,
             fg="red",
         )
