@@ -397,7 +397,7 @@ def protected_main(
 
     if sapp.is_configured:
         click.echo(
-            f"| to see your findings in the app, go to {publish_url}/manage/findings?repo={meta.repo_name}"
+            f"| to see your findings in the app, go to {publish_url}/manage/findings?repo={meta.repo_name}",
             err=True,
         )
 
