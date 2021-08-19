@@ -283,8 +283,7 @@ def invoke_semgrep(
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
             args = semgrep_args.copy()
-            if is_debug():
-                args.extend(["--debug"])
+            args.extend(["--debug"])
             args.extend(
                 [
                     "-o",
