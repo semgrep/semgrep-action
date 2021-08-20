@@ -259,7 +259,7 @@ def get_findings(
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths, sarif_path.open("w") as sarif_file:
-            args = ["--sarif", *rewrite_args, *config_args]
+            args = ["--quiet", "--sarif", *rewrite_args, *config_args]
             for path in paths:
                 args.extend(["--include", str(path)])
             semgrep_exec(*args, _out=sarif_file, _timeout=timeout)
