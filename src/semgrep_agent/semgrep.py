@@ -91,19 +91,15 @@ class Results:
         }
 
 
-def rewrite_sarif_file(sarif_path: Path) -> None:
+def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
     """Fix SARIF errors in semgrep output and pretty format the file."""
-
-    with sarif_path.open() as sarif_file:
-        sarif_results = json.load(sarif_file)
-
     rules_by_id = {
-        rule["id"]: rule for rule in sarif_results["runs"][0]["tool"]["driver"]["rules"]
+        rule["id"]: rule for rule in sarif_output["runs"][0]["tool"]["driver"]["rules"]
     }
-    sarif_results["runs"][0]["tool"]["driver"]["rules"] = list(rules_by_id.values())
+    sarif_output["runs"][0]["tool"]["driver"]["rules"] = list(rules_by_id.values())
 
     with sarif_path.open("w") as sarif_file:
-        json.dump(sarif_results, sarif_file, indent=2, sort_keys=True)
+        json.dump(sarif_output, sarif_file, indent=2, sort_keys=True)
 
 
 def get_findings(
@@ -258,12 +254,12 @@ def get_findings(
         # FIXME: This will crash when running on thousands of files due to command length limit
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
-        with targets.current_paths() as paths, sarif_path.open("w") as sarif_file:
-            args = ["--quiet", "--sarif", *rewrite_args, *config_args]
-            for path in paths:
-                args.extend(["--include", str(path)])
-            semgrep_exec(*args, _out=sarif_file, _timeout=timeout)
-        rewrite_sarif_file(sarif_path)
+        with targets.current_paths() as paths:
+            args = [*rewrite_args, *config_args]
+            _, sarif_output = invoke_semgrep_sarif(
+                args, [str(p) for p in paths], timeout=timeout
+            )
+        rewrite_sarif_file(sarif_output, sarif_path)
 
     return findings
 
@@ -303,6 +299,50 @@ def invoke_semgrep(
 
             output["results"].extend(parsed_output["results"])
             output["errors"].extend(parsed_output["errors"])
+
+    return max_exit_code, output
+
+
+def invoke_semgrep_sarif(
+    semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
+) -> Tuple[int, Dict[str, List[Any]]]:
+    """
+    Call semgrep passing in semgrep_args + targets as the arguments
+
+    Returns sarif output of semgrep as dict object
+    """
+    output: Dict[str, List[Any]] = {}
+
+    max_exit_code = 0
+
+    for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
+        with tempfile.NamedTemporaryFile("w") as output_json_file:
+            args = semgrep_args.copy()
+            args.extend(["--debug", "--sarif"])
+            args.extend(
+                [
+                    "-o",
+                    output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+                ]
+            )
+            for c in chunk:
+                args.append(c)
+
+            exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
+            max_exit_code = max(max_exit_code, exit_code)
+
+            with open(
+                output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+            ) as f:
+                parsed_output = json.load(f)
+
+            if len(output) == 0:
+                output = parsed_output
+            else:
+                output["runs"][0]["results"].extend(parsed_output["runs"][0]["results"])
+                output["runs"][0]["tool"]["driver"]["rules"].extend(
+                    parsed_output["runs"][0]["tool"]["driver"]["rules"]
+                )
 
     return max_exit_code, output
 
