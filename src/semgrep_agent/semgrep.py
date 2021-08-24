@@ -251,7 +251,6 @@ def get_findings(
                     )
 
     if os.getenv("INPUT_GENERATESARIF"):
-        # FIXME: This will crash when running on thousands of files due to command length limit
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths:
