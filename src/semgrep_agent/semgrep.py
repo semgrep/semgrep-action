@@ -187,8 +187,20 @@ def get_findings(
                 for e in findings.errors:
                     for s in render_error(e):
                         click.echo(f"|    {s}", err=True)
+            inventory_findings_len = 0
+            for finding in findings.current:
+                if "__r2c-internal-cai" in finding.check_id:
+                    inventory_findings_len += 1
             click.echo(
                 f"| {unit_len(findings.current, 'current issue')} found", err=True
+            )
+            click.echo(
+                f"| {unit_len(range(len(findings.current)-inventory_findings_len), 'current rule issue')}",
+                err=True,
+            )
+            click.echo(
+                f"| {unit_len(range(inventory_findings_len), 'current inventory issue')}",
+                err=True,
             )
             click.echo(
                 f"| {unit_len(findings.ignored, 'ignored issue')} found",
@@ -249,8 +261,20 @@ def get_findings(
                         Finding.from_semgrep_result(result, committed_datetime)
                         for result in semgrep_results
                     )
+                    inventory_findings_len = 0
+                    for finding in findings.baseline:
+                        if "__r2c-internal-cai" in finding.check_id:
+                            inventory_findings_len += 1
                     click.echo(
                         f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
+                        err=True,
+                    )
+                    click.echo(
+                        f"| {unit_len(range(len(findings.baseline)-inventory_findings_len), 'pre-existing rule issue')} found",
+                        err=True,
+                    )
+                    click.echo(
+                        f"| {unit_len(range(inventory_findings_len), 'pre-existing inventory issue')} found",
                         err=True,
                     )
 

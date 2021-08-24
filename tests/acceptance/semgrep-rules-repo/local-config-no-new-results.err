@@ -10,6 +10,8 @@
 | found 6 files in the paths to be scanned
 === looking for current issues in 6 files
 | No current issues found
+| No current rule issues found
+| No current inventory issues found
 | No ignored issues found
 === not looking at pre-existing issues since there are no current issues
 === exiting with success status
