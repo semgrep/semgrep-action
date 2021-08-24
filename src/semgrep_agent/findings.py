@@ -71,6 +71,12 @@ class Finding:
         """
         return "block" in self.metadata.get("dev.semgrep.actions", ["block"])
 
+    def is_cai_finding(self) -> bool:
+        """
+        Returns if this finding is an inventory finding
+        """
+        return "__r2c-internal-cai" in self.check_id
+
     def syntactic_identifier_int(self) -> int:
         # Use murmur3 hash to minimize collisions
         str_id = str((self.check_id, self.path, self.syntactic_context, self.index))

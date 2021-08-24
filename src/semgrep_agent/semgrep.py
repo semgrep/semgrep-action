@@ -189,7 +189,7 @@ def get_findings(
                         click.echo(f"|    {s}", err=True)
             inventory_findings_len = 0
             for finding in findings.current:
-                if "__r2c-internal-cai" in finding.check_id:
+                if finding.is_cai_finding:
                     inventory_findings_len += 1
             click.echo(
                 f"| {unit_len(findings.current, 'current issue')} found", err=True
@@ -263,7 +263,7 @@ def get_findings(
                     )
                     inventory_findings_len = 0
                     for finding in findings.baseline:
-                        if "__r2c-internal-cai" in finding.check_id:
+                        if finding.is_cai_finding:
                             inventory_findings_len += 1
                     click.echo(
                         f"| {unit_len(findings.baseline, 'pre-existing issue')} found",

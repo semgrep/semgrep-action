@@ -382,7 +382,7 @@ def protected_main(
     if non_blocking_findings:
         inventory_findings_len = 0
         for finding in non_blocking_findings:
-            if "__r2c-internal-cai" in finding.check_id:
+            if finding.is_cai_finding:
                 inventory_findings_len += 1
         click.echo(
             f"| {unit_len(non_blocking_findings, 'non-blocking finding')} hidden in output",
