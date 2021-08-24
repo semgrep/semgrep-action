@@ -9,8 +9,8 @@
 | skipping 1 file based on path ignore rules
 === looking for current issues in 1 file
 | 1 current issue found
-| 1 current rule issue found
-| No current inventory issues found
+| 1 current rule issue
+| No current inventory issues
 | No ignored issues found
 === not looking at pre-existing issues since all files with current issues are newly created
 === exiting with failing status
