@@ -10,8 +10,8 @@
 | found 6 files in the paths to be scanned
 === looking for current issues in 6 files
 | 2 current issues found
-| 2 current rule issues found
-| No current inventory issues found
+| 2 current rule issues
+| No current inventory issues
 | No ignored issues found
 === not looking at pre-existing issues since all files with current issues are newly created
 | audit mode is on for unknown, so the findings won't cause failure
