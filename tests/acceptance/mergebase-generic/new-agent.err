@@ -14,7 +14,6 @@
 | found 2 files in the paths to be scanned
 === looking for current issues in 2 files
 | 2 current issues found
-| Inventory scanned since Rule Reccomendations are enabled
 | No ignored issues found
 === not looking at pre-existing issues since all files with current issues are newly created
 === exiting with failing status

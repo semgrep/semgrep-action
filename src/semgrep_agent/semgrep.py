@@ -197,7 +197,7 @@ def get_findings(
             )
             if inventory_findings_len > 0:
                 click.echo(
-                    f"| Inventory scanned since Rule Reccomendations are enabled",
+                    f"| Inventory detected since Rule Reccomendations are enabled",
                     err=True,
                 )
             click.echo(
