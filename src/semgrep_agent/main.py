@@ -242,13 +242,13 @@ def protected_main(
             ),
             err=True,
         )
-        click.echo(get_aligned_command("policy", f"using {policy}"))
+        click.echo(get_aligned_command("policy", f"using {policy}"), err=True)
     else:
         click.echo(get_aligned_command("manage", f"not logged in"), err=True)
 
     for env_var in ALL_MANUAL_ENV_VARS.keys():
         if os.getenv(env_var):
-            click.echo(get_aligned_command(env_var, str(os.getenv(env_var))))
+            click.echo(get_aligned_command(env_var, str(os.getenv(env_var))), err=True)
 
     # Setup Config
     click.echo("=== setting up agent configuration", err=True)
@@ -291,7 +291,7 @@ def protected_main(
         click.echo(
             f"| using {len(rule_ids)} semgrep rules configured on the web UI", err=True
         )
-        click.echo(f"| using {len(cai_ids)} code asset inventory rules")
+        click.echo(f"| using {len(cai_ids)} code asset inventory rules", err=True)
     elif Path(".semgrep.yml").is_file():
         click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
         config = (".semgrep.yml",)
@@ -409,7 +409,8 @@ def protected_main(
 
     if sapp.is_configured:
         click.echo(
-            f"| to see your findings in the app, go to {publish_url}/manage/findings?repo={meta.repo_name}"
+            f"| to see your findings in the app, go to {publish_url}/manage/findings?repo={meta.repo_name}",
+            err=True,
         )
 
     exit_code = (
