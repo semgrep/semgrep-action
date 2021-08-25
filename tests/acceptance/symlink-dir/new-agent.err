@@ -11,6 +11,8 @@
 | found No files in the paths to be scanned
 === looking for current issues in No files
 | No current issues found
+| No current rule issues
+| No current inventory issues
 | No ignored issues found
 === not looking at pre-existing issues since there are no current issues
 === exiting with success status

@@ -380,8 +380,20 @@ def protected_main(
         finding for finding in new_findings if not finding.is_blocking()
     }
     if non_blocking_findings:
+        inventory_findings_len = 0
+        for finding in non_blocking_findings:
+            if finding.is_cai_finding:
+                inventory_findings_len += 1
         click.echo(
             f"| {unit_len(non_blocking_findings, 'non-blocking finding')} hidden in output",
+            err=True,
+        )
+        click.echo(
+            f"| {unit_len(range(len(non_blocking_findings)-inventory_findings_len), 'non-blocking rule finding')}",
+            err=True,
+        )
+        click.echo(
+            f"| {unit_len(range(inventory_findings_len), 'non-blocking inventory finding')}",
             err=True,
         )
 
