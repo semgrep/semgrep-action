@@ -390,7 +390,7 @@ def protected_main(
         )
         if inventory_findings_len > 0:
             click.echo(
-                f"| Rule recommendations are enabled",
+                f"| Detected technologies for rule recommendation engine",
                 err=True,
             )
 
