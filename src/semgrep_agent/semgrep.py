@@ -188,14 +188,7 @@ def get_findings(
                 if finding.is_cai_finding():
                     inventory_findings_len += 1
             click.echo(
-                f"| {unit_len(findings.current, 'current issue')} found", err=True
-            )
-            click.echo(
-                f"| {unit_len(range(len(findings.current)-inventory_findings_len), 'current rule issue')}",
-                err=True,
-            )
-            click.echo(
-                f"| {unit_len(range(inventory_findings_len), 'current inventory issue')}",
+                f"| {unit_len(range(len(findings.current)-inventory_findings_len), 'current issue')} found",
                 err=True,
             )
             click.echo(
@@ -262,15 +255,7 @@ def get_findings(
                         if finding.is_cai_finding():
                             inventory_findings_len += 1
                     click.echo(
-                        f"| {unit_len(findings.baseline, 'pre-existing issue')} found",
-                        err=True,
-                    )
-                    click.echo(
-                        f"| {unit_len(range(len(findings.baseline)-inventory_findings_len), 'pre-existing rule issue')} found",
-                        err=True,
-                    )
-                    click.echo(
-                        f"| {unit_len(range(inventory_findings_len), 'pre-existing inventory issue')} found",
+                        f"| {unit_len(range(len(findings.baseline)-inventory_findings_len), 'pre-existing issue')} found",
                         err=True,
                     )
 

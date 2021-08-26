@@ -385,17 +385,14 @@ def protected_main(
             if finding.is_cai_finding:
                 inventory_findings_len += 1
         click.echo(
-            f"| {unit_len(non_blocking_findings, 'non-blocking finding')} hidden in output",
+            f"| {unit_len(range(len(non_blocking_findings)-inventory_findings_len), 'non-blocking finding')} hidden in output",
             err=True,
         )
-        click.echo(
-            f"| {unit_len(range(len(non_blocking_findings)-inventory_findings_len), 'non-blocking rule finding')}",
-            err=True,
-        )
-        click.echo(
-            f"| {unit_len(range(inventory_findings_len), 'non-blocking inventory finding')}",
-            err=True,
-        )
+        if inventory_findings_len > 0:
+            click.echo(
+                f"| Detected technologies for rule recommendation engine",
+                err=True,
+            )
 
     if sapp.is_configured:
         sapp.report_results(results, rule_ids, cai_ids)
