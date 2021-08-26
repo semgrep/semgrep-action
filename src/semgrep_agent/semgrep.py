@@ -191,11 +191,6 @@ def get_findings(
                 f"| {unit_len(range(len(findings.current)-inventory_findings_len), 'current issue')} found",
                 err=True,
             )
-            if inventory_findings_len > 0:
-                click.echo(
-                    f"| Inventory detected since Rule Reccomendations are enabled",
-                    err=True,
-                )
             click.echo(
                 f"| {unit_len(findings.ignored, 'ignored issue')} found",
                 err=True,

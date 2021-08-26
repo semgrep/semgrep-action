@@ -390,7 +390,7 @@ def protected_main(
         )
         if inventory_findings_len > 0:
             click.echo(
-                f"| Inventory scanned since Rule Reccomendations are enabled",
+                f"| Rule recommendations are enabled",
                 err=True,
             )
 
