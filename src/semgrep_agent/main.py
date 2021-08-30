@@ -75,6 +75,13 @@ def url(string: str) -> str:
     multiple=True,
 )
 @click.option(
+    "--infer-baseline-ref/--no-infer-baseline-ref",
+    envvar="SEMGREP_INFER_BASELINE_REF",
+    type=bool,
+    default=True,
+    help="detect baseline ref from CI env (unless --baseline-ref is not set)",
+)
+@click.option(
     "--baseline-ref",
     envvar=["BASELINE_REF", "SEMGREP_BASELINE_REF"],
     type=str,
@@ -149,6 +156,7 @@ def url(string: str) -> str:
 )
 def main(
     config: str,
+    infer_baseline_ref: bool,
     baseline_ref: str,
     publish_url: str,
     publish_token: str,
@@ -169,7 +177,9 @@ def main(
         err=True,
     )
     # Get metadata from environment variables
-    meta = generate_meta_from_environment(baseline_ref, scan_environment)
+    meta = generate_meta_from_environment(
+        baseline_ref, infer_baseline_ref, scan_environment
+    )
     sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
     # Everything below here is covered by fail-open feature
     try:
@@ -202,6 +212,7 @@ def main(
 
 def protected_main(
     config: Sequence[str],
+    infer_baseline_ref: bool,
     baseline_ref: str,
     publish_url: str,
     publish_token: str,
@@ -221,7 +232,7 @@ def protected_main(
     click.echo(
         get_aligned_command(
             "environment",
-            f"running in environment {meta.environment}, triggering event is '{meta.event_name}'",
+            f"running {meta.scan_mode} scan in environment {meta.environment}, triggering event is '{meta.event_name}'",
         ),
         err=True,
     )

@@ -6,13 +6,10 @@ from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
 from typing import Any
-from typing import cast
 from typing import Dict
+from typing import Literal
 from typing import Optional
-from typing import Type
-from typing import Union
 
-import click
 import git as gitpython
 import sh
 from boltons.cacheutils import cachedproperty
@@ -25,13 +22,13 @@ from semgrep_agent.constants import GIT_SH_TIMEOUT
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import exit_with_sh_error
-from semgrep_agent.utils import get_aligned_command
 
 
 @dataclass
 class GitMeta:
     """Gather metadata only from local filesystem."""
 
+    infer_baseline_ref: bool
     cli_baseline_ref: Optional[str] = None
     environment: str = field(default="git", init=False)
 
@@ -40,6 +37,10 @@ class GitMeta:
         if self.pr_id:
             return "pull_request"
         return "unknown"
+
+    @cachedproperty
+    def scan_mode(self) -> Literal["full", "diff"]:
+        return "full" if self.base_commit_ref is None else "diff"
 
     @cachedproperty
     def repo(self) -> gitpython.Repo:  # type: ignore
@@ -225,7 +226,11 @@ class GithubMeta(GitMeta):
     def base_commit_ref(self) -> Optional[str]:
         if self.cli_baseline_ref:
             return self.cli_baseline_ref
-        if self.is_pull_request_event and self.head_ref is not None:
+        if (
+            self.infer_baseline_ref
+            and self.is_pull_request_event
+            and self.head_ref is not None
+        ):
             # The pull request "base" that GitHub sends us is not necessarily the merge base,
             # so we need to get the merge-base from Git
             return self._find_branchoff_point()
@@ -361,26 +366,20 @@ class GitlabMeta(GitMeta):
 
 
 def generate_meta_from_environment(
-    baseline_ref: Optional[str], scan_environment: Optional[str]
+    baseline_ref: Optional[str],
+    infer_baseline_ref: bool,
+    scan_environment: Optional[str],
 ) -> GitMeta:
     # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables
     if os.getenv("GITHUB_ACTIONS") == "true":
-        return GithubMeta(baseline_ref)
+        return GithubMeta(infer_baseline_ref, baseline_ref)
 
     # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
     elif os.getenv("GITLAB_CI") == "true":
-        return GitlabMeta(baseline_ref)
+        return GitlabMeta(infer_baseline_ref, baseline_ref)
 
     else:  # nosem
-        if not baseline_ref:
-            click.echo(
-                get_aligned_command(
-                    "scan type",
-                    "full scan (set --baseline-ref to scan changed files only)",
-                ),
-                err=True,
-            )
         if scan_environment == "local":
-            return LocalScanMeta(baseline_ref)
+            return LocalScanMeta(infer_baseline_ref, baseline_ref)
 
-        return GitMeta(baseline_ref)
+        return GitMeta(infer_baseline_ref, baseline_ref)
