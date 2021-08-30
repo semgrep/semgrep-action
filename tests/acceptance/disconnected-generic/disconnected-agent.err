@@ -1,6 +1,5 @@
 | versions          - semgrep x.y.z on Python x.y.z
-| scan type         - full scan (set --baseline-ref to scan changed files only)
-| environment       - running in environment git, triggering event is 'unknown'
+| environment       - running full scan in environment git, triggering event is 'unknown'
 | manage            - not logged in
 === setting up agent configuration
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
