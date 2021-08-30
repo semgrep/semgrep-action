@@ -303,7 +303,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "types-pyyaml"
-version = "5.4.1"
+version = "5.4.8"
 description = "Typing stubs for PyYAML"
 category = "dev"
 optional = false
@@ -345,7 +345,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "b948ecffde144bd535f457cc23506c6aa8d70fdfec2d9a6ecfc5ce9bac177f07"
+content-hash = "4d250a5547541309da975cfb64bf98b7414d21378d1f905e0eb1dfc8fe466ea3"
 
 [metadata.files]
 atomicwrites = [
@@ -486,7 +486,8 @@ toml = [
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
 ]
 types-pyyaml = [
-    {file = "types_PyYAML-5.4.1-py2.py3-none-any.whl", hash = "sha256:88c0c5bcb2656a7da25f0ed5a7cfa557edb8191a7f7a71b3aaabd799792c5321"},
+    {file = "types-PyYAML-5.4.8.tar.gz", hash = "sha256:f00ad122a78a7d41b0ad4e3fa481751c2b9bc3f34b8f71ea35232211057dd50f"},
+    {file = "types_PyYAML-5.4.8-py3-none-any.whl", hash = "sha256:e084cfc878c8c8b1d4e89011ae5d65ea962fc5745c3d08b931df2aaaa665de96"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
