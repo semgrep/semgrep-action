@@ -31,17 +31,17 @@ resulting in its job showing a ✅ or ❌.
 
 Find a relevant template for your CI provider through these links:
 
-- [**GitHub Actions**](https://semgrep.dev/docs/semgrep-ci/#github-actions)
-- [**GitLab CI/CD**](https://semgrep.dev/docs/semgrep-ci/#gitlab-cicd)
-- [**Other CI providers**](https://semgrep.dev/docs/semgrep-ci/#other-ci-providers) (Buildkite, CircleCI, Jenkins, and more)
+- [**GitHub Actions**](https://semgrep.dev/docs/semgrep-ci/overview/#github-actions)
+- [**GitLab CI/CD**](https://semgrep.dev/docs/semgrep-ci/overview/#gitlab-cicd)
+- [**Other CI providers**](https://semgrep.dev/docs/semgrep-ci/overview/#other-ci-providers) (Buildkite, CircleCI, Jenkins, and more)
 
 Read through the comments in the template to adjust when and what Semgrep CI scans, selecting pull and merge requests, merges to branches, or both.
 
-Once Semgrep CI is running, [explore the Semgrep Registry](https://semgrep.dev/explore) to find and add more project-specific rules.
+Once Semgrep CI is running, [explore the Semgrep Registry](https://semgrep.dev/r) to find and add more project-specific rules.
 
 ## Configuration
 
-See [Advanced Configuration documentation](https://semgrep.dev/docs/semgrep-ci/#advanced-configuration) for further customizations, such as scanning with custom rules, ignoring files, and tuning performance.
+See [Advanced Configuration documentation](https://semgrep.dev/docs/semgrep-ci/overview/#advanced-configuration) for further customizations, such as scanning with custom rules, ignoring files, and tuning performance.
 
 ## Metrics
 
