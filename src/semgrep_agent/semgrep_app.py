@@ -21,7 +21,7 @@ from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.utils import debug_echo
-from semgrep_agent.utils import validate_publish_token
+from semgrep_agent.utils import validate_token_length
 from semgrep_agent.yaml import yaml
 
 # 4, 8, 16 seconds
@@ -45,22 +45,43 @@ class Scan:
 class Sapp:
     url: str
     token: str
-    deployment_id: int
+    deployment_id: int = -1
+    deployment_name: str = ""
     scan: Scan = Scan()
     is_configured: bool = False
     session: requests.Session = field(init=False)
 
     def __post_init__(self) -> None:
-        if self.token and self.deployment_id:
+        if self.token:
             self.is_configured = True
-        if self.is_configured and not validate_publish_token(self.token):
+
+            self.session = requests.Session()
+            self.session.mount("https://", RETRYING_ADAPTER)
+            self.session.headers["Authorization"] = f"Bearer {self.token}"
+
+            if validate_token_length(self.token):
+                self.get_deployment_from_token(self.token)
+            else:
+                raise ActionFailure(
+                    f"Received invalid publish token. Length is too short."
+                )
+
+    def get_deployment_from_token(self, token: str) -> None:
+        response = self.session.get(
+            f"{self.url}/api/agent/deployment",
+            json={},
+            timeout=30,
+        )
+        try:
+            response.raise_for_status()
+        except requests.RequestException:
             raise ActionFailure(
-                f"Received invalid publish token, token length {len(self.token)}. "
-                f"Please check your publish token."
+                f"API server at {self.url} returned this error: {response.text}\n"
+                "Failed to get deployment"
             )
-        self.session = requests.Session()
-        self.session.mount("https://", RETRYING_ADAPTER)
-        self.session.headers["Authorization"] = f"Bearer {self.token}"
+        data = response.json()
+        self.deployment_id = data.get("deployment").get("id")
+        self.deployment_name = data.get("deployment").get("name")
 
     def fail_open_exit_code(self, meta: GitMeta, exit_code: int) -> int:
         response = self.session.get(
