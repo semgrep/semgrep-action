@@ -47,15 +47,15 @@ def url(string: str) -> str:
 
 @click.command(
     help=f"""
-    Scans a repository for findings using Semgrep with rules from semgrep.dev.
-
-    For usage, see https://semgrep.dev/docs/semgrep-ci.
+    Scans a repository for findings using Semgrep rules configured here or on semgrep.dev.
 
     In its most basic form, semgrep-agent is used by calling:
 
     $ semgrep-agent --config p/security-audit --config p/secrets
 
-    which will scan a repository using the r2c-ci ruleset.
+    which will scan a repository using the security-audit and secrets rulesets.
+
+    For more usage and how to configure rules on semgrep.dev, see https://semgrep.dev/docs/semgrep-ci.
 
     In addition to the options below, the following environment variables can be used to configure the data sent by
     semgrep-agent to semgrep.dev:
@@ -67,7 +67,7 @@ def url(string: str) -> str:
     "--config",
     envvar=["INPUT_CONFIG", "SEMGREP_RULES"],
     type=str,
-    help="Define a rule, ruleset, or snippet used to scan this repository. You can pass in multiple `--config`s",
+    help="Define a rule, ruleset, or snippet used to scan this repository (only needed if NOT using semgrep app). You can pass in multiple `--config`s.",
     multiple=True,
 )
 @click.option(
@@ -75,14 +75,20 @@ def url(string: str) -> str:
     envvar=["BASELINE_REF", "SEMGREP_BASELINE_REF"],
     type=str,
     default=None,
-    show_default="detected from CI env",
-    help="Only show findings introduced since this Git ref",
+    help="Only show findings introduced since this Git ref. If not specified, will be detected from CI environment.",
 )
 @click.option(
     "--publish-token",
     envvar=["INPUT_PUBLISHTOKEN", "SEMGREP_APP_TOKEN"],
     type=str,
-    help="Your semgrep.dev API token (only needed if specifying a publish deployment)",
+    help="Your secret semgrep.dev API token (only needed if using semgrep app)",
+)
+@click.option(
+    "--publish-deployment",
+    envvar=["INPUT_PUBLISHDEPLOYMENT", "SEMGREP_APP_DEPLOYMENT_ID"],
+    type=int,
+    help="DEPRECATED: your semgrep.dev deployment ID. Now, --publish-token is sufficient. You can remove this from your CI config.",
+    hidden=True,
 )
 @click.option(
     "--enable-metrics/--disable-metrics",
@@ -142,6 +148,7 @@ def main(
     baseline_ref: str,
     publish_url: str,
     publish_token: str,
+    publish_deployment: int,
     enable_metrics: bool,
     rewrite_rule_ids: bool,
     json_output: bool,
@@ -158,6 +165,11 @@ def main(
         err=True,
     )
     # Get metadata from environment variables
+    if publish_deployment:
+        click.secho(
+            "DEPRECATED flag --publish-deployment is no longer used and can be removed from your CI config",
+            fg="yellow",
+        )
     meta = generate_meta_from_environment(baseline_ref, scan_environment)
     sapp = Sapp(url=publish_url, token=publish_token)
     # Everything below here is covered by fail-open feature
@@ -194,6 +206,7 @@ def protected_main(
     baseline_ref: str,
     publish_url: str,
     publish_token: str,
+    publish_deployment: int,
     enable_metrics: bool,
     rewrite_rule_ids: bool,
     json_output: bool,
@@ -226,7 +239,7 @@ def protected_main(
         to_server = "" if publish_url == "https://semgrep.dev" else f" to {publish_url}"
         click.echo(
             get_aligned_command(
-                "manage", f"logged in{to_server} as deployment #{sapp.deployment_id}"
+                "manage", f"logged in{to_server} as {sapp.deployment_name}"
             ),
             err=True,
         )
@@ -292,10 +305,8 @@ def protected_main(
         message = """
             == [ERROR] you didn't configure what rules semgrep should scan for.
 
-            Please set a config in the CI configuration according to
-            https://semgrep.dev/docs/semgrep-ci/#selecting-rules or use your
-            CI provider's secret management to set SEMGREP_APP_TOKEN to an
-            API token from Semgrep App.
+            Please set a config in the CI configuration or connect to Semgrep App
+            according to https://semgrep.dev/docs/semgrep-ci/configuration-reference/
         """
         message = dedent(message).strip()
         click.echo(message, err=True)
