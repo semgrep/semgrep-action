@@ -303,10 +303,11 @@ def protected_main(
         config = (".semgrep/",)
     else:
         message = """
-            == [ERROR] you didn't configure what rules semgrep should scan for.
+            == [ERROR] you didn't configure what rules semgrep should scan with.
 
-            Please set a config in the CI configuration or connect to Semgrep App
-            according to https://semgrep.dev/docs/semgrep-ci/configuration-reference/
+            Please either set a config or pass in a token to connect to Semgrep App.
+            Detailed explanation and examples are at
+            https://semgrep.dev/docs/semgrep-ci/configuration-reference/.
         """
         message = dedent(message).strip()
         click.echo(message, err=True)
