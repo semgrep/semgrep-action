@@ -239,7 +239,8 @@ def protected_main(
         to_server = "" if publish_url == "https://semgrep.dev" else f" to {publish_url}"
         click.echo(
             get_aligned_command(
-                "manage", f"logged in{to_server} as {sapp.deployment_name}"
+                "manage",
+                f"authenticated{to_server} as the organization '{sapp.deployment_name}'",
             ),
             err=True,
         )

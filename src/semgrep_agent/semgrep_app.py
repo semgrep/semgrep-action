@@ -45,8 +45,8 @@ class Scan:
 class Sapp:
     url: str
     token: str
-    deployment_id: int = -1
-    deployment_name: str = ""
+    deployment_id: Optional[int] = None
+    deployment_name: Optional[str] = None
     scan: Scan = Scan()
     is_configured: bool = False
     session: requests.Session = field(init=False)
