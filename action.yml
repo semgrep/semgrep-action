@@ -11,9 +11,6 @@ inputs:
   publishToken:
     description: |
       Access token to post results to the semgrep app.
-  publishDeployment:
-    description: |
-      Deployment ID on semgrep app.
   generateSarif:
     description: |
       Set to 1 if you want a semgrep.sarif file to be written with all semgrep findings.

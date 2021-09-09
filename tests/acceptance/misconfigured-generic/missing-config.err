@@ -3,7 +3,8 @@
 | environment       - running in environment git, triggering event is 'unknown'
 | manage            - not logged in
 === setting up agent configuration
-== [ERROR] you didn't configure what rules semgrep should scan for.
+== [ERROR] you didn't configure what rules semgrep should scan with.
 
-Please set a config in the CI configuration according to
-https://semgrep.dev/docs/semgrep-ci/#selecting-rules
+Please either set a config or pass in a token to connect to Semgrep App.
+Detailed explanation and examples are at
+https://semgrep.dev/docs/semgrep-ci/configuration-reference/.

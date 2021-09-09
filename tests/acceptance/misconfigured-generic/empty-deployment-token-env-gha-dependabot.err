@@ -2,10 +2,8 @@
 | environment       - running in environment github-actions, triggering event is 'unknown'
 | manage            - not logged in
 === setting up agent configuration
-== [ERROR] you didn't set a token for authentication to semgrep.dev.
+== [ERROR] you didn't configure what rules semgrep should scan with.
 
-You tried logging in as deployment ID #0, but the deployment's API token is set to '' (an empty string).
-Dependabot cannot access your usual repository secrets. Please go to https://github.com/[unknown]/settings/secrets/dependabot and ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job as a Dependabot secret.
-
-You can find more details about authentication at
-https://semgrep.dev/docs/semgrep-ci/#connecting-to-semgrep-app
+Please either set a config or pass in a token to connect to Semgrep App.
+Detailed explanation and examples are at
+https://semgrep.dev/docs/semgrep-ci/configuration-reference/.

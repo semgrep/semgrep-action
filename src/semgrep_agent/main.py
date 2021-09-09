@@ -51,15 +51,15 @@ def url(string: str) -> str:
 
 @click.command(
     help=f"""
-    Scans a repository for findings using Semgrep with rules from semgrep.dev.
-
-    For usage, see https://semgrep.dev/docs/semgrep-ci.
+    Scans a repository for findings using Semgrep rules configured here or on semgrep.dev.
 
     In its most basic form, semgrep-agent is used by calling:
 
     $ semgrep-agent --config p/security-audit --config p/secrets
 
-    which will scan a repository using the r2c-ci ruleset.
+    which will scan a repository using the security-audit and secrets rulesets.
+
+    For more usage and how to configure rules on semgrep.dev, see https://semgrep.dev/docs/semgrep-ci.
 
     In addition to the options below, the following environment variables can be used to configure the data sent by
     semgrep-agent to semgrep.dev:
@@ -71,7 +71,7 @@ def url(string: str) -> str:
     "--config",
     envvar=["INPUT_CONFIG", "SEMGREP_RULES"],
     type=str,
-    help="Define a rule, ruleset, or snippet used to scan this repository. You can pass in multiple `--config`s",
+    help="Define a rule, ruleset, or snippet used to scan this repository (only needed if NOT using semgrep app). You can pass in multiple `--config`s.",
     multiple=True,
 )
 @click.option(
@@ -79,20 +79,20 @@ def url(string: str) -> str:
     envvar=["BASELINE_REF", "SEMGREP_BASELINE_REF"],
     type=str,
     default=None,
-    show_default="detected from CI env",
-    help="Only show findings introduced since this Git ref",
+    help="Only show findings introduced since this Git ref. If not specified, will be detected from CI environment.",
 )
 @click.option(
     "--publish-token",
     envvar=["INPUT_PUBLISHTOKEN", "SEMGREP_APP_TOKEN"],
     type=str,
-    help="Your semgrep.dev API token (only needed if specifying a publish deployment)",
+    help="Your secret semgrep.dev API token (only needed if using Semgrep App)",
 )
 @click.option(
     "--publish-deployment",
     envvar=["INPUT_PUBLISHDEPLOYMENT", "SEMGREP_APP_DEPLOYMENT_ID"],
     type=int,
-    help="Your semgrep.dev deployment ID (requires --publish-token)",
+    help="DEPRECATED: your semgrep.dev deployment ID. Now, --publish-token is sufficient. You can remove this from your CI config.",
+    hidden=True,
 )
 @click.option(
     "--enable-metrics/--disable-metrics",
@@ -169,8 +169,13 @@ def main(
         err=True,
     )
     # Get metadata from environment variables
+    if publish_deployment:
+        click.secho(
+            "DEPRECATED flag --publish-deployment is no longer used and can be removed from your CI config",
+            fg="yellow",
+        )
     meta = generate_meta_from_environment(baseline_ref, scan_environment)
-    sapp = Sapp(url=publish_url, token=publish_token, deployment_id=publish_deployment)
+    sapp = Sapp(url=publish_url, token=publish_token)
     # Everything below here is covered by fail-open feature
     try:
         protected_main(**locals())
@@ -238,7 +243,8 @@ def protected_main(
         to_server = "" if publish_url == "https://semgrep.dev" else f" to {publish_url}"
         click.echo(
             get_aligned_command(
-                "manage", f"logged in{to_server} as deployment #{sapp.deployment_id}"
+                "manage",
+                f"authenticated{to_server} as the organization '{sapp.deployment_name}'",
             ),
             err=True,
         )
@@ -300,44 +306,13 @@ def protected_main(
             "| using semgrep rules from the committed .semgrep/ directory", err=True
         )
         config = (".semgrep/",)
-    elif publish_deployment is not None and not publish_token:
-        token_state = (
-            # can't check without hardcoding the environment variable name
-            # https://github.com/pallets/click/issues/1790
-            "set to '' (an empty string)"
-            if os.getenv("INPUT_PUBLISHTOKEN") == ""
-            else "unset"
-        )
-
-        advice_line = "If you're using a CI secret management feature to set it, please ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job."
-        if meta.environment == "github-actions":
-            meta = cast(GithubMeta, meta)
-
-            advice_line = f"Please go to {meta.repo_url}/settings/secrets/actions and ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job as a GitHub Actions secret."
-            if meta.ci_actor in {
-                "dependabot[bot]",
-                "dependabot-preview[bot]",
-            }:
-                advice_line = f"Dependabot cannot access your usual repository secrets. Please go to {meta.repo_url}/settings/secrets/dependabot and ensure that your token secret (commonly named SEMGREP_APP_TOKEN) is available to this CI job as a Dependabot secret."
-
-        message = f"""
-            == [ERROR] you didn't set a token for authentication to semgrep.dev.
-
-            You tried logging in as deployment ID #{publish_deployment}, but the deployment's API token is {token_state}.
-            {advice_line}
-
-            You can find more details about authentication at
-            https://semgrep.dev/docs/semgrep-ci/#connecting-to-semgrep-app
-        """
-        message = dedent(message).strip()
-        click.echo(message, err=True)
-        sys.exit(1)
     else:
         message = """
-            == [ERROR] you didn't configure what rules semgrep should scan for.
+            == [ERROR] you didn't configure what rules semgrep should scan with.
 
-            Please set a config in the CI configuration according to
-            https://semgrep.dev/docs/semgrep-ci/#selecting-rules
+            Please either set a config or pass in a token to connect to Semgrep App.
+            Detailed explanation and examples are at
+            https://semgrep.dev/docs/semgrep-ci/configuration-reference/.
         """
         message = dedent(message).strip()
         click.echo(message, err=True)

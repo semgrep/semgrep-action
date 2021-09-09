@@ -10,10 +10,7 @@ inputs:
       Rules and patterns to search for with semgrep.
   publishToken:
     description: |
-      Access token to post results to the semgrep app.
-  publishDeployment:
-    description: |
-      Deployment ID on semgrep app.
+      Access token to authenticate to the semgrep app.
   generateSarif:
     description: |
       Set to 1 if you want a semgrep.sarif file to be written with all semgrep findings.

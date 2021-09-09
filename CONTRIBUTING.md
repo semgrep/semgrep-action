@@ -41,7 +41,7 @@ Run diff-aware scans in a git repo with clean state with
 python -m semgrep_agent --config p/r2c --baseline-ref HEAD~1
 ```
 
-Connect to semgrep-app with the `--publish-deployment` & `--publish-token` flags.
+Connect to semgrep-app with the `--publish-token` flag.
 
 ## Tests
 
