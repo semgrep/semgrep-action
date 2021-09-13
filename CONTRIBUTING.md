@@ -69,6 +69,10 @@ them!
 ## Release
 
 Let CI pass on GitHub Actions before releasing.
+
+If this release depends on a recent change to semgrep-app, ensure that all production
+servers, including on-prem ones for our enterprise customers, have the latest changes.
+
 After you merge your PR, check out develop and pull to get your latest changes.
 The following command will change all action runs to use your current `HEAD`:
 
