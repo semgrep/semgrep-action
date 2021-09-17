@@ -48,6 +48,7 @@ class Sapp:
     token: str
     org_id: Optional[int] = None
     org_name: Optional[str] = None
+    deployment_name: Optional[str] = None  # legacy
     rules_str: Optional[str] = None
     policy: Optional[Dict[str, Any]] = None
     meta: Optional[GitMeta] = None
@@ -88,6 +89,7 @@ class Sapp:
         data = response.json()
         self.org_id = data.get("org").get("id")
         self.org_name = data.get("org").get("name")
+        self.deployment_name = self.org_name  # legacy
         self.policy = data.get("policy")
         self.rules_str = data.get("rules_str")
 
@@ -132,7 +134,7 @@ class Sapp:
         self.meta = meta
         return (self.policy or {}).get("name", "no policy")
 
-    def report_failure(self, stderr: str) -> int:
+    def report_failure(self, stderr: str, exit_code: int) -> int:
         # TODO give this a nice domain like collector.semgrep.dev/v1/failure etc
         url = "https://11hnyozw6a.execute-api.us-west-2.amazonaws.com/prod/v1/upload"
         debug_echo(f"=== reporting failure to semgrep app at {url}")
@@ -153,7 +155,7 @@ class Sapp:
         except requests.RequestException:
             raise ActionFailure(f"API server returned this error: {response.text}")
 
-        return 0
+        return exit_code  # should this be returned here or just return 0?
 
     def report_results(
         self, results: Results, rule_ids: List[str], cai_ids: List[str]
