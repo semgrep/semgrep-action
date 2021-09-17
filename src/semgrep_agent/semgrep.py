@@ -322,6 +322,8 @@ def invoke_semgrep_sarif(
     output: Dict[str, List[Any]] = {}
 
     max_exit_code = 0
+    useless = 1
+    useless = useless - 1
 
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
