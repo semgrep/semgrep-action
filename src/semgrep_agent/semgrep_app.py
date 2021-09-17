@@ -100,15 +100,15 @@ class Sapp:
         ).hexdigest()
         return {"signature": hmac_signature, "payload": payload}
 
-    def validate_rules(self) -> str:
-        """Get a YAML string with the configured semgrep rules in it."""
+    def parsed_rules(self) -> Tuple[Any, str]:
+        """Get a YAML with the configured semgrep rules in it."""
         if self.rules_str is None:
             raise ActionFailure("No rules returned by server for this scan.")
         parsed = yaml.load(self.rules_str)
         if not parsed["rules"]:
             raise ActionFailure("No rules returned by server for this scan.")
         else:
-            return self.rules_str
+            return parsed, self.rules_str
 
     def fail_open_exit_code(self, meta: GitMeta, exit_code: int) -> int:
         policy = self.policy or {}
@@ -121,9 +121,8 @@ class Sapp:
         # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
         rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
         rules_path = Path(rules_file.name)  # nosem
-        rules = self.validate_rules()
-        parsed = yaml.load(rules)
-        rules_path.write_text(rules)
+        parsed, rules_str = self.parsed_rules()
+        rules_path.write_text(rules_str)
         rule_ids = [
             r["id"] for r in parsed["rules"] if "r2c-internal-cai" not in r["id"]
         ]
