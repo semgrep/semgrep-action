@@ -95,7 +95,6 @@ def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
     """Fix SARIF errors in semgrep output and pretty format the file."""
     # If no files are scanned by invoke_semgrep_sarif then sarif_output is {}. Just write empty sarif for now
     if not sarif_output:
-        click.echo("No files scanned so writing empty sarif output file", err=True)
         with sarif_path.open("w") as sarif_file:
             json.dump(sarif_output, sarif_file, indent=2)
         return
