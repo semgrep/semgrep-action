@@ -29,7 +29,7 @@ DATE_STR = re.compile(r"^Date:   (.*)$", re.MULTILINE)
 ENV_VERSIONS = re.compile(
     r"^(\| versions\s+?- semgrep ).+?( on Python ).+?$", re.MULTILINE
 )
-GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.+?\n", re.MULTILINE)
+GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.*?\n", re.MULTILINE)
 
 PIPE_OUTPUT: Mapping[str, Callable[[subprocess.CompletedProcess], str]] = {
     "expected_out": lambda r: cast(str, r.stdout),
