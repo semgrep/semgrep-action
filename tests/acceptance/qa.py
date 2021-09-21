@@ -1,3 +1,4 @@
+import difflib
 import os
 import pty
 import re
@@ -6,6 +7,7 @@ import sys
 import tempfile
 from functools import reduce
 from pathlib import Path
+from pprint import pprint
 from typing import Any
 from typing import Callable
 from typing import cast
@@ -75,7 +77,11 @@ def match_expected(output: str, expected: str) -> bool:
     output = clean_output(output)
 
     if output.strip() != expected.strip():
-        print(output == expected)
+        d = difflib.Differ()
+        o = output.splitlines(keepends=True)
+        e = expected.splitlines(keepends=True)
+        result = list(d.compare(o, e))
+        pprint(result)
         print("==== EXPECTED ====")
         print(expected)
         print("==== ACTUAL ====")
