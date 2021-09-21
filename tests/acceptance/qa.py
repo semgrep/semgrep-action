@@ -67,16 +67,17 @@ def clean_output(output: str) -> str:
     return output
 
 
-def match_expected(output: str, expected: str) -> bool:
+def match_expected(output_old: str, expected: str) -> bool:
     """Checks that OUTPUT matches EXPECTED
 
     Checks that OUTPUT and EXPECTED are exact
     matches ignoring trailing whitespace
 
     """
-    output = clean_output(output)
+    output = clean_output(output_old)
 
     if output.strip() != expected.strip():
+        print(output_old)
         d = difflib.Differ()
         o = output.splitlines(keepends=True)
         e = expected.splitlines(keepends=True)
