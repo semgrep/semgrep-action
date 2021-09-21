@@ -75,6 +75,7 @@ def match_expected(output: str, expected: str) -> bool:
     output = clean_output(output)
 
     if output.strip() != expected.strip():
+        print(output == expected)
         print("==== EXPECTED ====")
         print(expected)
         print("==== ACTUAL ====")
