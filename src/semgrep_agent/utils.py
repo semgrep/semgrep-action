@@ -38,7 +38,7 @@ def debug_echo(text: str) -> None:
     if is_debug():
         prefix = "=== [DEBUG] "
     elif os.getenv("GITHUB_ACTIONS"):
-        prefix = "::debug::"
+        prefix = "THIS SHOULD BE DEBUG"
     else:
         return
     text = "\n".join(prefix + line for line in text.splitlines())
