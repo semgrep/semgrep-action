@@ -198,7 +198,7 @@ def get_findings(
                 err=True,
             )
             click.echo(
-                f"| {unit_len(findings.ignored, 'ignored issue')} found",
+                f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment",
                 err=True,
             )
 
