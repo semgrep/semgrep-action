@@ -11,6 +11,6 @@
 | found No files in the paths to be scanned
 === looking for current issues in No files
 | No current issues found
-| No ignored issues found
+| No issues muted with nosemgrep comment
 === not looking at pre-existing issues since there are no current issues
 === exiting with success status

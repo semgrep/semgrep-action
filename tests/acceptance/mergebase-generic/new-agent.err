@@ -14,6 +14,6 @@
 | found 2 files in the paths to be scanned
 === looking for current issues in 2 files
 | 2 current issues found
-| No ignored issues found
+| No issues muted with nosemgrep comment
 === not looking at pre-existing issues since all files with current issues are newly created
 === exiting with failing status
