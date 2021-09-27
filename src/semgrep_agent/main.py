@@ -334,7 +334,6 @@ def protected_main(
     errors = results.findings.errors
 
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
-
     if json_output:
         # Output all new findings as json
         json_contents = [f.to_dict(omit=set()) for f in new_findings]
@@ -357,7 +356,7 @@ def protected_main(
     if non_blocking_findings:
         inventory_findings_len = 0
         for finding in non_blocking_findings:
-            if finding.is_cai_finding:
+            if finding.is_cai_finding():
                 inventory_findings_len += 1
         click.echo(
             f"| {unit_len(range(len(non_blocking_findings)-inventory_findings_len), 'non-blocking finding')} hidden in output",

@@ -10,7 +10,7 @@
 | found 6 files in the paths to be scanned
 === looking for current issues in 6 files
 | 2 current issues found
-| No ignored issues found
+| No issues muted with nosemgrep comment
 === not looking at pre-existing issues since all files with current issues are newly created
 | audit mode is on for unknown, so the findings won't cause failure
 === exiting with success status
