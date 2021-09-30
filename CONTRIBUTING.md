@@ -8,6 +8,12 @@ Install the correct version of poetry:
 pip3 install poetry==1.0.10
 ```
 
+Install semgrep
+
+```
+pip3 install semgrep
+```
+
 Install dependencies with poetry
 
 ```
