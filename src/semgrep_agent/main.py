@@ -172,6 +172,7 @@ def main(
     if publish_deployment:
         click.secho(
             "DEPRECATED flag --publish-deployment is no longer used and can be removed from your CI config",
+            err=True,
             fg="yellow",
         )
     meta = generate_meta_from_environment(baseline_ref, scan_environment)
