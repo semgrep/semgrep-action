@@ -22,7 +22,7 @@ PyYAML = "^5.4.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
-jsonschema = "^3.2.0"
+jsonschema = "^4.0.1"
 types-PyYAML = "^5.4.10"
 
 [tool.poetry.scripts]
