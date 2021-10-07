@@ -133,6 +133,24 @@ class Finding:
         d["is_blocking"] = self.is_blocking()
         return d
 
+    def to_github(self) -> str:
+        return "::{severity} file={file},line={start},endLine={end},title={title}::{message}".format(
+            severity=self._to_github_severity(),
+            title=f"semgrep rule:{str(self.check_id)}",
+            file=str(self.path),
+            start=str(self.line),
+            end=str(self.end_line),
+            message=str(self.message),
+        )
+
+    def _to_github_severity(self) -> str:
+        conversion_table: Dict[int, str] = {
+            0: "notice",
+            1: "warning",
+            2: "error",
+        }
+        return conversion_table.get(self.severity, "notice")
+
     def to_gitlab(self) -> Dict[str, Any]:
         return {
             "id": str(uuid.uuid5(uuid.NAMESPACE_URL, str(self.path))),

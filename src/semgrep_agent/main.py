@@ -121,6 +121,14 @@ def url(string: str) -> str:
     "--json", "json_output", envvar="SEMGREP_JSON_OUTPUT", hidden=True, is_flag=True
 )
 @click.option(
+    "--github/--no-github",
+    "github_output",
+    help="Additionally output findings in github annotation format",
+    envvar="SEMGREP_GITHUB_OUTPUT",
+    default=os.getenv("GITHUB_ACTIONS") == "true",
+    is_flag=True,
+)
+@click.option(
     "--gitlab-json",
     "gitlab_output",
     envvar="SEMGREP_GITLAB_JSON",
@@ -156,6 +164,7 @@ def main(
     enable_metrics: bool,
     rewrite_rule_ids: bool,
     json_output: bool,
+    github_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
     timeout: int,
@@ -215,6 +224,7 @@ def protected_main(
     enable_metrics: bool,
     rewrite_rule_ids: bool,
     json_output: bool,
+    github_output: bool,
     gitlab_output: bool,
     audit_on: Sequence[str],
     timeout: int,
@@ -334,6 +344,12 @@ def protected_main(
     new_findings = results.findings.new
     errors = results.findings.errors
 
+    # Additional github annotation output
+    if github_output:
+        click.echo("=== github annotation output", err=True)
+        click.echo("\n".join([f.to_github() for f in new_findings]))
+
+    click.echo("=== findings", err=True)
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
     if json_output:
         # Output all new findings as json
