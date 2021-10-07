@@ -345,7 +345,6 @@ def protected_main(
     errors = results.findings.errors
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
 
-    click.echo("=== findings", err=True)
     if json_output:
         # Output all new findings as json
         json_contents = [f.to_dict(omit=set()) for f in new_findings]
@@ -359,13 +358,13 @@ def protected_main(
         }
         click.echo(json.dumps(gitlab_contents))
     else:
-        # Print out blocking findings
-        formatter.dump(blocking_findings)
-
         # Additional github annotation output
         if github_output:
             click.echo("=== github annotation output", err=True)
             click.echo("\n".join([f.to_github() for f in new_findings]))
+
+        # Print out blocking findings
+        formatter.dump(blocking_findings)
 
     non_blocking_findings = {
         finding for finding in new_findings if not finding.is_blocking()

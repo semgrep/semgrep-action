@@ -140,7 +140,7 @@ class Finding:
             file=str(self.path),
             start=str(self.line),
             end=str(self.end_line),
-            message=str(self.message),
+            message=str(self.message).replace("\n", " "),
         )
 
     def _to_github_severity(self) -> str:

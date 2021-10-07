@@ -1,11 +1,5 @@
-::notice file=python/django/security/audit/xss/template-translate-as-no-escape.html,line=8,endLine=9,title=semgrep rule:python.django.security.audit.xss.template-translate-as-no-escape::Translated strings will not be escaped when rendered in a template.
-This leads to a vulnerability where translators could include malicious script tags in their translations.
-Consider using `force_escape` to explicitly escape a transalted text.
-
-::notice file=python/django/security/audit/xss/template-translate-as-no-escape.html,line=2,endLine=4,title=semgrep rule:python.django.security.audit.xss.template-translate-as-no-escape::Translated strings will not be escaped when rendered in a template.
-This leads to a vulnerability where translators could include malicious script tags in their translations.
-Consider using `force_escape` to explicitly escape a transalted text.
-
+::notice file=python/django/security/audit/xss/template-translate-as-no-escape.html,line=8,endLine=9,title=semgrep rule:python.django.security.audit.xss.template-translate-as-no-escape::Translated strings will not be escaped when rendered in a template. This leads to a vulnerability where translators could include malicious script tags in their translations. Consider using `force_escape` to explicitly escape a transalted text.
+::notice file=python/django/security/audit/xss/template-translate-as-no-escape.html,line=2,endLine=4,title=semgrep rule:python.django.security.audit.xss.template-translate-as-no-escape::Translated strings will not be escaped when rendered in a template. This leads to a vulnerability where translators could include malicious script tags in their translations. Consider using `force_escape` to explicitly escape a transalted text.
 python.django.security.audit.xss.template-translate-as-no-escape
      > python/django/security/audit/xss/template-translate-as-no-escape.html:2
      ╷
