@@ -44,13 +44,21 @@ steps:
     expected_out: local-config-some-new-results-gitlab-json.out
     returncode: 1
   - name: local-config-some-new-results-github-env-json
-    description: baseline ref should be used in github actions context
+    description: baseline ref should be used in github actions context and produce json
     command:
       - bash
       - -c
       - "GITHUB_ACTIONS=true semgrep-agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --json"
     expected_err: local-config-some-new-results-github-env-json.err
     expected_out: local-config-some-new-results-github-env-json.out
+  - name: local-config-some-new-results-github-annotated
+    description: baseline ref should be used in github actions context
+    command:
+      - bash
+      - -c
+      - "GITHUB_ACTIONS=true semgrep-agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1"
+    expected_err: local-config-some-new-results-github-env.err
+    expected_out: local-config-some-new-results-github-env.out
     returncode: 1
   - name: local-config-some-new-results-gitlab-env-json
     description: baseline ref should be used in gitlab ci context
