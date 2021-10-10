@@ -202,7 +202,7 @@ def get_findings(
                 err=True,
             )
 
-    if not findings.current:
+    if not findings.current and not findings.ignored:
         click.echo(
             "=== not looking at pre-existing issues since there are no current issues",
             err=True,
