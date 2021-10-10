@@ -234,7 +234,9 @@ class Sapp:
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/ignores",
             json={
-                "findings": [finding.to_dict() for finding in results.findings.new_ignored],
+                "findings": [
+                    finding.to_dict() for finding in results.findings.new_ignored
+                ],
             },
             timeout=30,
         )

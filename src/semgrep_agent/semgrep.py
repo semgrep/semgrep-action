@@ -209,7 +209,9 @@ def get_findings(
         )
     else:
         with targets.baseline_paths() as paths:
-            paths_with_findings = {finding.path for finding in findings.current.union(findings.ignored)}
+            paths_with_findings = {
+                finding.path for finding in findings.current.union(findings.ignored)
+            }
             paths_to_check = list(
                 set(str(path) for path in paths) & paths_with_findings
             )
