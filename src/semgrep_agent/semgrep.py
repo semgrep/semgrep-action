@@ -209,7 +209,7 @@ def get_findings(
         )
     else:
         with targets.baseline_paths() as paths:
-            paths_with_findings = {finding.path for finding in findings.current}
+            paths_with_findings = {finding.path for finding in findings.current.union(findings.ignored)}
             paths_to_check = list(
                 set(str(path) for path in paths) & paths_with_findings
             )
@@ -245,6 +245,7 @@ def get_findings(
 
                     args = [
                         "--skip-unknown-extensions",
+                        "--disable-nosem",
                         "--json",
                         "--disable-metrics",  # only count one semgrep run per semgrep-agent run
                         *rewrite_args,
