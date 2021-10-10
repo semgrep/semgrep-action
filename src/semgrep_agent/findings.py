@@ -233,3 +233,7 @@ class FindingSets:
     @property
     def new(self) -> Set[Finding]:
         return self.current - self.baseline
+
+    @property
+    def new_ignored(self) -> Set[Finding]:
+        return self.ignored - self.baseline
