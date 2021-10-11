@@ -20,5 +20,6 @@ test/
 tests/
 *_test.go
 
-# Semgrep rules folder
-.semgrep
+# Default Semgrep rule locations
+.semgrep/
+.semgrep.yml
