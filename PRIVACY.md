@@ -40,6 +40,7 @@ Scan data provide information on the environment and performance of Semgrep. The
 - Author identity (e.g. committer email)
 - Commit metadata (e.g. commit hash)
 - Scan metadata, including type of scan and scan parameters (e.g. paths scanned)
+- Timing metrics (e.g. time taken to scan per-rule and per-path)
 - Review and review-requester identifying data (e.g. pull-request ID, branch, merge base, request author)
 - Semgrep environment (e.g. version, interpreter, timestamp)
 
