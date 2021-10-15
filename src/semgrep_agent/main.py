@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 from typing import cast
@@ -127,6 +128,12 @@ def url(string: str) -> str:
     is_flag=True,
 )
 @click.option(
+    "--gitlab-secrets-json",
+    "gitlab_secrets_output",
+    envvar="SEMGREP_GITLAB_SECRETS_JSON",
+    is_flag=True,
+)
+@click.option(
     "--audit-on",
     envvar=["INPUT_AUDITON", "SEMGREP_AUDIT_ON"],
     multiple=True,
@@ -157,6 +164,7 @@ def main(
     rewrite_rule_ids: bool,
     json_output: bool,
     gitlab_output: bool,
+    gitlab_secrets_output: bool,
     audit_on: Sequence[str],
     timeout: int,
     scan_environment: str,
@@ -216,6 +224,7 @@ def protected_main(
     rewrite_rule_ids: bool,
     json_output: bool,
     gitlab_output: bool,
+    gitlab_secrets_output: bool,
     audit_on: Sequence[str],
     timeout: int,
     scan_environment: str,
@@ -320,6 +329,7 @@ def protected_main(
         sys.exit(1)
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
+    start_time = datetime.now()
     results = semgrep.scan(
         config,
         committed_datetime,
@@ -330,6 +340,7 @@ def protected_main(
         enable_metrics,
         timeout=(timeout if timeout > 0 else None),
     )
+    end_time = datetime.now()
 
     new_findings = results.findings.new
     errors = results.findings.errors
@@ -345,6 +356,27 @@ def protected_main(
             "$schema": "https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/sast-report-format.json",
             "version": "2.0",
             "vulnerabilities": [f.to_gitlab() for f in new_findings],
+        }
+        click.echo(json.dumps(gitlab_contents))
+    elif gitlab_secrets_output:
+        # output all new findings in Gitlab secret detection format
+        gitlab_contents = {
+            "version": "14.0.0",
+            "vulnerabilities": [f.to_gitlab_secrets() for f in new_findings],
+            "remediations": [],
+            "scan": {
+                "scanner": {
+                    "id": "semgrep_agent",
+                    "name": "Semgrep Agent",
+                    "url": "https://github.com/returntocorp/semgrep-action",
+                    "vendor": {"name": "returntocorp"},
+                    "version": "v1",
+                },
+                "type": "secret_detection",
+                "start_time": start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_time": end_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "status": "success" if not errors else "failed",
+            },
         }
         click.echo(json.dumps(gitlab_contents))
     else:
