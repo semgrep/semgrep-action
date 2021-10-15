@@ -359,6 +359,7 @@ def protected_main(
         }
         click.echo(json.dumps(gitlab_contents))
     elif gitlab_secrets_output:
+        # schema https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/secret-detection-report-format.json
         # output all new findings in Gitlab secret detection format
         gitlab_contents = {
             "version": "14.0.0",
