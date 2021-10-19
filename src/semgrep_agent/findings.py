@@ -5,6 +5,7 @@ import uuid
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+from hashlib import sha224
 from pathlib import Path
 from typing import Any
 from typing import Collection
@@ -164,9 +165,19 @@ class Finding:
         }
 
     def to_gitlab_secrets(self) -> Dict[str, Any]:
-        id = str(uuid.uuid5(uuid.NAMESPACE_URL, str(self.path)))
+
+        # IDs need to be persistent across findings for the same issue
+        # This needs to account for the same rule matching in different
+        # files and the same file
+        # file_path + check_id + matching lines = uniqueness
+        id_hash = sha224(
+            self.path.encode("utf-8")
+            + self.check_id.encode("utf-8")
+            + str(self.line).encode("utf-8")
+            + str(self.end_line).encode("utf-8")
+        ).hexdigest()
         return {
-            "id": id,
+            "id": id_hash,
             "category": "secret_detection",
             # CVE is a required field from Gitlab schema.
             # It also is part of the determination for uniqueness
@@ -174,7 +185,10 @@ class Finding:
             # /regardless/ of differentiated ID. See issue 262648.
             # https://gitlab.com/gitlab-org/gitlab/-/issues/262648
             # Gitlab themselves mock a CVE for findings that lack a CVE
-            "cve": id,
+            # Format: path:hash-of-file-path:check_id
+            "cve": "{}:{}:{}".format(
+                self.path, sha224(self.path.encode("utf-8")).hexdigest(), self.check_id
+            ),
             "message": self.message,
             "severity": self._to_gitlab_severity(),
             "confidence": "High",
