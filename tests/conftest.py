@@ -43,6 +43,9 @@ def _run_semgrep_agent(
     if output_format == "gitlab":
         options.append("--gitlab-json")
 
+    if output_format == "gitlab-secrets":
+        options.append("--gitlab-secrets-json")
+
     process = subprocess.run(
         ["python", "-m", "semgrep_agent", *options],
         encoding="utf-8",
@@ -53,7 +56,7 @@ def _run_semgrep_agent(
 
     print(f"--- stderr start ---\n{process.stderr}\n--- stderr end ---")
 
-    if output_format in {"json", "gitlab"} and not stderr:
+    if output_format in {"json", "gitlab", "gitlab-secrets"} and not stderr:
         output = _clean_output_json(process.stdout)
     else:
         output = process.stdout
