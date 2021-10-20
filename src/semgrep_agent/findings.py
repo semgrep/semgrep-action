@@ -170,7 +170,7 @@ class Finding:
             # IDs need to be persistent across findings for the same issue
             # This needs to account for the same rule matching in different
             # files and the same file -- even on the same syntactic value
-            "id": str(self.syntactic_identifier_int()),
+            "id": self.syntactic_identifier_str(),
             "category": "secret_detection",
             # CVE is a required field from Gitlab schema.
             # It also is part of the determination for uniqueness
