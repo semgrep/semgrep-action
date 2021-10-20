@@ -166,18 +166,11 @@ class Finding:
 
     def to_gitlab_secrets(self) -> Dict[str, Any]:
 
-        # IDs need to be persistent across findings for the same issue
-        # This needs to account for the same rule matching in different
-        # files and the same file
-        # file_path + check_id + matching lines = uniqueness
-        id_hash = sha224(
-            self.path.encode("utf-8")
-            + self.check_id.encode("utf-8")
-            + str(self.line).encode("utf-8")
-            + str(self.end_line).encode("utf-8")
-        ).hexdigest()
         return {
-            "id": id_hash,
+            # IDs need to be persistent across findings for the same issue
+            # This needs to account for the same rule matching in different
+            # files and the same file -- even on the same syntactic value
+            "id": str(self.syntactic_identifier_int()),
             "category": "secret_detection",
             # CVE is a required field from Gitlab schema.
             # It also is part of the determination for uniqueness
