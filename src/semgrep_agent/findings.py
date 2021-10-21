@@ -5,6 +5,7 @@ import uuid
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
+from hashlib import sha224
 from pathlib import Path
 from typing import Any
 from typing import Collection
@@ -156,6 +157,52 @@ class Finding:
             "identifiers": [
                 {
                     "type": "semgrep_type",
+                    "name": f"Semgrep - {self.check_id}",
+                    "value": self.check_id,
+                    "url": self._construct_semgrep_rule_url(),
+                }
+            ],
+        }
+
+    def to_gitlab_secrets(self) -> Dict[str, Any]:
+
+        return {
+            # IDs need to be persistent across findings for the same issue
+            # This needs to account for the same rule matching in different
+            # files and the same file -- even on the same syntactic value
+            "id": self.syntactic_identifier_str(),
+            "category": "secret_detection",
+            # CVE is a required field from Gitlab schema.
+            # It also is part of the determination for uniqueness
+            # of a detected secret
+            # /regardless/ of differentiated ID. See issue 262648.
+            # https://gitlab.com/gitlab-org/gitlab/-/issues/262648
+            # Gitlab themselves mock a CVE for findings that lack a CVE
+            # Format: path:hash-of-file-path:check_id
+            "cve": "{}:{}:{}".format(
+                self.path, sha224(self.path.encode("utf-8")).hexdigest(), self.check_id
+            ),
+            "message": self.message,
+            "severity": self._to_gitlab_severity(),
+            "confidence": "High",
+            "raw_source_code_extract": self.syntactic_context,
+            "scanner": self._gitlab_tool_info(),
+            "location": {
+                "file": str(self.path),
+                "commit": {
+                    "date": self.commit_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    if self.commit_date
+                    else "1970-01-01T00:00:00Z",
+                    # Even native Gitleaks based Gitlab secret detection
+                    # provides a dummy value for now on relevant hash.
+                    "sha": "0000000",
+                },
+                "start_line": self.line,
+                "end_line": self.end_line,
+            },
+            "identifiers": [
+                {
+                    "type": "semgrep_type_secrets",
                     "name": f"Semgrep - {self.check_id}",
                     "value": self.check_id,
                     "url": self._construct_semgrep_rule_url(),
