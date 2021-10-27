@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://r2c.dev/slack">
-      <img src="https://img.shields.io/badge/Slack-700%2B%20members-black" alt="Slack invite" />
+      <img src="https://img.shields.io/badge/Slack-1K%2B%20members-black" alt="Slack invite" />
   </a>
   <a href="https://semgrep.dev/docs/semgrep-ci/">
       <img src="https://img.shields.io/badge/docs-semgrep.dev-purple" alt="Documentation" />
