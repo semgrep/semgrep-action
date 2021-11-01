@@ -18,7 +18,7 @@ glom = "^20.8.0"
 pymmh3 = "^0.0.5"
 attrs = ">=20.3,<22.0"
 GitPython = "^3.1.11"
-PyYAML = "^5.4.1"
+PyYAML = ">=5.4.1,<7.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
