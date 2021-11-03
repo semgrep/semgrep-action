@@ -16,13 +16,11 @@ from git import InvalidGitRepositoryError
 
 from semgrep_agent import formatter
 from semgrep_agent import semgrep
-from semgrep_agent.constants import ERROR_EXIT_CODE
 from semgrep_agent.constants import FINDING_EXIT_CODE
 from semgrep_agent.constants import GIT_SH_TIMEOUT
 from semgrep_agent.constants import NO_RESULT_EXIT_CODE
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
-from semgrep_agent.meta import GithubMeta
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
@@ -330,16 +328,17 @@ def protected_main(
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
     start_time = datetime.now()
-    results = semgrep.scan(
-        config,
-        committed_datetime,
-        meta.base_commit_ref,
-        meta.head_ref,
-        semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
-        rewrite_rule_ids and not sapp.is_configured,
-        enable_metrics,
+    scan_context = semgrep.RunContext(
+        config_specifier=config,
+        committed_datetime=committed_datetime,
+        base_ref=meta.base_commit_ref,
+        head_ref=meta.head_ref,
+        semgrep_ignore=semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
+        rewrite_rule_ids=(rewrite_rule_ids and not sapp.is_configured),
+        enable_metrics=enable_metrics,
         timeout=(timeout if timeout > 0 else None),
     )
+    results = semgrep.scan(scan_context)
     end_time = datetime.now()
 
     new_findings = results.findings.new
