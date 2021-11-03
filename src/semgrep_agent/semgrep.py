@@ -170,7 +170,8 @@ class Results:
             f"=== Semgrep may be taking longer than expected to run (took {self.total_time:0.2f} s)."
         )
         click.echo(
-            "| These files are taking the most time. Consider adding them to .semgrepignore or ignoring them in your Semgrep.dev project configuration."
+            "| These files are taking the most time. Consider adding them to .semgrepignore or\n"
+            "| ignoring them in your Semgrep.dev policy."
         )
         for t in self.run_stats.longest_targets(10):
             rt = sum(t.get("run_times", []))
