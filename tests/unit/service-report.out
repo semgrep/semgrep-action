@@ -1,0 +1,24 @@
+=== Semgrep may be taking longer than expected to run (took 600.00 s).
+| These files are taking the most time. Consider adding them to .semgrepignore or
+| ignoring them in your Semgrep.dev policy.
+|   - 0.51 s: src/semgrep_agent/semgrep.py
+|   - 0.47 s: src/semgrep_agent/main.py
+|   - 0.47 s: src/semgrep_agent/meta.py
+|   - 0.45 s: src/semgrep_agent/targets.py
+|   - 0.44 s: src/semgrep_agent/findings.py
+|   - 0.43 s: src/semgrep_agent/semgrep_app.py
+|   - 0.41 s: tests/acceptance/qa.py
+|   - 0.40 s: src/semgrep_agent/ignores.py
+|   - 0.09 s: src/semgrep_agent/utils.py
+|   - 0.08 s: src/semgrep_agent/formatter.py
+| These rules are taking the most time. Consider removing them from your config.
+|   - 1.53 s: python.flask.security.injection.path-traversal-open.path-traversal-open
+|   - 0.31 s: python.lang.correctness.common-mistakes.default-mutable-dict.default-mutable-dict
+|   - 0.28 s: python.django.security.injection.code.globals-misuse-code-execution.globals-misuse-code-execution
+|   - 0.27 s: python.lang.correctness.common-mistakes.default-mutable-list.default-mutable-list
+|   - 0.18 s: python.django.security.injection.command.command-injection-os-system.command-injection-os-system
+|   - 0.14 s: python.django.security.injection.email.xss-send-mail-html-message.xss-send-mail-html-message
+|   - 0.13 s: python.cryptography.security.insufficient-ec-key-size.insufficient-ec-key-size
+|   - 0.11 s: python.lang.correctness.common-mistakes.is-comparison-string.string-is-comparison
+|   - 0.10 s: python.lang.correctness.useless-eqeq.useless-eqeq
+|   - 0.08 s: python.lang.correctness.return-in-init.yield-in-init

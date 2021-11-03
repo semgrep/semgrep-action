@@ -1,27 +1,30 @@
-import asyncio
 import io
 import json
 import os
-import sys
 import tempfile
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from functools import reduce
 from pathlib import Path
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
+from typing import Set
 from typing import TextIO
 from typing import Tuple
 
+import attr
 import click
 import sh
 from boltons.iterutils import chunked_iter
+from boltons.iterutils import get_path
 from boltons.strutils import unit_len
 from sh.contrib import git
 
@@ -32,7 +35,6 @@ from semgrep_agent.findings import FindingSets
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
-from semgrep_agent.utils import is_debug
 from semgrep_agent.utils import print_git_log
 from semgrep_agent.utils import render_error
 
@@ -42,6 +44,69 @@ semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
 PATHS_CHUNK_SIZE = 500
+
+
+@attr.s(auto_attribs=True, frozen=True)
+class RunContext:
+    # This scan's config specifiers (e.g. p/ci, semgrep.yml, etc.)
+    config_specifier: Sequence[str]
+    # This commits timestamp (for time-stamping findings)
+    committed_datetime: Optional[datetime]
+    # The baseline ref; if absent, no baselining is performed
+    base_ref: Optional[str]
+    # The head ref; Semgrep checks for findings on this ref
+    head_ref: Optional[str]
+    # Ignore file text stream
+    semgrep_ignore: TextIO
+    # If true, rewrites rule IDs in findings to a shorter value
+    rewrite_rule_ids: bool
+    # If True, sends metrics; also currently sends metrics if False
+    enable_metrics: bool
+    # If present, Semgrep run is aborted after this many seconds
+    timeout: Optional[int]
+
+
+@attr.s(auto_attribs=True, frozen=True)
+class RunStats:
+    # Rules
+    rule_list: Sequence[Mapping[str, str]]
+    # Target match times
+    target_data: Sequence[Mapping[str, Any]]
+
+    def longest_targets(self, n: int) -> Sequence[Mapping[str, Any]]:
+        """
+        Returns the n longest-running files and their associated timing data
+        """
+        ordered = sorted(
+            self.target_data, key=lambda i: sum(i.get("run_times", [])), reverse=True
+        )
+        return ordered[0:n]
+
+    def rules_with_times(self) -> Sequence[Mapping[str, Any]]:
+        """
+        Annotates the rules list with total run times
+        """
+        rule_indices = range(len(self.rule_list))
+        empty_times: Sequence[float] = [0.0 for _ in rule_indices]
+
+        def combine(memo: Sequence[float], el: Mapping[str, Any]) -> Sequence[float]:
+            rt = el.get("run_times", [])
+            return [memo[ix] + get_path(rt, (ix,), 0.0) for ix in rule_indices]
+
+        rule_times = reduce(combine, self.target_data, empty_times)
+        rules_with_times: Sequence[Mapping[str, Any]] = [
+            {**self.rule_list[ix], "run_time": rule_times[ix]} for ix in rule_indices
+        ]
+        return rules_with_times
+
+    def longest_rules(self, n: int) -> Sequence[Mapping[str, Any]]:
+        """
+        Returns the longest-running rules
+        """
+        ordered = sorted(
+            self.rules_with_times(), key=lambda i: float(i["run_time"]), reverse=True
+        )
+        return ordered[0:n]
 
 
 def resolve_config_shorthand(config: str) -> str:
@@ -80,15 +145,41 @@ def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
 @dataclass
 class Results:
     findings: FindingSets
+    run_stats: RunStats
     total_time: float
 
-    @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self, *, n_heavy_targets: int) -> Dict[str, Any]:
         return {
             "findings": len(self.findings.new),
             "errors": self.findings.errors,
+            "longest_targets": self.run_stats.longest_targets(n_heavy_targets),
+            "rules": self.run_stats.rules_with_times(),
             "total_time": self.total_time,
         }
+
+    def service_report(self, run_time_threshold: float) -> None:
+        """
+        Echoes a user-friendly debugging report for long-running scans
+        """
+        if self.total_time < run_time_threshold:
+            return
+
+        click.echo(
+            f"=== Semgrep may be taking longer than expected to run (took {self.total_time:0.2f} s)."
+        )
+        click.echo(
+            "| These files are taking the most time. Consider adding them to .semgrepignore or\n"
+            "| ignoring them in your Semgrep.dev policy."
+        )
+        for t in self.run_stats.longest_targets(10):
+            rt = sum(t.get("run_times", []))
+            click.echo(f"|   - {rt:0.2f} s: {t.get('path', '')}")
+        click.echo(
+            "| These rules are taking the most time. Consider removing them from your config."
+        )
+        for r in self.run_stats.longest_rules(10):
+            rt = r["run_time"]
+            click.echo(f"|   - {rt:0.2f} s: {r.get('id', '')}")
 
 
 def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
@@ -108,100 +199,148 @@ def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
         json.dump(sarif_output, sarif_file, indent=2, sort_keys=True)
 
 
-def get_findings(
-    config_specifier: Sequence[str],
-    committed_datetime: Optional[datetime],
-    base_commit_ref: Optional[str],
-    head_ref: Optional[str],
-    semgrep_ignore: TextIO,
-    rewrite_rule_ids: bool,
-    enable_metrics: bool,
-    *,
-    timeout: Optional[int],
-) -> FindingSets:
+def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
+    """
+    Gets head and baseline findings for this run
+
+    :param context: This scan's run context object
+    :return: This project's findings
+    """
     debug_echo("=== adding semgrep configuration")
 
-    with _fix_head_for_github(base_commit_ref, head_ref) as base_ref:
+    rewrite_args: Sequence[str] = (
+        [] if context.rewrite_rule_ids else ["--no-rewrite-rule-ids"]
+    )
+    metrics_args: Sequence[str] = ["--enable-metrics"] if context.enable_metrics else []
+
+    with _fix_head_for_github(context.base_ref, context.head_ref) as base_ref:
         workdir = Path.cwd()
         targets = TargetFileManager(
             base_path=workdir,
             base_commit=base_ref,
             all_paths=[workdir],
-            ignore_rules_file=semgrep_ignore,
+            ignore_rules_file=context.semgrep_ignore,
         )
 
         config_args = []
-        local_configs = (
-            set()
-        )  # Keep track of which config specifiers are local files/dirs
-        for conf in config_specifier:
+        # Keep track of which config specifiers are local files/dirs
+        local_configs: Set[str] = set()
+        for conf in context.config_specifier:
             if Path(conf).exists():
                 local_configs.add(conf)
             config_args.extend(["--config", conf])
-        rewrite_args = [] if rewrite_rule_ids else ["--no-rewrite-rule-ids"]
-        metrics_args = ["--enable-metrics"] if enable_metrics else []
         debug_echo("=== seeing if there are any findings")
 
+        findings, stats = _get_head_findings(
+            context, [*config_args, *metrics_args, *rewrite_args], targets
+        )
+
+    _update_baseline_findings(context, findings, local_configs, rewrite_args, targets)
+
+    if os.getenv("INPUT_GENERATESARIF"):
+        click.echo("=== re-running scan to generate a SARIF report", err=True)
+        sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths:
+            args = [*rewrite_args, *config_args]
+            _, sarif_output = invoke_semgrep_sarif(
+                args, [str(p) for p in paths], timeout=context.timeout
+            )
+        rewrite_sarif_file(sarif_output, sarif_path)
+
+    return findings, stats
+
+
+def _get_head_findings(
+    context: RunContext, extra_args: Sequence[str], targets: TargetFileManager
+) -> Tuple[FindingSets, RunStats]:
+    """
+    Gets findings for the project's HEAD git commit
+
+    :param context: The Semgrep run context object
+    :param extra_args: Extra arguments to pass to Semgrep
+    :param targets: This run's target manager
+    :return: A findings object with existing head findings and empty baseline findings
+    """
+    with targets.current_paths() as paths:
+        click.echo(
+            "=== looking for current issues in " + unit_len(paths, "file"), err=True
+        )
+
+        for path in paths:
+            debug_echo(f"searching {str(path)}")
+
+        args = [
+            "--skip-unknown-extensions",
+            "--disable-nosem",
+            "--json",
+            "--autofix",
+            "--dryrun",
+            "--time",
+            *extra_args,
+        ]
+        exit_code, semgrep_output = invoke_semgrep(
+            args, [str(p) for p in paths], timeout=context.timeout
+        )
+        findings = FindingSets(
+            exit_code,
+            searched_paths=set(targets.searched_paths),
+            errors=semgrep_output.errors,
+        )
+
+        stats = RunStats(
+            rule_list=semgrep_output.timing.rules,
+            target_data=semgrep_output.timing.targets,
+        )
+
+        findings.current.update_findings(
+            Finding.from_semgrep_result(result, context.committed_datetime)
+            for result in semgrep_output.results
+            if not result["extra"].get("is_ignored")
+        )
+        findings.ignored.update_findings(
+            Finding.from_semgrep_result(result, context.committed_datetime)
+            for result in semgrep_output.results
+            if result["extra"].get("is_ignored")
+        )
+        if findings.errors:
             click.echo(
-                "=== looking for current issues in " + unit_len(paths, "file"), err=True
-            )
-
-            for path in paths:
-                debug_echo(f"searching {str(path)}")
-
-            args = [
-                "--skip-unknown-extensions",
-                "--disable-nosem",
-                "--json",
-                "--autofix",
-                "--dryrun",
-                *metrics_args,
-                *rewrite_args,
-                *config_args,
-            ]
-            exit_code, semgrep_output = invoke_semgrep(
-                args, [str(p) for p in paths], timeout=timeout
-            )
-            findings = FindingSets(
-                exit_code,
-                searched_paths=set(targets.searched_paths),
-                errors=semgrep_output.get("errors", []),
-            )
-
-            semgrep_results = semgrep_output["results"]
-
-            findings.current.update_findings(
-                Finding.from_semgrep_result(result, committed_datetime)
-                for result in semgrep_results
-                if not result["extra"].get("is_ignored")
-            )
-            findings.ignored.update_findings(
-                Finding.from_semgrep_result(result, committed_datetime)
-                for result in semgrep_results
-                if result["extra"].get("is_ignored")
-            )
-            if findings.errors:
-                click.echo(
-                    f"| Semgrep exited with {unit_len(findings.errors, 'error')}:",
-                    err=True,
-                )
-                for e in findings.errors:
-                    for s in render_error(e):
-                        click.echo(f"|    {s}", err=True)
-            inventory_findings_len = 0
-            for finding in findings.current:
-                if finding.is_cai_finding():
-                    inventory_findings_len += 1
-            click.echo(
-                f"| {unit_len(range(len(findings.current)-inventory_findings_len), 'current issue')} found",
+                f"| Semgrep exited with {unit_len(findings.errors, 'error')}:",
                 err=True,
             )
-            click.echo(
-                f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment",
-                err=True,
-            )
+            for e in findings.errors:
+                for s in render_error(e):
+                    click.echo(f"|    {s}", err=True)
+        inventory_findings_len = 0
+        for finding in findings.current:
+            if finding.is_cai_finding():
+                inventory_findings_len += 1
+        click.echo(
+            f"| {unit_len(range(len(findings.current) - inventory_findings_len), 'current issue')} found",
+            err=True,
+        )
+        click.echo(
+            f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment",
+            err=True,
+        )
+    return findings, stats
 
+
+def _update_baseline_findings(
+    context: RunContext,
+    findings: FindingSets,
+    local_configs: Set[str],
+    extra_args: Sequence[str],
+    targets: TargetFileManager,
+) -> None:
+    """
+    Updates findings.baseline with findings from the baseline git commit
+
+    :param context: Semgrep run context
+    :param findings: Findings structure from running on the head git commit
+    :param local_configs: Any local semgrep.yml configs
+    :param extra_args: Extra Semgrep arguments
+    :param targets: File targets from head commit
+    """
     if not findings.current and not findings.ignored:
         click.echo(
             "=== not looking at pre-existing issues since there are no current issues",
@@ -222,7 +361,7 @@ def get_findings(
                 )
             else:
                 config_args = []
-                for conf in config_specifier:
+                for conf in context.config_specifier:
                     # If a local config existed with initial scan but doesn't exist
                     # in baseline, treat as if no issues found in baseline with that config
                     if conf in local_configs and not Path(conf).exists():
@@ -233,7 +372,7 @@ def get_findings(
                         continue
                     config_args.extend(["--config", conf])
 
-                if config_args == []:
+                if not config_args:
                     click.echo(
                         "=== not looking at pre-exiting issues since after filtering out local files that don't exist in baseline, no configs left to run",
                         err=True,
@@ -249,49 +388,51 @@ def get_findings(
                         "--skip-unknown-extensions",
                         "--disable-nosem",
                         "--json",
-                        "--disable-metrics",  # only count one semgrep run per semgrep-agent run
-                        *rewrite_args,
+                        "--metrics",
+                        "off",  # only count one semgrep run per semgrep-agent run
+                        *extra_args,
                         *config_args,
                     ]
-                    _, sr = invoke_semgrep(args, paths_to_check, timeout=timeout)
-                    semgrep_results = sr["results"]
+                    _, semgrep_output = invoke_semgrep(
+                        args, paths_to_check, timeout=context.timeout
+                    )
                     findings.baseline.update_findings(
-                        Finding.from_semgrep_result(result, committed_datetime)
-                        for result in semgrep_results
+                        Finding.from_semgrep_result(result, context.committed_datetime)
+                        for result in semgrep_output.results
                     )
                     inventory_findings_len = 0
                     for finding in findings.baseline:
                         if finding.is_cai_finding():
                             inventory_findings_len += 1
                     click.echo(
-                        f"| {unit_len(range(len(findings.baseline)-inventory_findings_len), 'pre-existing issue')} found",
+                        f"| {unit_len(range(len(findings.baseline) - inventory_findings_len), 'pre-existing issue')} found",
                         err=True,
                     )
 
-    if os.getenv("INPUT_GENERATESARIF"):
-        click.echo("=== re-running scan to generate a SARIF report", err=True)
-        sarif_path = Path("semgrep.sarif")
-        with targets.current_paths() as paths:
-            args = [*rewrite_args, *config_args]
-            _, sarif_output = invoke_semgrep_sarif(
-                args, [str(p) for p in paths], timeout=timeout
-            )
-        rewrite_sarif_file(sarif_output, sarif_path)
 
-    return findings
+@attr.s(auto_attribs=True)
+class SemgrepTiming:
+    rules: Sequence[Mapping[str, str]]
+    targets: Sequence[Mapping[str, Any]]
+
+
+@attr.s(auto_attribs=True)
+class SemgrepOutput:
+    results: Sequence[Any]
+    errors: Sequence[Any]
+    timing: SemgrepTiming
 
 
 def invoke_semgrep(
     semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
-) -> Tuple[int, Mapping[str, List[Any]]]:
+) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
 
     Returns json output of semgrep as dict object
     """
-    output: Dict[str, List[Any]] = {"results": [], "errors": []}
-
     max_exit_code = 0
+    output = SemgrepOutput([], [], SemgrepTiming([], []))
 
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
@@ -314,8 +455,13 @@ def invoke_semgrep(
             ) as f:
                 parsed_output = json.load(f)
 
-            output["results"].extend(parsed_output["results"])
-            output["errors"].extend(parsed_output["errors"])
+            output.results = [*output.results, *parsed_output["results"]]
+            output.errors = [*output.errors, *parsed_output["errors"]]
+            parsed_timing = parsed_output.get("time", {})
+            output.timing = SemgrepTiming(
+                parsed_timing.get("rules", output.timing.rules),
+                [*output.timing.targets, *parsed_timing.get("targets", [])],
+            )
 
     return max_exit_code, output
 
@@ -388,39 +534,20 @@ class SemgrepError(Exception):
         return self._command
 
 
-def scan(
-    config_specifier: Sequence[str],
-    committed_datetime: Optional[datetime],
-    base_commit_ref: Optional[str],
-    head_ref: Optional[str],
-    semgrep_ignore: TextIO,
-    rewrite_rule_ids: bool,
-    enable_metrics: bool,
-    *,
-    timeout: Optional[int],
-) -> Results:
+def scan(context: RunContext) -> Results:
     before = time.time()
     try:
-        findings = get_findings(
-            config_specifier,
-            committed_datetime,
-            base_commit_ref,
-            head_ref,
-            semgrep_ignore,
-            rewrite_rule_ids,
-            enable_metrics,
-            timeout=timeout,
-        )
+        findings, stats = _get_findings(context)
     except sh.ErrorReturnCode as error:
         raise SemgrepError(error)
     after = time.time()
 
-    return Results(findings, after - before)
+    return Results(findings, stats, after - before)
 
 
 @contextmanager
 def _fix_head_for_github(
-    base_commit_ref: Optional[str] = None,
+    base_ref_name: Optional[str] = None,
     head_ref: Optional[str] = None,
 ) -> Iterator[Optional[str]]:
     """
@@ -434,7 +561,7 @@ def _fix_head_for_github(
     """
 
     stashed_rev: Optional[str] = None
-    base_ref: Optional[str] = base_commit_ref
+    base_ref: Optional[str] = base_ref_name
 
     if get_git_repo() is None:
         yield base_ref
@@ -468,7 +595,7 @@ def _fix_head_for_github(
                 click.echo("| also reporting findings fixed by these commits from the baseline branch:", err=True)
                 print_git_log(f"{merge_base}..{base_ref}")
                 click.echo("| to exclude these latter commits, run with", err=True)
-                click.echo(f"|   --baseline-ref $(git merge-base {base_commit_ref} HEAD)", err=True)
+                click.echo(f"|   --baseline-ref $(git merge-base {base_ref_name} HEAD)", err=True)
             # fmt: on
 
         yield base_ref
