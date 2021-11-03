@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import cast
 from typing import List
 from typing import Optional
+from typing import Sequence
 from typing import Tuple
 
 import click
@@ -194,7 +195,7 @@ class Sapp:
         return exit_code
 
     def report_results(
-        self, results: Results, rule_ids: List[str], cai_ids: List[str]
+        self, results: Results, rule_ids: Sequence[str], cai_ids: Sequence[str]
     ) -> None:
         debug_echo(f"=== reporting results to semgrep app at {self.url}")
 
@@ -247,11 +248,13 @@ class Sapp:
             raise ActionFailure(f"API server returned this error: {response.text}")
 
         # mark as complete
+        # In order to not overload our app database, we truncate target stats to the 20 heaviest hitters. This adds
+        # approximately 80 kB of database load per scan when using p/ci.
         response = self.session.post(
             f"{self.url}/api/agent/scan/{self.scan.id}/complete",
             json={
                 "exit_code": results.findings.max_exit_code,
-                "stats": results.stats,
+                "stats": results.stats(n_heavy_targets=20),
             },
             timeout=30,
         )

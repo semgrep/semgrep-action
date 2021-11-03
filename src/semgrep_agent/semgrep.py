@@ -6,8 +6,10 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from functools import reduce
 from pathlib import Path
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import Iterator
 from typing import List
@@ -32,7 +34,6 @@ from semgrep_agent.findings import FindingSets
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
-from semgrep_agent.utils import is_debug
 from semgrep_agent.utils import print_git_log
 from semgrep_agent.utils import render_error
 
@@ -62,6 +63,52 @@ class RunContext:
     enable_metrics: bool
     # If present, Semgrep run is aborted after this many seconds
     timeout: Optional[int]
+
+
+@attr.s(auto_attribs=True, frozen=True)
+class RunStats:
+    # Rules
+    rule_list: Sequence[Mapping[str, str]]
+    # Target match times
+    target_data: Sequence[Mapping[str, Any]]
+
+    def longest_targets(self, n: int) -> Sequence[Mapping[str, Any]]:
+        """
+        Returns the n longest-running files and their associated timing data
+        """
+        ordered = sorted(
+            self.target_data, key=lambda i: sum(i.get("run_times", [])), reverse=True
+        )
+        return ordered[0:n]
+
+    def rules_with_times(self) -> Sequence[Mapping[str, Any]]:
+        """
+        Annotates the rules list with total run times
+        """
+        rule_indices = range(len(self.rule_list))
+        empty_times: Sequence[float] = [0.0 for _ in rule_indices]
+
+        def list_get(seq: Sequence[float], ix: int, default: float) -> float:
+            return seq[ix] if len(seq) > ix else default
+
+        def combine(memo: Sequence[float], el: Mapping[str, Any]) -> Sequence[float]:
+            rt = el.get("run_times", [])
+            return [memo[ix] + list_get(rt, ix, 0.0) for ix in rule_indices]
+
+        rule_times = reduce(combine, self.target_data, empty_times)
+        rules_with_times: Sequence[Mapping[str, Any]] = [
+            {**self.rule_list[ix], "run_time": rule_times[ix]} for ix in rule_indices
+        ]
+        return rules_with_times
+
+    def longest_rules(self, n: int) -> Sequence[Mapping[str, Any]]:
+        """
+        Returns the longest-running rules
+        """
+        ordered = sorted(
+            self.rules_with_times(), key=lambda i: float(i["run_time"]), reverse=True
+        )
+        return ordered[0:n]
 
 
 def resolve_config_shorthand(config: str) -> str:
@@ -100,15 +147,40 @@ def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
 @dataclass
 class Results:
     findings: FindingSets
+    run_stats: RunStats
     total_time: float
 
-    @property
-    def stats(self) -> Dict[str, Any]:
+    def stats(self, *, n_heavy_targets: int) -> Dict[str, Any]:
         return {
             "findings": len(self.findings.new),
             "errors": self.findings.errors,
+            "longest_targets": self.run_stats.longest_targets(n_heavy_targets),
+            "rules": self.run_stats.rules_with_times(),
             "total_time": self.total_time,
         }
+
+    def service_report(self, run_time_threshold: float) -> None:
+        """
+        Echoes a user-friendly debugging report for long-running scans
+        """
+        if self.total_time < run_time_threshold:
+            return
+
+        click.echo(
+            f"=== Semgrep may be taking longer than expected to run (took {self.total_time:0.2f} s)."
+        )
+        click.echo(
+            "| These files are taking the most time. Consider adding them to .semgrepignore or ignoring them in your Semgrep.dev project configuration."
+        )
+        for t in self.run_stats.longest_targets(10):
+            rt = sum(t.get("run_times", []))
+            click.echo(f"|   - {rt:0.2f} s: {t.get('path', '')}")
+        click.echo(
+            "| These rules are taking the most time. Consider removing them from your config."
+        )
+        for r in self.run_stats.longest_rules(10):
+            rt = r["run_time"]
+            click.echo(f"|   - {rt:0.2f} s: {r.get('id', '')}")
 
 
 def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
@@ -128,7 +200,7 @@ def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
         json.dump(sarif_output, sarif_file, indent=2, sort_keys=True)
 
 
-def _get_findings(context: RunContext) -> FindingSets:
+def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
     """
     Gets head and baseline findings for this run
 
@@ -160,7 +232,7 @@ def _get_findings(context: RunContext) -> FindingSets:
             config_args.extend(["--config", conf])
         debug_echo("=== seeing if there are any findings")
 
-        findings = _get_head_findings(
+        findings, stats = _get_head_findings(
             context, [*config_args, *metrics_args, *rewrite_args], targets
         )
 
@@ -176,12 +248,12 @@ def _get_findings(context: RunContext) -> FindingSets:
             )
         rewrite_sarif_file(sarif_output, sarif_path)
 
-    return findings
+    return findings, stats
 
 
 def _get_head_findings(
     context: RunContext, extra_args: Sequence[str], targets: TargetFileManager
-) -> FindingSets:
+) -> Tuple[FindingSets, RunStats]:
     """
     Gets findings for the project's HEAD git commit
 
@@ -204,6 +276,7 @@ def _get_head_findings(
             "--json",
             "--autofix",
             "--dryrun",
+            "--time",
             *extra_args,
         ]
         exit_code, semgrep_output = invoke_semgrep(
@@ -212,19 +285,22 @@ def _get_head_findings(
         findings = FindingSets(
             exit_code,
             searched_paths=set(targets.searched_paths),
-            errors=semgrep_output.get("errors", []),
+            errors=semgrep_output.errors,
         )
 
-        semgrep_results = semgrep_output["results"]
+        stats = RunStats(
+            rule_list=semgrep_output.timing.rules,
+            target_data=semgrep_output.timing.targets,
+        )
 
         findings.current.update_findings(
             Finding.from_semgrep_result(result, context.committed_datetime)
-            for result in semgrep_results
+            for result in semgrep_output.results
             if not result["extra"].get("is_ignored")
         )
         findings.ignored.update_findings(
             Finding.from_semgrep_result(result, context.committed_datetime)
-            for result in semgrep_results
+            for result in semgrep_output.results
             if result["extra"].get("is_ignored")
         )
         if findings.errors:
@@ -247,7 +323,7 @@ def _get_head_findings(
             f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment",
             err=True,
         )
-    return findings
+    return findings, stats
 
 
 def _update_baseline_findings(
@@ -318,13 +394,12 @@ def _update_baseline_findings(
                         *extra_args,
                         *config_args,
                     ]
-                    _, sr = invoke_semgrep(
+                    _, semgrep_output = invoke_semgrep(
                         args, paths_to_check, timeout=context.timeout
                     )
-                    semgrep_results = sr["results"]
                     findings.baseline.update_findings(
                         Finding.from_semgrep_result(result, context.committed_datetime)
-                        for result in semgrep_results
+                        for result in semgrep_output.results
                     )
                     inventory_findings_len = 0
                     for finding in findings.baseline:
@@ -336,17 +411,29 @@ def _update_baseline_findings(
                     )
 
 
+@attr.s(auto_attribs=True)
+class SemgrepTiming:
+    rules: Sequence[Mapping[str, str]]
+    targets: Sequence[Mapping[str, Any]]
+
+
+@attr.s(auto_attribs=True)
+class SemgrepOutput:
+    results: Sequence[Any]
+    errors: Sequence[Any]
+    timing: SemgrepTiming
+
+
 def invoke_semgrep(
     semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
-) -> Tuple[int, Mapping[str, List[Any]]]:
+) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
 
     Returns json output of semgrep as dict object
     """
-    output: Dict[str, List[Any]] = {"results": [], "errors": []}
-
     max_exit_code = 0
+    output = SemgrepOutput([], [], SemgrepTiming([], []))
 
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
@@ -369,8 +456,13 @@ def invoke_semgrep(
             ) as f:
                 parsed_output = json.load(f)
 
-            output["results"].extend(parsed_output["results"])
-            output["errors"].extend(parsed_output["errors"])
+            output.results = [*output.results, *parsed_output["results"]]
+            output.errors = [*output.errors, *parsed_output["errors"]]
+            parsed_timing = parsed_output.get("time", {})
+            output.timing = SemgrepTiming(
+                parsed_timing.get("rules", output.timing.rules),
+                [*output.timing.targets, *parsed_timing.get("targets", [])],
+            )
 
     return max_exit_code, output
 
@@ -446,12 +538,12 @@ class SemgrepError(Exception):
 def scan(context: RunContext) -> Results:
     before = time.time()
     try:
-        findings = _get_findings(context)
+        findings, stats = _get_findings(context)
     except sh.ErrorReturnCode as error:
         raise SemgrepError(error)
     after = time.time()
 
-    return Results(findings, after - before)
+    return Results(findings, stats, after - before)
 
 
 @contextmanager

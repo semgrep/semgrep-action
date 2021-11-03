@@ -18,6 +18,7 @@ from semgrep_agent import formatter
 from semgrep_agent import semgrep
 from semgrep_agent.constants import FINDING_EXIT_CODE
 from semgrep_agent.constants import GIT_SH_TIMEOUT
+from semgrep_agent.constants import LONG_RUNNING_SECONDS
 from semgrep_agent.constants import NO_RESULT_EXIT_CODE
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
@@ -266,6 +267,8 @@ def protected_main(
 
     # Setup Config
     click.echo("=== setting up agent configuration", err=True)
+    rule_ids: Sequence[str] = []
+    cai_ids: Sequence[str] = []
     if config:
         if sapp.is_configured:
             message = """
@@ -400,6 +403,8 @@ def protected_main(
                 f"| Detected technologies for rule recommendation engine",
                 err=True,
             )
+
+    results.service_report(min(timeout, LONG_RUNNING_SECONDS))
 
     if sapp.is_configured:
         sapp.report_results(results, rule_ids, cai_ids)
