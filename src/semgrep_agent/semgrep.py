@@ -24,6 +24,7 @@ import attr
 import click
 import sh
 from boltons.iterutils import chunked_iter
+from boltons.iterutils import get_path
 from boltons.strutils import unit_len
 from sh.contrib import git
 
@@ -88,12 +89,9 @@ class RunStats:
         rule_indices = range(len(self.rule_list))
         empty_times: Sequence[float] = [0.0 for _ in rule_indices]
 
-        def list_get(seq: Sequence[float], ix: int, default: float) -> float:
-            return seq[ix] if len(seq) > ix else default
-
         def combine(memo: Sequence[float], el: Mapping[str, Any]) -> Sequence[float]:
             rt = el.get("run_times", [])
-            return [memo[ix] + list_get(rt, ix, 0.0) for ix in rule_indices]
+            return [memo[ix] + get_path(rt, (ix,), 0.0) for ix in rule_indices]
 
         rule_times = reduce(combine, self.target_data, empty_times)
         rules_with_times: Sequence[Mapping[str, Any]] = [

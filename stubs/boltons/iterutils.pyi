@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Hashable, Iterable, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Hashable, Iterable, List, Optional, TypeVar, Sequence, Union
 
 Item = TypeVar("Item")
 Items = Iterable[Item]
@@ -15,3 +15,7 @@ def bucketize(
     value_transform: Optional[Callable[[SourceItem_co], BucketItem_co]] = None,
     key_filter: Optional[Callable[[BucketKey_co], bool]] = None,
 ) -> Dict[BucketKey_co, List[BucketItem_co]]: ...
+
+def get_path(
+    root: Iterable[Item], path: Sequence[Union[str, int]], default: Item
+) -> Item: ...
