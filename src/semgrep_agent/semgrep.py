@@ -390,11 +390,15 @@ def _update_baseline_findings(
                         "--skip-unknown-extensions",
                         "--disable-nosem",
                         "--json",
-                        "--metrics",
-                        "off",  # only count one semgrep run per semgrep-agent run
                         *extra_args,
                         *config_args,
                     ]
+
+                    # Can only disable metrics if auto is not a passed config
+                    # disable so only one metrics run per semgrep-action run
+                    if "auto" not in config_args:
+                        args.extend(["--metrics", "off"])
+
                     _, semgrep_output = invoke_semgrep(
                         args, paths_to_check, timeout=context.timeout
                     )
