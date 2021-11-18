@@ -276,6 +276,8 @@ def _get_head_findings(
             "--autofix",
             "--dryrun",
             "--time",
+            "--timeout-threshold",
+            "3",
             *extra_args,
         ]
         exit_code, semgrep_output = invoke_semgrep(
