@@ -394,8 +394,8 @@ def _update_baseline_findings(
                         *config_args,
                     ]
 
-                    # Can only disable metrics if auto is not a passed config
-                    # disable so only one metrics run per semgrep-action run
+                    # If possible, disable metrics so that we get metrics only once per semgrep-action run
+                    # However, if run with config auto we must allow metrics to be sent
                     if "auto" not in config_args:
                         args.extend(["--metrics", "off"])
 
