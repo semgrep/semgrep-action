@@ -572,26 +572,38 @@ def _fix_head_for_github(
 
     :return: The baseline ref as a commit hash
     """
+    debug_echo(
+        f"Called _fix_head_for_github with base_ref_name: {base_ref_name} head_ref: {head_ref}"
+    )
 
     stashed_rev: Optional[str] = None
     base_ref: Optional[str] = base_ref_name
 
     if get_git_repo() is None:
+        debug_echo("Yielding base_ref since get_git_repo was None")
         yield base_ref
         return
 
     if base_ref:
         # Preserve location of head^ after we possibly change location below
         try:
+            debug_echo(f"Calling git rev-parse {base_ref}")
             process = git(["rev-parse", base_ref])
             base_ref = process.stdout.decode("utf-8").rstrip()
         except sh.ErrorReturnCode as ex:
             raise ActionFailure(f"There is a problem with your git project:{ex}")
 
     if head_ref:
+        debug_echo("Calling git branch --show-current")
         stashed_rev = git(["branch", "--show-current"]).stdout.decode("utf-8").rstrip()
+        debug_echo(f"stashed_rev: {stashed_rev}")
         if not stashed_rev:
-            stashed_rev = git(["rev-parse", "HEAD"]).stdout.decode("utf-8").rstrip()
+            debug_echo("Calling git rev-parse HEAD")
+            rev_parse = git(["rev-parse", "HEAD"])
+            debug_echo(rev_parse.stderr.decode("utf-8").rstrip())
+            stashed_rev = rev_parse.stdout.decode("utf-8").rstrip()
+            debug_echo(f"stashed_rev: {stashed_rev}")
+
         click.echo(f"| not on head ref {head_ref}; checking that out now...", err=True)
         git.checkout(
             [head_ref], _timeout=GIT_SH_TIMEOUT, _out=debug_echo, _err=debug_echo
@@ -610,7 +622,7 @@ def _fix_head_for_github(
                 click.echo("| to exclude these latter commits, run with", err=True)
                 click.echo(f"|   --baseline-ref $(git merge-base {base_ref_name} HEAD)", err=True)
             # fmt: on
-
+        debug_echo(f"yielding {base_ref}")
         yield base_ref
     finally:
         if stashed_rev is not None:
