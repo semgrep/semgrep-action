@@ -44,7 +44,7 @@ ENV_VAR_HELP_TEXT = "\n        ".join(
     f"{k}: {v}\n" for k, v in ALL_MANUAL_ENV_VARS.items()
 )
 
-LOG_FILE = "semgrep_agent_logs"
+LOG_FILE = "~/.semgrep/semgrep_agent_logs"
 
 
 def url(string: str) -> str:

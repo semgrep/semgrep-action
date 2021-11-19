@@ -198,5 +198,3 @@ dmypy.json
 .pytype/
 
 #### custom ####
-semgrep_agent_logs
-semgrep_agent_output
