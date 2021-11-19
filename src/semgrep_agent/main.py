@@ -221,8 +221,7 @@ def main(
     except Exception as error:
         # Handles all other errors like FileNotFound, EOF, etc.
         # https://docs.python.org/3.9/library/exceptions.html#exception-hierarchy
-        click.secho(f"An unexpected error occurred", err=True, fg="red")
-        logging.exception(error)  # TODO will I need to change this?
+        click.secho(f"An unexpected error occurred:\n{error}", err=True, fg="red")
         _handle_error(str(error), 2, sapp, meta)
     # Should never get here, as all sub-functions contain a sys.exit
     sys.exit(0)
