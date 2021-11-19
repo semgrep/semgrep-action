@@ -5,9 +5,9 @@
 === setting up agent configuration
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
 | using default path ignore rules of common test and dependency directories
-| found 2 files in the paths to be scanned
+| found 3 files in the paths to be scanned
 | skipping 1 file based on path ignore rules
-=== looking for current issues in 1 file
+=== looking for current issues in 2 files
 | 1 current issue found
 | No issues muted with nosemgrep comment
 === not looking at pre-existing issues since all files with current issues are newly created

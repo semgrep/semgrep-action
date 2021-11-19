@@ -5,9 +5,9 @@
 === setting up agent configuration
 | using semgrep rules from python/lang/best-practice/sleep.yaml
 | using default path ignore rules of common test and dependency directories
-| found 1476 files in the paths to be scanned
+| found 1477 files in the paths to be scanned
 | skipping 3 files based on path ignore rules
-=== looking for current issues in 1473 files
+=== looking for current issues in 1474 files
 | 2 current issues found
 | No issues muted with nosemgrep comment
 === not looking at pre-existing issues since all files with current issues are newly created
