@@ -23,6 +23,7 @@ from semgrep_agent.constants import NO_RESULT_EXIT_CODE
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
+from semgrep_agent.semgrep import LOG_FOLDER
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import get_aligned_command
@@ -43,6 +44,8 @@ ALL_MANUAL_ENV_VARS = {
 ENV_VAR_HELP_TEXT = "\n        ".join(
     f"{k}: {v}\n" for k, v in ALL_MANUAL_ENV_VARS.items()
 )
+
+LOG_FILE = LOG_FOLDER + "semgrep_agent_logs"
 
 
 def url(string: str) -> str:
@@ -168,6 +171,18 @@ def main(
     timeout: int,
     scan_environment: str,
 ) -> NoReturn:
+
+    if not os.path.isdir(LOG_FOLDER):
+        os.mkdir(LOG_FOLDER)
+
+    logging.basicConfig(
+        filename=(LOG_FILE),
+        filemode="w",
+        format="%(asctime)s === %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.INFO,
+    )
+
     click.echo(
         get_aligned_command(
             "versions",
@@ -206,8 +221,7 @@ def main(
     except Exception as error:
         # Handles all other errors like FileNotFound, EOF, etc.
         # https://docs.python.org/3.9/library/exceptions.html#exception-hierarchy
-        click.secho(f"An unexpected error occurred", err=True, fg="red")
-        logging.exception(error)
+        click.secho(f"An unexpected error occurred:\n{error}", err=True, fg="red")
         _handle_error(str(error), 2, sapp, meta)
     # Should never get here, as all sub-functions contain a sys.exit
     sys.exit(0)

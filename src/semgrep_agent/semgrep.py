@@ -41,6 +41,9 @@ from semgrep_agent.utils import render_error
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 
+LOG_FOLDER = os.path.expanduser("~/.semgrep/")
+SEMGREP_SAVE_FILE = LOG_FOLDER + "semgrep_agent_output"
+
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
 PATHS_CHUNK_SIZE = 500
@@ -441,7 +444,7 @@ def invoke_semgrep(
     output = SemgrepOutput([], [], SemgrepTiming([], []))
 
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
-        with tempfile.NamedTemporaryFile("w") as output_json_file:
+        with open(SEMGREP_SAVE_FILE, "w+") as output_json_file:
             args = semgrep_args.copy()
             args.extend(["--debug"])
             args.extend(
@@ -453,8 +456,12 @@ def invoke_semgrep(
             for c in chunk:
                 args.append(c)
 
+            debug_echo(f"== Invoking semgrep with { len(args) } args")
+
             exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
             max_exit_code = max(max_exit_code, exit_code)
+
+            debug_echo(f"== Semgrep finished with exit code { exit_code }")
 
             with open(
                 output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush

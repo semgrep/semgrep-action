@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 from contextlib import contextmanager
@@ -35,11 +36,13 @@ def is_debug() -> Optional[str]:
 
 def debug_echo(text: str) -> None:
     """Print debug messages with context-specific debug formatting."""
+    prefix = ""
     if is_debug():
         prefix = "=== [DEBUG] "
     elif os.getenv("GITHUB_ACTIONS"):
         prefix = "::debug::"
     else:
+        logging.info(text)
         return
     text = "\n".join(prefix + line for line in text.splitlines())
     click.echo(text, err=True)
