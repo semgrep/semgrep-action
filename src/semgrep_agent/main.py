@@ -23,6 +23,7 @@ from semgrep_agent.constants import NO_RESULT_EXIT_CODE
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
+from semgrep_agent.semgrep import LOG_FOLDER
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.utils import get_aligned_command
@@ -44,7 +45,7 @@ ENV_VAR_HELP_TEXT = "\n        ".join(
     f"{k}: {v}\n" for k, v in ALL_MANUAL_ENV_VARS.items()
 )
 
-LOG_FILE = os.path.expanduser("~/.semgrep/semgrep_agent_logs")
+LOG_FILE = LOG_FOLDER + "semgrep_agent_logs"
 
 
 def url(string: str) -> str:
@@ -170,6 +171,10 @@ def main(
     timeout: int,
     scan_environment: str,
 ) -> NoReturn:
+
+    if not os.path.isdir(LOG_FOLDER):
+        os.mkdir(LOG_FOLDER)
+
     logging.basicConfig(
         filename=(LOG_FILE),
         filemode="w",
