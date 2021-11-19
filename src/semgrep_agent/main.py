@@ -44,6 +44,8 @@ ENV_VAR_HELP_TEXT = "\n        ".join(
     f"{k}: {v}\n" for k, v in ALL_MANUAL_ENV_VARS.items()
 )
 
+LOG_FILE = "semgrep_agent_logs"
+
 
 def url(string: str) -> str:
     return string.rstrip("/")
@@ -168,6 +170,14 @@ def main(
     timeout: int,
     scan_environment: str,
 ) -> NoReturn:
+    logging.basicConfig(
+        filename=LOG_FILE,
+        filemode="w",
+        format="%(asctime)s === %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.INFO,
+    )
+
     click.echo(
         get_aligned_command(
             "versions",
@@ -207,7 +217,7 @@ def main(
         # Handles all other errors like FileNotFound, EOF, etc.
         # https://docs.python.org/3.9/library/exceptions.html#exception-hierarchy
         click.secho(f"An unexpected error occurred", err=True, fg="red")
-        logging.exception(error)
+        logging.exception(error)  # TODO will I need to change this?
         _handle_error(str(error), 2, sapp, meta)
     # Should never get here, as all sub-functions contain a sys.exit
     sys.exit(0)
