@@ -15,6 +15,7 @@ from typing import TextIO
 import attr
 import click
 
+from semgrep_agent.constants import LOG_FOLDER
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.utils import debug_echo
 
@@ -89,7 +90,7 @@ class FileIgnore(Mapping[Path, Entry]):
 
         return True
 
-    def _walk(self, this_path: str, root_path: str) -> Iterator[Entry]:
+    def _walk(self, this_path_str: str, root_path_str: str) -> Iterator[Entry]:
         """
         Walks path, returning an Entry iterator for each item.
 
@@ -98,22 +99,27 @@ class FileIgnore(Mapping[Path, Entry]):
 
         Recalculates on every call.
         """
+        this_path = Path(this_path_str)
+
         # Handle non existent paths passed to cli.
         # TODO handle further up
-        if not Path(this_path).exists():
+        if not this_path.exists():
             return
 
-        if Path(this_path).is_file():
-            yield Entry(Path(this_path), self._survives(Path(this_path)))
+        if this_path.is_file():
+            yield Entry(this_path, self._survives(this_path))
         else:
-            for e in os.scandir(this_path):
+            for e in os.scandir(this_path_str):
                 if e.is_symlink():
+                    continue
+                elif this_path.match(LOG_FOLDER):
+                    # Ignore the files we produce for logging
                     continue
                 elif self._survives(Path(e.path)):
                     before = time.time()
-                    for ee in self._walk(e.path, root_path):
+                    for ee in self._walk(e.path, root_path_str):
                         yield ee
-                    filename = Path(this_path) / e.name
+                    filename = this_path / e.name
                 else:
                     # TODO I think we can remove the false ones and have existence be survival
                     yield Entry(Path(e.path), False)

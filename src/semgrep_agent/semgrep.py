@@ -29,6 +29,7 @@ from boltons.strutils import unit_len
 from sh.contrib import git
 
 from semgrep_agent.constants import GIT_SH_TIMEOUT
+from semgrep_agent.constants import LOG_FOLDER
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
@@ -41,8 +42,7 @@ from semgrep_agent.utils import render_error
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 
-LOG_FOLDER = ".semgrep_logs/"
-SEMGREP_SAVE_FILE = LOG_FOLDER + "semgrep_agent_output"
+SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
 
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
