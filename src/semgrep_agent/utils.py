@@ -39,8 +39,6 @@ def debug_echo(text: str) -> None:
     prefix = ""
     if is_debug():
         prefix = "=== [DEBUG] "
-    elif os.getenv("GITHUB_ACTIONS"):
-        prefix = "::debug::"
     else:
         logging.info(text)
         return

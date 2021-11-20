@@ -198,3 +198,4 @@ dmypy.json
 .pytype/
 
 #### custom ####
+.semgrep_logs/

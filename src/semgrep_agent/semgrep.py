@@ -29,6 +29,7 @@ from boltons.strutils import unit_len
 from sh.contrib import git
 
 from semgrep_agent.constants import GIT_SH_TIMEOUT
+from semgrep_agent.constants import LOG_FOLDER
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
@@ -41,8 +42,7 @@ from semgrep_agent.utils import render_error
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 
-LOG_FOLDER = os.path.expanduser("~/.semgrep/")
-SEMGREP_SAVE_FILE = LOG_FOLDER + "semgrep_agent_output"
+SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
 
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
@@ -450,7 +450,7 @@ def invoke_semgrep(
             args.extend(
                 [
                     "-o",
-                    output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+                    output_json_file.name,
                 ]
             )
             for c in chunk:
@@ -463,9 +463,7 @@ def invoke_semgrep(
 
             debug_echo(f"== Semgrep finished with exit code { exit_code }")
 
-            with open(
-                output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-            ) as f:
+            with open(output_json_file.name) as f:
                 parsed_output = json.load(f)
 
             output.results = [*output.results, *parsed_output["results"]]
