@@ -42,7 +42,12 @@ def debug_echo(text: str) -> None:
     else:
         logging.info(text)
         return
-    text = "\n".join(prefix + line for line in text.splitlines())
+    try:
+        modified_text = "\n".join(prefix + line for line in text.splitlines())
+        text = modified_text
+    except Exception as e:
+        logging.info(e)
+
     click.echo(text, err=True)
 
 
