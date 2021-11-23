@@ -218,12 +218,14 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
 
     with _fix_head_for_github(context.base_ref, context.head_ref) as base_ref:
         workdir = Path.cwd()
+        debug_echo(f"Workdir: {str(workdir)}")
         targets = TargetFileManager(
             base_path=workdir,
             base_commit=base_ref,
             all_paths=[workdir],
             ignore_rules_file=context.semgrep_ignore,
         )
+        debug_echo("Initialized TargetFileManager")
 
         config_args = []
         # Keep track of which config specifiers are local files/dirs

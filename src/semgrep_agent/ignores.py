@@ -57,6 +57,7 @@ class FileIgnore(Mapping[Path, Entry]):
 
     def __attrs_post_init__(self) -> None:
         self._processed_patterns = Processor(self.base_path).process(self.patterns)
+        debug_echo("Initializing file tree")
         self._init_cache()
 
     def _survives(self, path: Path) -> bool:
@@ -90,7 +91,7 @@ class FileIgnore(Mapping[Path, Entry]):
 
         return True
 
-    def _walk(self, this_path_str: str, root_path_str: str) -> Iterator[Entry]:
+    def _walk(self, this_path_str: str) -> Iterator[Entry]:
         """
         Walks path, returning an Entry iterator for each item.
 
@@ -99,6 +100,7 @@ class FileIgnore(Mapping[Path, Entry]):
 
         Recalculates on every call.
         """
+        debug_echo(f"Walking {this_path_str}")
         this_path = Path(this_path_str)
 
         # Handle non existent paths passed to cli.
@@ -116,10 +118,8 @@ class FileIgnore(Mapping[Path, Entry]):
                     # Ignore the files we produce for logging
                     continue
                 elif self._survives(Path(e.path)):
-                    before = time.time()
-                    for ee in self._walk(e.path, root_path_str):
+                    for ee in self._walk(e.path):
                         yield ee
-                    filename = this_path / e.name
                 else:
                     # TODO I think we can remove the false ones and have existence be survival
                     yield Entry(Path(e.path), False)
@@ -128,7 +128,7 @@ class FileIgnore(Mapping[Path, Entry]):
         before = time.time()
         self._walk_cache = {}
         for target in self.target_paths:
-            entries = self._walk(str(target), str(self.base_path))
+            entries = self._walk(str(target))
             self._walk_cache.update(dict((e.path, e) for e in entries))
         debug_echo(f"Loaded file ignore cache in {time.time() - before} s.")
 
@@ -221,8 +221,10 @@ class Parser:
     def expand_directives(self, line: str) -> Iterable[str]:
         """Load :include files"""
         if line.startswith(":include "):
+            debug_echo(f"Expanding {line}")
             include_path = self.base_path / line[9:]
             if include_path.is_file():
+                debug_echo(f"{str(include_path)} exists. Expanding file")
                 with include_path.open() as include_lines:
                     sub_base = include_path.parent.resolve()
                     sub_parser = Parser(sub_base)

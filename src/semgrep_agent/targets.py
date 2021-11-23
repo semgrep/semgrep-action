@@ -96,9 +96,11 @@ class TargetFileManager:
         """
         import gitdb.exc  # type: ignore
 
+        debug_echo("Initializing git status")
         repo = get_git_repo()
 
         if not repo or self._base_commit is None:
+            debug_echo("Not repo or no base_commit")
             return GitStatus([], [], [], [])
 
         try:
@@ -119,7 +121,7 @@ class TargetFileManager:
                 _timeout=GIT_SH_TIMEOUT,
             ).stdout.decode()
         )
-
+        debug_echo("Parsing git status output")
         added = []
         modified = []
         removed = []
@@ -173,6 +175,7 @@ class TargetFileManager:
         """
         Return list of all absolute paths to analyze
         """
+        debug_echo("Getting path list")
         repo = get_git_repo()
         submodules = repo.submodules  # type: ignore
         submodule_paths = [
@@ -182,6 +185,7 @@ class TargetFileManager:
         # resolve given paths relative to current working directory
         paths = [p.resolve() for p in self._all_paths]
         if self._base_commit is not None:
+            debug_echo(f"- base_commit is {self._base_commit}")
             paths = [
                 a
                 for a in (self._status.added + self._status.modified)
@@ -207,11 +211,14 @@ class TargetFileManager:
 
         # Filter out ignore rules, expand directories
         self._ignore_rules_file.seek(0)
+        debug_echo("Parsing ignore_rules_file")
         patterns = Parser(self._base_path).parse(self._ignore_rules_file)
+        debug_echo("Parsed ignore rules")
 
         file_ignore = FileIgnore(
             base_path=self._base_path, patterns=patterns, target_paths=paths
         )
+        debug_echo("Initialized FileIgnore")
 
         walked_entries = list(file_ignore.entries())
         click.echo(
