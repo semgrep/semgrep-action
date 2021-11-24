@@ -85,6 +85,7 @@ class TargetFileManager:
     _dirty_paths_by_status = attr.ib(type=Dict[str, List[Path]], init=False)
 
     def _fname_to_path(self, repo: "gitpython.Repo", fname: str) -> Path:  # type: ignore
+        debug_echo(f"_fname_to_path: root: {repo.working_tree_dir} fname: {fname}")
         return (Path(repo.working_tree_dir) / fname).resolve()
 
     @_status.default
@@ -176,13 +177,6 @@ class TargetFileManager:
         Return list of all absolute paths to analyze
         """
         debug_echo("Getting path list")
-        repo = get_git_repo()
-        debug_echo("Got git repo")
-        submodules = repo.submodules  # type: ignore
-        debug_echo(f"Resolving submodules {submodules}")
-        submodule_paths = [
-            self._fname_to_path(repo, submodule.path) for submodule in submodules
-        ]
 
         # resolve given paths relative to current working directory
         debug_echo(f"resolving all_paths: {self._all_paths}")
@@ -198,6 +192,13 @@ class TargetFileManager:
             ]
             changed_count = len(paths)
             click.echo(f"| looking at {unit_len(paths, 'changed path')}", err=True)
+            repo = get_git_repo()
+            debug_echo("Got git repo")
+            submodules = repo.submodules  # type: ignore
+            debug_echo(f"Resolving submodules {submodules}")
+            submodule_paths = [
+                self._fname_to_path(repo, submodule.path) for submodule in submodules
+            ]
             paths = [
                 path
                 for path in paths
