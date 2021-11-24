@@ -177,13 +177,17 @@ class TargetFileManager:
         """
         debug_echo("Getting path list")
         repo = get_git_repo()
+        debug_echo("Got git repo")
         submodules = repo.submodules  # type: ignore
+        debug_echo(f"Resolving submodules {submodules}")
         submodule_paths = [
             self._fname_to_path(repo, submodule.path) for submodule in submodules
         ]
 
         # resolve given paths relative to current working directory
+        debug_echo(f"resolving all_paths: {self._all_paths}")
         paths = [p.resolve() for p in self._all_paths]
+
         if self._base_commit is not None:
             debug_echo(f"- base_commit is {self._base_commit}")
             paths = [
@@ -210,6 +214,7 @@ class TargetFileManager:
                 )
 
         # Filter out ignore rules, expand directories
+        debug_echo("Reset ignores file")
         self._ignore_rules_file.seek(0)
         debug_echo("Parsing ignore_rules_file")
         patterns = Parser(self._base_path).parse(self._ignore_rules_file)
