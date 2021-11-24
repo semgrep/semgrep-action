@@ -218,6 +218,8 @@ def main(
     except InvalidGitRepositoryError as error:
         click.secho("Current directory is not a git repository", err=True, fg="red")
         _handle_error(str(error), 2, sapp, meta)
+    except AssertionError as error:
+        raise error
     except Exception as error:
         # Handles all other errors like FileNotFound, EOF, etc.
         # https://docs.python.org/3.9/library/exceptions.html#exception-hierarchy

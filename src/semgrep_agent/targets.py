@@ -85,6 +85,7 @@ class TargetFileManager:
     _dirty_paths_by_status = attr.ib(type=Dict[str, List[Path]], init=False)
 
     def _fname_to_path(self, repo: "gitpython.Repo", fname: str) -> Path:  # type: ignore
+        debug_echo(f"_fname_to_path: root: {repo.working_tree_dir} fname: {fname}")
         return (Path(repo.working_tree_dir) / fname).resolve()
 
     @_status.default
@@ -176,14 +177,11 @@ class TargetFileManager:
         Return list of all absolute paths to analyze
         """
         debug_echo("Getting path list")
-        repo = get_git_repo()
-        submodules = repo.submodules  # type: ignore
-        submodule_paths = [
-            self._fname_to_path(repo, submodule.path) for submodule in submodules
-        ]
 
         # resolve given paths relative to current working directory
+        debug_echo(f"resolving all_paths: {self._all_paths}")
         paths = [p.resolve() for p in self._all_paths]
+
         if self._base_commit is not None:
             debug_echo(f"- base_commit is {self._base_commit}")
             paths = [
@@ -194,6 +192,13 @@ class TargetFileManager:
             ]
             changed_count = len(paths)
             click.echo(f"| looking at {unit_len(paths, 'changed path')}", err=True)
+            repo = get_git_repo()
+            debug_echo("Got git repo")
+            submodules = repo.submodules  # type: ignore
+            debug_echo(f"Resolving submodules {submodules}")
+            submodule_paths = [
+                self._fname_to_path(repo, submodule.path) for submodule in submodules
+            ]
             paths = [
                 path
                 for path in paths
@@ -210,6 +215,7 @@ class TargetFileManager:
                 )
 
         # Filter out ignore rules, expand directories
+        debug_echo("Reset ignores file")
         self._ignore_rules_file.seek(0)
         debug_echo("Parsing ignore_rules_file")
         patterns = Parser(self._base_path).parse(self._ignore_rules_file)
