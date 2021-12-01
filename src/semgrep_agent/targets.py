@@ -110,6 +110,7 @@ class TargetFileManager:
             raise ActionFailure(f"Unknown git ref '{self._base_commit}'")
 
         # Output of git command will be relative to git project root
+        debug_echo("Running git diff")
         status_output = zsplit(
             git.diff(
                 "--cached",
@@ -122,7 +123,7 @@ class TargetFileManager:
                 _timeout=GIT_SH_TIMEOUT,
             ).stdout.decode()
         )
-        debug_echo("Parsing git status output")
+        debug_echo("Finished git diff. Parsing git status output")
         added = []
         modified = []
         removed = []
@@ -252,6 +253,7 @@ class TargetFileManager:
         relative_ignored_paths = [
             path.relative_to(self._base_path) for path in ignored_paths
         ]
+        debug_echo("Finished initializing path list")
 
         return PathLists(
             targeted=relative_survived_paths, ignored=relative_ignored_paths
@@ -264,9 +266,11 @@ class TargetFileManager:
 
         These can be staged, unstaged, or untracked.
         """
+        debug_echo("Initializing dirty paths")
         output = zsplit(
             git.status("--porcelain", "-z", _timeout=GIT_SH_TIMEOUT).stdout.decode()
         )
+        debug_echo("finished getting dirty paths")
         return bucketize(
             output,
             key=lambda line: line[0],
@@ -330,6 +334,7 @@ class TargetFileManager:
         self._abort_on_pending_changes()
         self._abort_on_conflicting_untracked_paths()
 
+        debug_echo("Running git write-tree")
         current_tree = git("write-tree").stdout.decode().strip()
         try:
             for a in self._status.added:
@@ -337,7 +342,10 @@ class TargetFileManager:
                     a.unlink()
                 except FileNotFoundError:
                     click.echo(f"| {a} was not found when trying to delete", err=True)
+
+            debug_echo("Running git checkout for baseline context")
             git.checkout(self._base_commit, "--", ".", _timeout=GIT_SH_TIMEOUT)
+            debug_echo("Finished git checkout for baseline context")
             yield
         finally:
             # git checkout will fail if the checked-out index deletes all files in the repo
@@ -345,7 +353,9 @@ class TargetFileManager:
             # Note that we have no good way of detecting this issue without inspecting the checkout output
             # message, which means we are fragile with respect to git version here.
             try:
+                debug_echo("Running git checkout to return original context")
                 git.checkout(current_tree.strip(), "--", ".", _timeout=GIT_SH_TIMEOUT)
+                debug_echo("Finished git checkout to return original context")
             except sh.ErrorReturnCode as error:
                 output = error.stderr.decode()
                 if (
@@ -367,7 +377,9 @@ class TargetFileManager:
                 # in both the base and head. Only call if there are files to delete
                 to_remove = [r for r in self._status.removed if r.exists()]
                 if to_remove:
+                    debug_echo("Running git rm")
                     git.rm("-f", *(str(r) for r in to_remove), _timeout=GIT_SH_TIMEOUT)
+                    debug_echo("finished git rm")
 
     @contextmanager
     def baseline_paths(self) -> Iterator[List[Path]]:
