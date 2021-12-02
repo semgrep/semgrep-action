@@ -1,3 +1,4 @@
+import subprocess
 from collections import namedtuple
 from contextlib import contextmanager
 from enum import auto
@@ -267,15 +268,24 @@ class TargetFileManager:
         These can be staged, unstaged, or untracked.
         """
         debug_echo("Initializing dirty paths")
-        output = zsplit(
-            git.status("--porcelain", "-z", _timeout=GIT_SH_TIMEOUT).stdout.decode()
+        sub_out = subprocess.run(
+            ["git", "status", "--porcelain", "-z"],
+            timeout=GIT_SH_TIMEOUT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
+        git_status_output = sub_out.stdout.decode("utf-8", errors="replace")
+        debug_echo(f"Git status output: {git_status_output}")
+        output = zsplit(git_status_output)
         debug_echo("finished getting dirty paths")
-        return bucketize(
+
+        dirty_paths = bucketize(
             output,
             key=lambda line: line[0],
             value_transform=lambda line: Path(line[3:]),
         )
+        debug_echo(str(dirty_paths))
+        return dirty_paths
 
     def _abort_on_pending_changes(self) -> None:
         """
