@@ -83,7 +83,8 @@ class TargetFileManager:
     _base_commit = attr.ib(type=Optional[str], default=None)
     _status = attr.ib(type=GitStatus, init=False)
     _paths = attr.ib(type=PathLists, init=False)
-    _dirty_paths_by_status = attr.ib(type=Dict[str, List[Path]], init=False)
+
+    _dirty_paths_by_status: Optional[Dict[str, List[Path]]] = None
 
     def _fname_to_path(self, repo: "gitpython.Repo", fname: str) -> Path:  # type: ignore
         debug_echo(f"_fname_to_path: root: {repo.working_tree_dir} fname: {fname}")
@@ -260,13 +261,15 @@ class TargetFileManager:
             targeted=relative_survived_paths, ignored=relative_ignored_paths
         )
 
-    @_dirty_paths_by_status.default
     def get_dirty_paths_by_status(self) -> Dict[str, List[Path]]:
         """
         Returns all paths that have a git status, grouped by change type.
 
         These can be staged, unstaged, or untracked.
         """
+        if self._dirty_paths_by_status is not None:
+            return self._dirty_paths_by_status
+
         debug_echo("Initializing dirty paths")
         sub_out = subprocess.run(
             ["git", "status", "--porcelain", "-z"],
@@ -285,6 +288,9 @@ class TargetFileManager:
             value_transform=lambda line: Path(line[3:]),
         )
         debug_echo(str(dirty_paths))
+
+        # Cache dirty paths
+        self._dirty_paths_by_status = dirty_paths
         return dirty_paths
 
     def _abort_on_pending_changes(self) -> None:
@@ -293,7 +299,7 @@ class TargetFileManager:
 
         :raises ActionFailure: If the git repo is not in a clean state
         """
-        if set(self._dirty_paths_by_status) - {StatusCode.Untracked}:
+        if set(self.get_dirty_paths_by_status()) - {StatusCode.Untracked}:
             raise ActionFailure(
                 "Found pending changes in tracked files. Diff-aware runs require a clean git state."
             )
@@ -317,7 +323,7 @@ class TargetFileManager:
         )
         untracked_paths = {
             self._fname_to_path(repo, str(path))
-            for path in (self._dirty_paths_by_status.get(StatusCode.Untracked, []))
+            for path in (self.get_dirty_paths_by_status().get(StatusCode.Untracked, []))
         }
         overlapping_paths = untracked_paths & changed_paths
 
