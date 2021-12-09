@@ -63,7 +63,13 @@ def maybe_print_debug_info(meta: "GitMeta") -> None:
 
 def render_error(error: Mapping[str, Any]) -> Sequence[str]:
     spans = error.get("spans")
-    msg = error.get("long_msg", "")
+    msg: str = error.get("long_msg", error.get("message", ""))
+    # semgrep-core errors sometimes include extremely long stack traces;
+    # These aren't useful to the user, and should properly belong in a log
+    # artifact instead. Therefore, truncate messages to the first line.
+    newline_ix = msg.find("\n")
+    if newline_ix > -1:
+        msg = msg[: newline_ix - 1]
     if spans:
         return [f"{s['file']}:{s['start']['line']} {msg}" for s in spans]
     return [msg]
