@@ -188,15 +188,15 @@ class Results:
 def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
     """Fix SARIF errors in semgrep output and pretty format the file."""
     # If no files are scanned by invoke_semgrep_sarif then sarif_output is {}. Just write empty sarif for now
-    if not sarif_output:
-        with sarif_path.open("w") as sarif_file:
-            json.dump(sarif_output, sarif_file, indent=2)
-        return
+    sarif_output.setdefault("runs", [])
+    sarif_output.setdefault("version", "2.1.0")
 
-    rules_by_id = {
-        rule["id"]: rule for rule in sarif_output["runs"][0]["tool"]["driver"]["rules"]
-    }
-    sarif_output["runs"][0]["tool"]["driver"]["rules"] = list(rules_by_id.values())
+    if sarif_output["runs"]:
+        rules_by_id = {
+            rule["id"]: rule
+            for rule in sarif_output["runs"][0]["tool"]["driver"]["rules"]
+        }
+        sarif_output["runs"][0]["tool"]["driver"]["rules"] = list(rules_by_id.values())
 
     with sarif_path.open("w") as sarif_file:
         json.dump(sarif_output, sarif_file, indent=2, sort_keys=True)
