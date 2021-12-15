@@ -10,10 +10,10 @@
 |   * aaaaaaa fix finding
 | to exclude these latter commits, run with
 |   --baseline-ref $(git merge-base main HEAD)
-| looking at 2 changed paths
-| found 2 files in the paths to be scanned
-=== looking for current issues in 2 files
-| 2 current issues found
+| looking at 1 changed path
+| found 1 file in the paths to be scanned
+=== looking for current issues in 1 file
+| 1 current issue found
 | No issues muted with nosemgrep comment
 === not looking at pre-existing issues since all files with current issues are newly created
 === exiting with failing status
