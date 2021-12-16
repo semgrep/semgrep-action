@@ -1,0 +1,38 @@
+steps:
+  - include: generic.yaml
+  - name: branch introduce-err off of main
+    description: create a branch that introduces an error
+    command:
+      - bash
+      - -c
+      - git checkout main && git checkout -b introduce-err && echo "10 == 10" > bad.py && git add bad.py && git commit -m "add finding"
+  - name: branch all-good off of main
+    description: create another branch
+    command:
+      - bash
+      - -c
+      - git checkout main && git checkout -b all-good && echo "print()" > baz.py && git add baz.py && git commit -m "nothing bad here"
+  - name: merge vulnerability into main
+    description: merge the branch with the error into main
+    command:
+      - bash
+      - -c
+      - git checkout main && git merge introduce-err
+  - name: merge main into all-good
+    description: now merge main (with the error) into the good branch
+    command:
+      - bash
+      - -c
+      - git checkout all-good && git merge main
+  - name: new log
+    description: git log with commits
+    command: git log --stat
+    returncode: 0
+    expected_out: new-log.out
+    expected_err: new-log.err
+  - name: new agent
+    description: expect no errors even though merge contains an error
+    command: semgrep-agent --baseline-ref main --config p/r2c-ci
+    returncode: 0
+    expected_out: new-agent.out
+    expected_err: new-agent.err
