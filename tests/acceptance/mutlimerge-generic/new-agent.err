@@ -4,14 +4,11 @@
 === setting up agent configuration
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
 | reporting findings introduced by these commits:
-|   * aaaaaaa add pr finding
-| also reporting findings fixed by these commits from the baseline branch:
-|   * aaaaaaa fix finding
-| to exclude these latter commits, run with
-|   --baseline-ref $(git merge-base main HEAD)
+|   * aaaaaaa Merge branch 'main' into all-good
+|   * aaaaaaa nothing bad here
 | looking at 1 changed path
 === looking for current issues in 1 file
-| 1 current issue found
+| No current issues found
 | No issues muted with nosemgrep comment
-=== not looking at pre-existing issues since all files with current issues are newly created
-=== exiting with failing status
+=== not looking at pre-existing issues since there are no current issues
+=== exiting with success status

@@ -160,15 +160,15 @@ class Results:
 def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
     """Fix SARIF errors in semgrep output and pretty format the file."""
     # If no files are scanned by invoke_semgrep_sarif then sarif_output is {}. Just write empty sarif for now
-    if not sarif_output:
-        with sarif_path.open("w") as sarif_file:
-            json.dump(sarif_output, sarif_file, indent=2)
-        return
+    sarif_output.setdefault("runs", [])
+    sarif_output.setdefault("version", "2.1.0")
 
-    rules_by_id = {
-        rule["id"]: rule for rule in sarif_output["runs"][0]["tool"]["driver"]["rules"]
-    }
-    sarif_output["runs"][0]["tool"]["driver"]["rules"] = list(rules_by_id.values())
+    if sarif_output["runs"]:
+        rules_by_id = {
+            rule["id"]: rule
+            for rule in sarif_output["runs"][0]["tool"]["driver"]["rules"]
+        }
+        sarif_output["runs"][0]["tool"]["driver"]["rules"] = list(rules_by_id.values())
 
     with sarif_path.open("w") as sarif_file:
         json.dump(sarif_output, sarif_file, indent=2, sort_keys=True)
@@ -410,20 +410,27 @@ def invoke_semgrep(
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
+    Also, save semgrep output as a list of json blobs in SEMGREP_SAVE_FILE
+    to help debugging
 
     Returns json output of semgrep as dict object
     """
     max_exit_code = 0
     output = SemgrepOutput([], [], SemgrepTiming([], []))
 
+    semgrep_save_file = open(SEMGREP_SAVE_FILE, "w+")
+    semgrep_save_file.write("[")
+
+    first_chunk = True
+
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
-        with open(SEMGREP_SAVE_FILE, "w+") as output_json_file:
+        with tempfile.NamedTemporaryFile("w") as output_json_file:
             args = semgrep_args.copy()
             args.extend(["--debug"])
             args.extend(
                 [
                     "-o",
-                    output_json_file.name,
+                    output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
                 ]
             )
             for c in chunk:
@@ -436,8 +443,16 @@ def invoke_semgrep(
 
             debug_echo(f"== Semgrep finished with exit code { exit_code }")
 
-            with open(output_json_file.name) as f:
-                parsed_output = json.load(f)
+            with open(
+                output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
+            ) as f:
+                semgrep_output = f.read()
+            parsed_output = json.loads(semgrep_output)
+            if first_chunk:
+                first_chunk = False
+            else:
+                semgrep_save_file.write(",")
+            semgrep_save_file.write(semgrep_output)
 
             output.results = [*output.results, *parsed_output["results"]]
             output.errors = [*output.errors, *parsed_output["errors"]]
@@ -446,6 +461,9 @@ def invoke_semgrep(
                 parsed_timing.get("rules", output.timing.rules),
                 [*output.timing.targets, *parsed_timing.get("targets", [])],
             )
+
+    semgrep_save_file.write("]")
+    semgrep_save_file.close()
 
     return max_exit_code, output
 

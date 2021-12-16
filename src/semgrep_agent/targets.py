@@ -110,6 +110,7 @@ class TargetFileManager:
                 "-z",
                 "--diff-filter=ACDMRTUXB",
                 "--ignore-submodules",
+                "--merge-base",
                 self._base_commit,
                 _timeout=GIT_SH_TIMEOUT,
             ).stdout.decode()

@@ -1,0 +1,33 @@
+commit aaaaaaa
+Merge: aaaaaaa bbbbbbb
+Author: Test <test@r2c.dev>
+Date:   YYYY-MM-DD
+
+    Merge branch 'main' into all-good
+
+commit aaaaaaa
+Author: Test <test@r2c.dev>
+Date:   YYYY-MM-DD
+
+    nothing bad here
+
+ baz.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit aaaaaaa
+Author: Test <test@r2c.dev>
+Date:   YYYY-MM-DD
+
+    add finding
+
+ bad.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit aaaaaaa
+Author: Test <test@r2c.dev>
+Date:   YYYY-MM-DD
+
+    base
+
+ foo.py | 1 +
+ 1 file changed, 1 insertion(+)
