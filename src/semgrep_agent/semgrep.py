@@ -59,8 +59,6 @@ class RunContext:
     base_ref: Optional[str]
     # The head ref; Semgrep checks for findings on this ref
     head_ref: Optional[str]
-    # Ignore file text stream
-    semgrep_ignore: TextIO
     # If true, rewrites rule IDs in findings to a shorter value
     rewrite_rule_ids: bool
     # If True, sends metrics; also currently sends metrics if False
@@ -117,32 +115,6 @@ def resolve_config_shorthand(config: str) -> str:
     if maybe_prefix in {"p/", "r/", "s/"}:
         return f"https://semgrep.dev/c/{config}"
     return config
-
-
-def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
-    semgrepignore = io.StringIO()
-    TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
-
-    semgrepignore_path = Path(".semgrepignore")
-    if semgrepignore_path.is_file():
-        click.echo("| using path ignore rules from .semgrepignore", err=True)
-        semgrepignore.write(semgrepignore_path.read_text())
-    else:
-        click.echo(
-            "| using default path ignore rules of common test and dependency directories",
-            err=True,
-        )
-        semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
-
-    if ignore_patterns:
-        click.echo(
-            "| adding further path ignore rules configured on the web UI", err=True
-        )
-        semgrepignore.write("\n# Ignores from semgrep app\n")
-        semgrepignore.write("\n".join(ignore_patterns))
-        semgrepignore.write("\n")
-
-    return semgrepignore
 
 
 @dataclass
@@ -223,7 +195,6 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
             base_path=workdir,
             base_commit=base_ref,
             all_paths=[workdir],
-            ignore_rules_file=context.semgrep_ignore,
         )
         debug_echo("Initialized TargetFileManager")
 

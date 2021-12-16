@@ -167,7 +167,7 @@ class TargetFileManager:
         return GitStatus(added, modified, removed, unmerged)
 
     @_paths.default
-    def _get_path_lists(self) -> PathLists:
+    def _get_path_lists(self) -> List[Path]:
         """
         Return list of all absolute paths to analyze
         """
@@ -209,15 +209,9 @@ class TargetFileManager:
                     err=True,
                 )
 
-        relative_survived_paths = [
-            path.relative_to(self._base_path) for path in paths
-        ]
-        relative_ignored_paths = []
         debug_echo("Finished initializing path list")
 
-        return PathLists(
-            targeted=relative_survived_paths, ignored=relative_ignored_paths
-        )
+        return [path.relative_to(self._base_path) for path in paths]
 
     def get_dirty_paths_by_status(self) -> Dict[str, List[Path]]:
         """
