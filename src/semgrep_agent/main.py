@@ -356,7 +356,6 @@ def protected_main(
         committed_datetime=committed_datetime,
         base_ref=meta.base_commit_ref,
         head_ref=meta.head_ref,
-        semgrep_ignore=semgrep.get_semgrepignore(sapp.scan.ignore_patterns),
         rewrite_rule_ids=(rewrite_rule_ids and not sapp.is_configured),
         enable_metrics=enable_metrics,
         timeout=(timeout if timeout > 0 else None),

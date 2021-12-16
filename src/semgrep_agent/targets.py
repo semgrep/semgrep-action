@@ -21,8 +21,6 @@ from sh.contrib import git
 
 from semgrep_agent.constants import GIT_SH_TIMEOUT
 from semgrep_agent.exc import ActionFailure
-from semgrep_agent.ignores import FileIgnore
-from semgrep_agent.ignores import Parser
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import zsplit
@@ -57,7 +55,6 @@ class TargetFileManager:
     Handles all logic related to knowing what files to run on.
 
     This includes:
-        - understanding files are ignores based on semgrepignore rules
         - traversing project directories
         - pruning traversal
         - listing staged files
@@ -356,7 +353,6 @@ class TargetFileManager:
 
         Returned list of paths are all relative paths and include all files that are
             - already in the baseline commit, i.e. not created later
-            - not ignored based on .semgrepignore rules
             - in any path include filters specified.
 
         Returned list is empty if a baseline commit is inaccessible.
@@ -372,7 +368,7 @@ class TargetFileManager:
             with self._baseline_context():
                 yield [
                     relative_path
-                    for relative_path in self._paths.targeted
+                    for relative_path in self._paths
                     if self._fname_to_path(repo, str(relative_path))
                     not in self._status.added
                 ]
@@ -383,13 +379,12 @@ class TargetFileManager:
         Prepare file system for current scan, and return the paths to be analyzed.
 
         Returned list of paths are all relative paths and include all files that are
-            - not ignored based on .semgrepignore rules
             - in any path include filters specified.
 
         :return: A list of paths
         :raises ActionFailure: If git cannot detect a HEAD commit or unmerged files exist
         """
-        yield self._paths.targeted
+        yield self._paths
 
     @property
     def searched_paths(self) -> List[Path]:
@@ -398,4 +393,4 @@ class TargetFileManager:
 
         :return: A list of paths NOT ignored, all relative to root directory
         """
-        return self._paths.targeted
+        return self._paths
