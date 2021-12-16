@@ -4,11 +4,9 @@
 === setting up agent configuration
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
 | using semgrep rules from https://semgrep.dev/c/p/r2c
-| using default path ignore rules of common test and dependency directories
 | reporting findings introduced by these commits:
 |   * aaaaaaa add finding
 | looking at 1 changed path
-| found 1 file in the paths to be scanned
 === looking for current issues in 1 file
 | 1 current issue found
 | No issues muted with nosemgrep comment
