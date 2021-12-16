@@ -26,6 +26,7 @@ REPO_ROOT = str(Path(__file__).parent.parent.parent.resolve())
 
 BRANCH_COMMIT = re.compile(r"^(commit|\|   \*) ([0-9a-f]+)", re.MULTILINE)
 DATE_STR = re.compile(r"^Date:   (.*)$", re.MULTILINE)
+BRANCH_MERGE = re.compile(r"^Merge: (.*)$", re.MULTILINE)
 ENV_VERSIONS = re.compile(
     r"^(\| versions\s+?- semgrep ).+?( on Python ).+?$", re.MULTILINE
 )
@@ -49,6 +50,7 @@ CLEANING_FUNCS: Sequence[Callable[[str], str]] = [
     lambda s: "\n".join(line.rstrip() for line in s.splitlines()) + "\n",
     lambda s: re.sub(BRANCH_COMMIT, r"\1 aaaaaaa", s),
     lambda s: re.sub(DATE_STR, r"Date:   YYYY-MM-DD", s),
+    lambda s: re.sub(BRANCH_MERGE, r"Merge: aaaaaaa bbbbbbb", s),
     lambda s: re.sub(ENV_VERSIONS, r"\1x.y.z\2x.y.z", s),
     lambda s: re.sub(GITHUB_ACTIONS_DEBUG, "", s),
     lambda s: re.sub(
