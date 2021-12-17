@@ -17,13 +17,15 @@ from glom import T
 from urllib3.util.retry import Retry
 
 from semgrep_agent import constants
+from semgrep_agent.constants import LOG_FOLDER
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
-from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import validate_token_length
 from semgrep_agent.yaml import yaml
+
+SEMGREP_RULES_FILE = LOG_FOLDER + "/semgrep_app_rules.yaml"
 
 # 4, 8, 16 seconds
 RETRYING_ADAPTER = requests.adapters.HTTPAdapter(
@@ -156,10 +158,10 @@ class Sapp:
             return response.text
 
     def download_rules(self) -> Tuple[Path, List[str], List[str]]:
-        """Save the rules configured on semgrep app to a temporary file"""
-        # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
-        rules_file = tempfile.NamedTemporaryFile(suffix=".yml", delete=False)  # nosem
-        rules_path = Path(rules_file.name)  # nosem
+        """Save the rules configured on semgrep app to a file in .semgrep_logs"""
+        """so that it persists for debugging """
+        rules_file = SEMGREP_RULES_FILE
+        rules_path = Path(rules_file)
         rules = self.fetch_rules_text()
         parsed = yaml.load(rules)
         rules_path.write_text(rules)
