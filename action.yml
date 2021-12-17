@@ -3,7 +3,7 @@ author: "Return To Corporation"
 description: "Easily detect and prevent bugs and anti-patterns in your codebase"
 runs:
   using: "docker"
-  image: "docker://returntocorp/semgrep-agent:beta"
+  image: "docker://returntocorp/semgrep-agent:pr-461"
 inputs:
   config:
     description: |
