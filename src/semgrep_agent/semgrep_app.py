@@ -159,7 +159,7 @@ class Sapp:
         """Save the rules configured on semgrep app to a file in .semgrep_logs"""
         """so that it persists for debugging """
         rules_file = SEMGREP_RULES_FILE
-        rules_path = Path(rules_file)  # nosem
+        rules_path = Path(rules_file)
         rules = self.fetch_rules_text()
         parsed = yaml.load(rules)
         rules_path.write_text(rules)
