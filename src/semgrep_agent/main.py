@@ -45,8 +45,8 @@ ENV_VAR_HELP_TEXT = "\n        ".join(
     f"{k}: {v}\n" for k, v in ALL_MANUAL_ENV_VARS.items()
 )
 
-LOG_FILE = LOG_FOLDER + "/semgrep_agent_logs"
-SEMGREP_RULES_FILE = LOG_FOLDER + "/semgrep_app_rules.yaml"
+LOG_PATH = LOG_FOLDER / "semgrep_agent_logs"
+SEMGREP_RULES_PATH = LOG_FOLDER / "semgrep_app_rules.yaml"
 
 
 def url(string: str) -> str:
@@ -173,11 +173,10 @@ def main(
     scan_environment: str,
 ) -> NoReturn:
 
-    if not os.path.isdir(LOG_FOLDER):
-        os.mkdir(LOG_FOLDER)
+    LOG_FOLDER.mkdir(exist_ok=True)
 
     logging.basicConfig(
-        filename=(LOG_FILE),
+        filename=(str(LOG_PATH)),
         filemode="w",
         format="%(asctime)s === %(message)s",
         datefmt="%H:%M:%S",
@@ -310,7 +309,7 @@ def protected_main(
             click.echo(f"| using semgrep rules from {resolved}", err=True)
         config = resolved_config
     elif sapp.is_configured:
-        local_config_path, rule_ids, cai_ids = sapp.download_rules()
+        rule_ids, cai_ids = sapp.download_rules()
         if len(rule_ids) + len(cai_ids) == 0:
             message = """
             === [ERROR] This policy will not run any rules
@@ -325,8 +324,8 @@ def protected_main(
             message = dedent(message).strip()
             click.secho(message, err=True, fg="red")
             sys.exit(1)
-        config = (str(local_config_path),)
-        logging.info(f"Config saved to {SEMGREP_RULES_FILE}")
+        config = (str(SEMGREP_RULES_PATH),)
+        logging.info(f"Config saved to {SEMGREP_RULES_PATH}")
         click.echo(
             f"| using {len(rule_ids)} semgrep rules configured on the web UI", err=True
         )

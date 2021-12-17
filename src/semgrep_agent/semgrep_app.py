@@ -18,7 +18,7 @@ from urllib3.util.retry import Retry
 
 from semgrep_agent import constants
 from semgrep_agent.exc import ActionFailure
-from semgrep_agent.main import SEMGREP_RULES_FILE
+from semgrep_agent.main import SEMGREP_RULES_PATH
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import Results
 from semgrep_agent.utils import debug_echo
@@ -155,19 +155,17 @@ class Sapp:
         else:
             return response.text
 
-    def download_rules(self) -> Tuple[Path, List[str], List[str]]:
+    def download_rules(self) -> Tuple[List[str], List[str]]:
         """Save the rules configured on semgrep app to a file in .semgrep_logs"""
         """so that it persists for debugging """
-        rules_file = SEMGREP_RULES_FILE
-        rules_path = Path(rules_file)
         rules = self.fetch_rules_text()
         parsed = yaml.load(rules)
-        rules_path.write_text(rules)
+        SEMGREP_RULES_PATH.write_text(rules)
         rule_ids = [
             r["id"] for r in parsed["rules"] if "r2c-internal-cai" not in r["id"]
         ]
         cai_ids = [r["id"] for r in parsed["rules"] if "r2c-internal-cai" in r["id"]]
-        return rules_path, rule_ids, cai_ids
+        return rule_ids, cai_ids
 
     def report_failure(self, stderr: str, exit_code: int) -> int:
         """

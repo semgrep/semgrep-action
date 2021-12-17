@@ -114,7 +114,7 @@ class FileIgnore(Mapping[Path, Entry]):
             for e in os.scandir(this_path_str):
                 if e.is_symlink():
                     continue
-                elif this_path.match(LOG_FOLDER):
+                elif this_path.match(str(LOG_FOLDER)):
                     # Ignore the files we produce for logging
                     continue
                 elif self._survives(Path(e.path)):

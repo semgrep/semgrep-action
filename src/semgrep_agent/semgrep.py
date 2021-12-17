@@ -42,7 +42,7 @@ from semgrep_agent.utils import render_error
 ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 
-SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
+SEMGREP_SAVE_PATH = LOG_FOLDER / "semgrep_agent_output"
 
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
@@ -439,7 +439,7 @@ def invoke_semgrep(
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
-    Also, save semgrep output as a list of json blobs in SEMGREP_SAVE_FILE
+    Also, save semgrep output as a list of json blobs at SEMGREP_SAVE_PATH
     to help debugging
 
     Returns json output of semgrep as dict object
@@ -447,7 +447,7 @@ def invoke_semgrep(
     max_exit_code = 0
     output = SemgrepOutput([], [], SemgrepTiming([], []))
 
-    semgrep_save_file = open(SEMGREP_SAVE_FILE, "w+")
+    semgrep_save_file = SEMGREP_SAVE_PATH.open("w+")
     semgrep_save_file.write("[")
 
     first_chunk = True
