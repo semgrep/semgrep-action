@@ -46,6 +46,7 @@ ENV_VAR_HELP_TEXT = "\n        ".join(
 )
 
 LOG_FILE = LOG_FOLDER + "/semgrep_agent_logs"
+SEMGREP_RULES_FILE = LOG_FOLDER + "/semgrep_app_rules.yaml"
 
 
 def url(string: str) -> str:
@@ -325,6 +326,7 @@ def protected_main(
             click.secho(message, err=True, fg="red")
             sys.exit(1)
         config = (str(local_config_path),)
+        logging.info(f"Config saved to { SEMGREP_RULES_FILE }")
         click.echo(
             f"| using {len(rule_ids)} semgrep rules configured on the web UI", err=True
         )
