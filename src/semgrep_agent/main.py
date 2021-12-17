@@ -326,7 +326,7 @@ def protected_main(
             click.secho(message, err=True, fg="red")
             sys.exit(1)
         config = (str(local_config_path),)
-        logging.info(f"Config saved to { SEMGREP_RULES_FILE }")
+        logging.info(f"Config saved to {SEMGREP_RULES_FILE}")
         click.echo(
             f"| using {len(rule_ids)} semgrep rules configured on the web UI", err=True
         )

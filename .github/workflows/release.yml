@@ -6,6 +6,7 @@ on:
       - "**"
     tags:
       - "v*"
+      - "beta"
   pull_request:
 
 jobs:
