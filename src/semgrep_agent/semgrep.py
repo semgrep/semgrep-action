@@ -405,7 +405,7 @@ def _update_baseline_findings(
                         args.extend(["--metrics", "off"])
 
                     _, semgrep_output = invoke_semgrep(
-                        args, paths_to_check, timeout=context.timeout
+                        args, paths_to_check, timeout=context.timeout, baseline=True
                     )
                     findings.baseline.update_findings(
                         Finding.from_semgrep_result(result, context.committed_datetime)
@@ -435,19 +435,27 @@ class SemgrepOutput:
 
 
 def invoke_semgrep(
-    semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
+    semgrep_args: List[str],
+    targets: List[str],
+    *,
+    timeout: Optional[int],
+    baseline: bool = False,
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
     Also, save semgrep output as a list of json blobs in SEMGREP_SAVE_FILE
-    to help debugging
+    to help debugging. Baseline scan output will be saved separately with
+    the "_baseline" suffix.
 
     Returns json output of semgrep as dict object
     """
     max_exit_code = 0
     output = SemgrepOutput([], [], SemgrepTiming([], []))
 
-    semgrep_save_file = open(SEMGREP_SAVE_FILE, "w+")
+    semgrep_save_file_path = (
+        SEMGREP_SAVE_FILE + "_baseline" if baseline else SEMGREP_SAVE_FILE
+    )
+    semgrep_save_file = open(semgrep_save_file_path, "w+")
     semgrep_save_file.write("[")
 
     first_chunk = True
