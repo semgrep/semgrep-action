@@ -325,10 +325,11 @@ def _get_head_findings(
             f"| {unit_len(range(len(findings.current) - inventory_findings_len), 'current issue')} found",
             err=True,
         )
-        click.echo(
-            f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment (not counted as current)",
-            err=True,
-        )
+        if len(findings.ignored) > 0:
+            click.echo(
+                f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment (not counted as current)",
+                err=True,
+            )
     return findings, stats
 
 
