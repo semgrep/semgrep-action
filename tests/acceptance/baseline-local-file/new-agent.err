@@ -10,7 +10,7 @@
 | found 2 files in the paths to be scanned
 === looking for current issues in 2 files
 | 1 current issue found
-| No issues muted with nosemgrep comment
 === .semgrep.yml file not found in baseline, skipping scanning for baseline
 === not looking at pre-exiting issues since after filtering out local files that don't exist in baseline, no configs left to run
+=== analyzing new issues in this scan
 === exiting with failing status
