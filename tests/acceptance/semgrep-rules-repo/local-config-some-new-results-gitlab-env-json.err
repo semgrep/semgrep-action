@@ -10,6 +10,6 @@
 | found 6 files in the paths to be scanned
 === looking for current issues in 6 files
 | 2 current issues found
-| No issues muted with nosemgrep comment
 === not looking at pre-existing issues since all files with current issues are newly created
+=== analyzing new issues in this scan
 === exiting with failing status

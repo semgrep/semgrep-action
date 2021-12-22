@@ -325,10 +325,11 @@ def _get_head_findings(
             f"| {unit_len(range(len(findings.current) - inventory_findings_len), 'current issue')} found",
             err=True,
         )
-        click.echo(
-            f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment",
-            err=True,
-        )
+        if len(findings.ignored) > 0:
+            click.echo(
+                f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment (not counted as current)",
+                err=True,
+            )
     return findings, stats
 
 
@@ -415,8 +416,11 @@ def _update_baseline_findings(
                     for finding in findings.baseline:
                         if finding.is_cai_finding():
                             inventory_findings_len += 1
+                    baseline_findings_count = (
+                        len(findings.baseline) - inventory_findings_len
+                    )
                     click.echo(
-                        f"| {unit_len(range(len(findings.baseline) - inventory_findings_len), 'pre-existing issue')} found",
+                        f"| {unit_len(range(baseline_findings_count), 'current issue')} removed by diffing logic",
                         err=True,
                     )
 

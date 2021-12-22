@@ -284,3 +284,7 @@ class FindingSets:
     @property
     def new_ignored(self) -> Set[Finding]:
         return self.ignored - self.baseline
+
+    @property
+    def new_all(self) -> Set[Finding]:
+        return self.new.union(self.new_ignored)

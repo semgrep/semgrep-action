@@ -370,6 +370,11 @@ def protected_main(
     errors = results.findings.errors
 
     blocking_findings = {finding for finding in new_findings if finding.is_blocking()}
+    if meta.base_commit_ref:
+        click.echo(
+            "=== analyzing new issues in this scan",
+            err=True,
+        )
     if json_output:
         # Output all new findings as json
         json_contents = [f.to_dict(omit=set()) for f in new_findings]
@@ -417,7 +422,7 @@ def protected_main(
             if finding.is_cai_finding():
                 inventory_findings_len += 1
         click.echo(
-            f"| {unit_len(range(len(non_blocking_findings)-inventory_findings_len), 'non-blocking finding')} hidden in output",
+            f"| (non-blocking issue details hidden in output)",
             err=True,
         )
         if inventory_findings_len > 0:
@@ -430,17 +435,24 @@ def protected_main(
 
     if sapp.is_configured:
         sapp.report_results(results, rule_ids, cai_ids)
+        click.echo(
+            f"| {unit_len(results.findings.new, 'new issue')} uploaded to the app",
+            err=True,
+        )
+        click.echo(
+            f"| {unit_len(results.findings.new_ignored, 'muted issue')} synced to the app",
+            err=True,
+        )
+        if len(results.findings.new_all) > 0:
+            click.echo(
+                f"| visit {publish_url}/orgs/{sapp.deployment_name}/findings?repo={meta.repo_name}",
+                err=True,
+            )
 
     audit_mode = meta.event_name in audit_on
     if blocking_findings and audit_mode:
         click.echo(
             f"| audit mode is on for {meta.event_name}, so the findings won't cause failure",
-            err=True,
-        )
-
-    if sapp.is_configured:
-        click.echo(
-            f"| to see your findings in the app, go to {publish_url}/orgs/{sapp.deployment_name}/findings?repo={meta.repo_name}",
             err=True,
         )
 
