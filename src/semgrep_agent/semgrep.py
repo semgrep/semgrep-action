@@ -43,6 +43,7 @@ ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 
 SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
+SEMGREP_SAVE_FILE_BASELINE = LOG_FOLDER + "/semgrep_agent_output_baseline"
 
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
@@ -452,8 +453,12 @@ def invoke_semgrep(
     max_exit_code = 0
     output = SemgrepOutput([], [], SemgrepTiming([], []))
 
+    semgrep_save_file_baseline = Path(SEMGREP_SAVE_FILE_BASELINE)
+    if not baseline and semgrep_save_file_baseline.exists():
+        semgrep_save_file_baseline.unlink()
+
     semgrep_save_file_path = (
-        SEMGREP_SAVE_FILE + "_baseline" if baseline else SEMGREP_SAVE_FILE
+        SEMGREP_SAVE_FILE_BASELINE if baseline else SEMGREP_SAVE_FILE
     )
     semgrep_save_file = open(semgrep_save_file_path, "w+")
     semgrep_save_file.write("[")
