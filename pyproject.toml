@@ -23,7 +23,7 @@ PyYAML = "^5.4.1"
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
 jsonschema = "^4.3.3"
-types-PyYAML = "^5.4.10"
+types-PyYAML = "^6.0.3"
 
 [tool.poetry.scripts]
 semgrep-agent = "semgrep_agent.__main__:error_guard"
