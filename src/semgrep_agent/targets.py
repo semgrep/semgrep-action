@@ -273,7 +273,7 @@ class TargetFileManager:
 
         debug_echo("Initializing dirty paths")
         sub_out = subprocess.run(
-            ["git", "status", "--porcelain", "-z"],
+            ["git", "status", "--porcelain", "-z", "':!.semgrep_logs/'"],
             timeout=GIT_SH_TIMEOUT,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
