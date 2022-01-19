@@ -48,6 +48,8 @@ SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
 # we assume an average ~250 characters for a path in the worst case
 PATHS_CHUNK_SIZE = 500
 
+SEMGREPIGNORE_ACTION = Path(".semgrepignore_action")
+
 
 @attr.s(auto_attribs=True, frozen=True)
 class RunContext:
@@ -115,6 +117,24 @@ def resolve_config_shorthand(config: str) -> str:
     if maybe_prefix in {"p/", "r/", "s/"}:
         return f"https://semgrep.dev/c/{config}"
     return config
+
+
+def create_semgrepignore(app_ignore_patterns: List[str]) -> None:
+    with open(SEMGREPIGNORE_ACTION, "w") as semgrepignore:
+        TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
+
+        semgrepignore_path = Path(".semgrepignore")
+        if semgrepignore_path.is_file():
+            semgrepignore.write(semgrepignore_path.read_text())
+        else:
+
+            semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
+
+        if app_ignore_patterns:
+            click.echo("| using path ignore rules configured on the web UI", err=True)
+            semgrepignore.write("\n# Ignores from semgrep app\n")
+            semgrepignore.write("\n".join(app_ignore_patterns))
+            semgrepignore.write("\n")
 
 
 @dataclass

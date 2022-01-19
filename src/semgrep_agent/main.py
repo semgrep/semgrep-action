@@ -351,6 +351,8 @@ def protected_main(
 
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
     start_time = datetime.now()
+    semgrep.create_semgrepignore(sapp.scan.ignore_patterns)
+    os.environ["EXPLICIT_SEMGREPIGNORE"] = str(semgrep.SEMGREPIGNORE_ACTION)
     scan_context = semgrep.RunContext(
         config_specifier=config,
         committed_datetime=committed_datetime,
@@ -361,6 +363,7 @@ def protected_main(
         timeout=(timeout if timeout > 0 else None),
     )
     results = semgrep.scan(scan_context)
+    semgrep.SEMGREPIGNORE_ACTION.unlink()
     end_time = datetime.now()
 
     new_findings = results.findings.new
