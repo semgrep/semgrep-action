@@ -9,6 +9,6 @@
 | looking at 1 changed path
 === looking for current issues in 1 file
 | No current issues found
-| No issues muted with nosemgrep comment
 === not looking at pre-existing issues since there are no current issues
+=== analyzing new issues in this scan
 === exiting with success status
