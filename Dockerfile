@@ -5,6 +5,7 @@ COPY poetry.lock pyproject.toml ./
 
 ENV INSTALLED_SEMGREP_VERSION=0.79.0
 
+
 # This is all in one run command in order to save disk space.
 # Note that there's a tradeoff here for debuggability.
 RUN apk add --no-cache --virtual=.build-deps build-base cargo libffi-dev openssl-dev yaml-dev &&\

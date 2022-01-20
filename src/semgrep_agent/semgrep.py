@@ -43,6 +43,7 @@ os.environ["SEMGREP_USER_AGENT_APPEND"] = "(Agent)"
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False)
 
 SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
+SEMGREP_SAVE_FILE_BASELINE = LOG_FOLDER + "/semgrep_agent_output_baseline"
 
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
@@ -316,10 +317,11 @@ def _get_head_findings(
             f"| {unit_len(range(len(findings.current) - inventory_findings_len), 'current issue')} found",
             err=True,
         )
-        click.echo(
-            f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment",
-            err=True,
-        )
+        if len(findings.ignored) > 0:
+            click.echo(
+                f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment (not counted as current)",
+                err=True,
+            )
     return findings, stats
 
 
@@ -396,7 +398,7 @@ def _update_baseline_findings(
                         args.extend(["--metrics", "off"])
 
                     _, semgrep_output = invoke_semgrep(
-                        args, paths_to_check, timeout=context.timeout
+                        args, paths_to_check, timeout=context.timeout, baseline=True
                     )
                     findings.baseline.update_findings(
                         Finding.from_semgrep_result(result, context.committed_datetime)
@@ -406,8 +408,11 @@ def _update_baseline_findings(
                     for finding in findings.baseline:
                         if finding.is_cai_finding():
                             inventory_findings_len += 1
+                    baseline_findings_count = (
+                        len(findings.baseline) - inventory_findings_len
+                    )
                     click.echo(
-                        f"| {unit_len(range(len(findings.baseline) - inventory_findings_len), 'pre-existing issue')} found",
+                        f"| {unit_len(range(baseline_findings_count), 'current issue')} removed by diffing logic",
                         err=True,
                     )
 
@@ -426,19 +431,31 @@ class SemgrepOutput:
 
 
 def invoke_semgrep(
-    semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
+    semgrep_args: List[str],
+    targets: List[str],
+    *,
+    timeout: Optional[int],
+    baseline: bool = False,
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
     Also, save semgrep output as a list of json blobs in SEMGREP_SAVE_FILE
-    to help debugging
+    to help debugging. Baseline scan output will be saved separately with
+    the "_baseline" suffix.
 
     Returns json output of semgrep as dict object
     """
     max_exit_code = 0
     output = SemgrepOutput([], [], SemgrepTiming([], []))
 
-    semgrep_save_file = open(SEMGREP_SAVE_FILE, "w+")
+    semgrep_save_file_baseline = Path(SEMGREP_SAVE_FILE_BASELINE)
+    if not baseline and semgrep_save_file_baseline.exists():
+        semgrep_save_file_baseline.unlink()
+
+    semgrep_save_file_path = (
+        SEMGREP_SAVE_FILE_BASELINE if baseline else SEMGREP_SAVE_FILE
+    )
+    semgrep_save_file = open(semgrep_save_file_path, "w+")
     semgrep_save_file.write("[")
 
     first_chunk = True

@@ -51,26 +51,42 @@ Connect to semgrep-app with the `--publish-token` flag.
 
 ## Tests
 
-Run unit tests with
+### Unit tests
 
 ```
 pytest tests
 ```
 
-Run acceptance tests with
+### Acceptance tests
+
+Run with
 
 ```
 pytest tests/acceptance/qa.py
 ```
 
-Regenerate acceptance snapshots with
+Regenerate snapshots with
 
 ```
 python tests/acceptance/qa.py
 ```
 
-Please always double-check generated snapshots for accuracy prior to committing
-them!
+Please always double-check generated snapshots for accuracy prior to committing!
+
+### Testing a branch on a real repo
+
+To test your changes on your `my-changes` branch on a real project,
+change the semgrep-action CI job config from
+
+```yaml
+uses: returntocorp/semgrep-action@v1
+```
+
+to
+
+```yaml
+uses: returntocorp/semgrep-action/tests/local-image-action@my-changes
+```
 
 ## Release
 
