@@ -39,8 +39,8 @@ from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import print_git_log
 from semgrep_agent.utils import render_error
 
-ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
-semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
+os.environ["SEMGREP_USER_AGENT_APPEND"] = "(Agent)"
+semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False)
 
 SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
 
@@ -458,7 +458,9 @@ def invoke_semgrep(
 
             debug_echo(f"== Invoking semgrep with { len(args) } args")
 
-            exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
+            exit_code = semgrep_exec(
+                *args, _timeout=timeout, _err=debug_echo, _env=os.environ
+            ).exit_code
             max_exit_code = max(max_exit_code, exit_code)
 
             debug_echo(f"== Semgrep finished with exit code { exit_code }")
@@ -513,7 +515,9 @@ def invoke_semgrep_sarif(
             for c in chunk:
                 args.append(c)
 
-            exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
+            exit_code = semgrep_exec(
+                *args, _timeout=timeout, _err=debug_echo, _env=os.environ
+            ).exit_code
             max_exit_code = max(max_exit_code, exit_code)
 
             with open(
