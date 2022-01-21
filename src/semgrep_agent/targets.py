@@ -21,6 +21,8 @@ from sh.contrib import git
 
 from semgrep_agent.constants import GIT_SH_TIMEOUT
 from semgrep_agent.exc import ActionFailure
+from semgrep_agent.ignores import FileIgnore
+from semgrep_agent.ignores import Parser
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import zsplit
@@ -50,11 +52,18 @@ class StatusCode:
 
 
 @attr.s
+class PathLists:
+    targeted = attr.ib(type=List[Path])
+    ignored = attr.ib(type=List[Path])
+
+
+@attr.s
 class TargetFileManager:
     """
     Handles all logic related to knowing what files to run on.
 
     This includes:
+        - understanding files are ignores based on semgrepignore rules
         - traversing project directories
         - pruning traversal
         - listing staged files
@@ -65,13 +74,15 @@ class TargetFileManager:
         base_path: Path to start walking files from
         paths: List of Paths (absolute or relative to current working directory) that
                 we want to traverse
+        ignore_rules_file: Text buffer with .semgrepignore rules
     """
 
     _base_path = attr.ib(type=Path)
     _all_paths = attr.ib(type=List[Path])
+    _ignore_rules_file = attr.ib(type=TextIO)
     _base_commit = attr.ib(type=Optional[str], default=None)
     _status = attr.ib(type=GitStatus, init=False)
-    _paths = attr.ib(type=List[Path], init=False)
+    _paths = attr.ib(type=PathLists, init=False)
 
     _dirty_paths_by_status: Optional[Dict[str, List[Path]]] = None
 
@@ -165,7 +176,7 @@ class TargetFileManager:
         return GitStatus(added, modified, removed, unmerged)
 
     @_paths.default
-    def _get_path_lists(self) -> List[Path]:
+    def _get_path_lists(self) -> PathLists:
         """
         Return list of all absolute paths to analyze
         """
@@ -207,9 +218,49 @@ class TargetFileManager:
                     err=True,
                 )
 
+        # Filter out ignore rules, expand directories
+        debug_echo("Reset ignores file")
+        self._ignore_rules_file.seek(0)
+        debug_echo("Parsing ignore_rules_file")
+        patterns = Parser(self._base_path).parse(self._ignore_rules_file)
+        debug_echo("Parsed ignore rules")
+
+        file_ignore = FileIgnore(
+            base_path=self._base_path, patterns=patterns, target_paths=paths
+        )
+        debug_echo("Initialized FileIgnore")
+
+        walked_entries = list(file_ignore.entries())
+        click.echo(
+            f"| found {unit_len(walked_entries, 'file')} in the paths to be scanned",
+            err=True,
+        )
+        survived_paths: List[Path] = []
+        ignored_paths: List[Path] = []
+        for elem in walked_entries:
+            paths_group = survived_paths if elem.survives else ignored_paths
+            paths_group.append(elem.path)
+
+        if ignored_paths:
+            click.echo(
+                f"| skipping {unit_len(ignored_paths, 'file')} based on path ignore rules",
+                err=True,
+            )
+
+            for p in patterns:
+                debug_echo(f"Ignoring files matching pattern '{p}'")
+
+        relative_survived_paths = [
+            path.relative_to(self._base_path) for path in survived_paths
+        ]
+        relative_ignored_paths = [
+            path.relative_to(self._base_path) for path in ignored_paths
+        ]
         debug_echo("Finished initializing path list")
 
-        return [path.relative_to(self._base_path) for path in paths]
+        return PathLists(
+            targeted=relative_survived_paths, ignored=relative_ignored_paths
+        )
 
     def get_dirty_paths_by_status(self) -> Dict[str, List[Path]]:
         """
@@ -354,6 +405,7 @@ class TargetFileManager:
 
         Returned list of paths are all relative paths and include all files that are
             - already in the baseline commit, i.e. not created later
+            - not ignored based on .semgrepignore rules
             - in any path include filters specified.
 
         Returned list is empty if a baseline commit is inaccessible.
@@ -369,7 +421,7 @@ class TargetFileManager:
             with self._baseline_context():
                 yield [
                     relative_path
-                    for relative_path in self._paths
+                    for relative_path in self._paths.targeted
                     if self._fname_to_path(repo, str(relative_path))
                     not in self._status.added
                 ]
@@ -380,12 +432,13 @@ class TargetFileManager:
         Prepare file system for current scan, and return the paths to be analyzed.
 
         Returned list of paths are all relative paths and include all files that are
+            - not ignored based on .semgrepignore rules
             - in any path include filters specified.
 
         :return: A list of paths
         :raises ActionFailure: If git cannot detect a HEAD commit or unmerged files exist
         """
-        yield self._paths
+        yield self._paths.targeted
 
     @property
     def searched_paths(self) -> List[Path]:
@@ -394,4 +447,4 @@ class TargetFileManager:
 
         :return: A list of paths NOT ignored, all relative to root directory
         """
-        return self._paths
+        return self._paths.targeted

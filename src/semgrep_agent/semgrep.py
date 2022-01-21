@@ -39,8 +39,8 @@ from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import print_git_log
 from semgrep_agent.utils import render_error
 
-os.environ["SEMGREP_USER_AGENT_APPEND"] = "(Agent)"
-semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False)
+ua_environ = {"SEMGREP_USER_AGENT_APPEND": "(Agent)", **os.environ}
+semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _env=ua_environ)
 
 SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
 SEMGREP_SAVE_FILE_BASELINE = LOG_FOLDER + "/semgrep_agent_output_baseline"
@@ -48,8 +48,6 @@ SEMGREP_SAVE_FILE_BASELINE = LOG_FOLDER + "/semgrep_agent_output_baseline"
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
 PATHS_CHUNK_SIZE = 500
-
-SEMGREPIGNORE_ACTION = Path(".semgrepignore_action")
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -62,14 +60,14 @@ class RunContext:
     base_ref: Optional[str]
     # The head ref; Semgrep checks for findings on this ref
     head_ref: Optional[str]
+    # Ignore file text stream
+    semgrep_ignore: TextIO
     # If true, rewrites rule IDs in findings to a shorter value
     rewrite_rule_ids: bool
     # If True, sends metrics; also currently sends metrics if False
     enable_metrics: bool
     # If present, Semgrep run is aborted after this many seconds
     timeout: Optional[int]
-    # The path to the semgrepignore file to be used by the Semgrep CLI
-    action_ignores_path: str
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -122,22 +120,30 @@ def resolve_config_shorthand(config: str) -> str:
     return config
 
 
-def create_semgrepignore(app_ignore_patterns: List[str]) -> None:
-    with open(SEMGREPIGNORE_ACTION, "w") as semgrepignore:
-        TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
+def get_semgrepignore(ignore_patterns: List[str]) -> TextIO:
+    semgrepignore = io.StringIO()
+    TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
 
-        semgrepignore_path = Path(".semgrepignore")
-        if semgrepignore_path.is_file():
-            semgrepignore.write(semgrepignore_path.read_text())
-        else:
+    semgrepignore_path = Path(".semgrepignore")
+    if semgrepignore_path.is_file():
+        click.echo("| using path ignore rules from .semgrepignore", err=True)
+        semgrepignore.write(semgrepignore_path.read_text())
+    else:
+        click.echo(
+            "| using default path ignore rules of common test and dependency directories",
+            err=True,
+        )
+        semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
 
-            semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
+    if ignore_patterns:
+        click.echo(
+            "| adding further path ignore rules configured on the web UI", err=True
+        )
+        semgrepignore.write("\n# Ignores from semgrep app\n")
+        semgrepignore.write("\n".join(ignore_patterns))
+        semgrepignore.write("\n")
 
-        if app_ignore_patterns:
-            click.echo("| using path ignore rules configured on the web UI", err=True)
-            semgrepignore.write("\n# Ignores from semgrep app\n")
-            semgrepignore.write("\n".join(app_ignore_patterns))
-            semgrepignore.write("\n")
+    return semgrepignore
 
 
 @dataclass
@@ -218,6 +224,7 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
             base_path=workdir,
             base_commit=base_ref,
             all_paths=[workdir],
+            ignore_rules_file=context.semgrep_ignore,
         )
         debug_echo("Initialized TargetFileManager")
 
@@ -242,10 +249,7 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
         with targets.current_paths() as paths:
             args = [*rewrite_args, *config_args]
             _, sarif_output = invoke_semgrep_sarif(
-                args,
-                [str(p) for p in paths],
-                timeout=context.timeout,
-                explicit_semgrepignore_path=context.action_ignores_path,
+                args, [str(p) for p in paths], timeout=context.timeout
             )
         rewrite_sarif_file(sarif_output, sarif_path)
 
@@ -283,10 +287,7 @@ def _get_head_findings(
             *extra_args,
         ]
         exit_code, semgrep_output = invoke_semgrep(
-            args,
-            [str(p) for p in paths],
-            timeout=context.timeout,
-            explicit_semgrepignore_path=context.action_ignores_path,
+            args, [str(p) for p in paths], timeout=context.timeout
         )
         findings = FindingSets(
             exit_code,
@@ -406,11 +407,7 @@ def _update_baseline_findings(
                         args.extend(["--metrics", "off"])
 
                     _, semgrep_output = invoke_semgrep(
-                        args,
-                        paths_to_check,
-                        timeout=context.timeout,
-                        baseline=True,
-                        explicit_semgrepignore_path=context.action_ignores_path,
+                        args, paths_to_check, timeout=context.timeout, baseline=True
                     )
                     findings.baseline.update_findings(
                         Finding.from_semgrep_result(result, context.committed_datetime)
@@ -448,7 +445,6 @@ def invoke_semgrep(
     *,
     timeout: Optional[int],
     baseline: bool = False,
-    explicit_semgrepignore_path: Optional[str] = None,
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -460,14 +456,6 @@ def invoke_semgrep(
     """
     max_exit_code = 0
     output = SemgrepOutput([], [], SemgrepTiming([], []))
-    _env = (
-        {
-            "SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE": explicit_semgrepignore_path,
-            **os.environ,
-        }
-        if explicit_semgrepignore_path
-        else os.environ
-    )
 
     semgrep_save_file_baseline = Path(SEMGREP_SAVE_FILE_BASELINE)
     if not baseline and semgrep_save_file_baseline.exists():
@@ -496,9 +484,7 @@ def invoke_semgrep(
 
             debug_echo(f"== Invoking semgrep with { len(args) } args")
 
-            exit_code = semgrep_exec(
-                *args, _timeout=timeout, _err=debug_echo, _env=_env
-            ).exit_code
+            exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
             max_exit_code = max(max_exit_code, exit_code)
 
             debug_echo(f"== Semgrep finished with exit code { exit_code }")
@@ -529,11 +515,7 @@ def invoke_semgrep(
 
 
 def invoke_semgrep_sarif(
-    semgrep_args: List[str],
-    targets: List[str],
-    *,
-    timeout: Optional[int],
-    explicit_semgrepignore_path: Optional[str] = None,
+    semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
 ) -> Tuple[int, Dict[str, List[Any]]]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -543,14 +525,6 @@ def invoke_semgrep_sarif(
     output: Dict[str, List[Any]] = {}
 
     max_exit_code = 0
-    _env = (
-        {
-            "SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE": explicit_semgrepignore_path,
-            **os.environ,
-        }
-        if explicit_semgrepignore_path
-        else os.environ
-    )
 
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
@@ -565,9 +539,7 @@ def invoke_semgrep_sarif(
             for c in chunk:
                 args.append(c)
 
-            exit_code = semgrep_exec(
-                *args, _timeout=timeout, _err=debug_echo, _env=_env
-            ).exit_code
+            exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
             max_exit_code = max(max_exit_code, exit_code)
 
             with open(

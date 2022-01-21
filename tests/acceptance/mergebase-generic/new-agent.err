@@ -3,6 +3,7 @@
 | manage            - not logged in
 === setting up agent configuration
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
+| using default path ignore rules of common test and dependency directories
 | reporting findings introduced by these commits:
 |   * aaaaaaa add pr finding
 | also reporting findings fixed by these commits from the baseline branch:
@@ -10,6 +11,7 @@
 | to exclude these latter commits, run with
 |   --baseline-ref $(git merge-base main HEAD)
 | looking at 1 changed path
+| found 1 file in the paths to be scanned
 === looking for current issues in 1 file
 | 1 current issue found
 === not looking at pre-existing issues since all files with current issues are newly created
