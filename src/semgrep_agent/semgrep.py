@@ -68,6 +68,8 @@ class RunContext:
     enable_metrics: bool
     # If present, Semgrep run is aborted after this many seconds
     timeout: Optional[int]
+    # The path to the semgrepignore file to be used by the Semgrep CLI
+    action_ignores_path: str
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -240,7 +242,10 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
         with targets.current_paths() as paths:
             args = [*rewrite_args, *config_args]
             _, sarif_output = invoke_semgrep_sarif(
-                args, [str(p) for p in paths], timeout=context.timeout
+                args,
+                [str(p) for p in paths],
+                timeout=context.timeout,
+                explicit_semgrepignore_path=context.action_ignores_path,
             )
         rewrite_sarif_file(sarif_output, sarif_path)
 
@@ -278,7 +283,10 @@ def _get_head_findings(
             *extra_args,
         ]
         exit_code, semgrep_output = invoke_semgrep(
-            args, [str(p) for p in paths], timeout=context.timeout
+            args,
+            [str(p) for p in paths],
+            timeout=context.timeout,
+            explicit_semgrepignore_path=context.action_ignores_path,
         )
         findings = FindingSets(
             exit_code,
@@ -398,7 +406,11 @@ def _update_baseline_findings(
                         args.extend(["--metrics", "off"])
 
                     _, semgrep_output = invoke_semgrep(
-                        args, paths_to_check, timeout=context.timeout, baseline=True
+                        args,
+                        paths_to_check,
+                        timeout=context.timeout,
+                        baseline=True,
+                        explicit_semgrepignore_path=context.action_ignores_path,
                     )
                     findings.baseline.update_findings(
                         Finding.from_semgrep_result(result, context.committed_datetime)
@@ -436,6 +448,7 @@ def invoke_semgrep(
     *,
     timeout: Optional[int],
     baseline: bool = False,
+    explicit_semgrepignore_path: Optional[str] = None,
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -447,6 +460,14 @@ def invoke_semgrep(
     """
     max_exit_code = 0
     output = SemgrepOutput([], [], SemgrepTiming([], []))
+    _env = (
+        {
+            "SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE": explicit_semgrepignore_path,
+            **os.environ,
+        }
+        if explicit_semgrepignore_path
+        else os.environ
+    )
 
     semgrep_save_file_baseline = Path(SEMGREP_SAVE_FILE_BASELINE)
     if not baseline and semgrep_save_file_baseline.exists():
@@ -476,7 +497,7 @@ def invoke_semgrep(
             debug_echo(f"== Invoking semgrep with { len(args) } args")
 
             exit_code = semgrep_exec(
-                *args, _timeout=timeout, _err=debug_echo, _env=os.environ
+                *args, _timeout=timeout, _err=debug_echo, _env=_env
             ).exit_code
             max_exit_code = max(max_exit_code, exit_code)
 
@@ -508,7 +529,11 @@ def invoke_semgrep(
 
 
 def invoke_semgrep_sarif(
-    semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
+    semgrep_args: List[str],
+    targets: List[str],
+    *,
+    timeout: Optional[int],
+    explicit_semgrepignore_path: Optional[str] = None,
 ) -> Tuple[int, Dict[str, List[Any]]]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -518,6 +543,14 @@ def invoke_semgrep_sarif(
     output: Dict[str, List[Any]] = {}
 
     max_exit_code = 0
+    _env = (
+        {
+            "SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE": explicit_semgrepignore_path,
+            **os.environ,
+        }
+        if explicit_semgrepignore_path
+        else os.environ
+    )
 
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
@@ -533,7 +566,7 @@ def invoke_semgrep_sarif(
                 args.append(c)
 
             exit_code = semgrep_exec(
-                *args, _timeout=timeout, _err=debug_echo, _env=os.environ
+                *args, _timeout=timeout, _err=debug_echo, _env=_env
             ).exit_code
             max_exit_code = max(max_exit_code, exit_code)
 

@@ -25,6 +25,7 @@ from semgrep_agent.exc import ActionFailure
 from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
+from semgrep_agent.semgrep import SEMGREPIGNORE_ACTION
 from semgrep_agent.semgrep_app import Sapp
 from semgrep_agent.semgrep_app import SEMGREP_RULES_FILE
 from semgrep_agent.utils import get_aligned_command
@@ -354,9 +355,6 @@ def protected_main(
     committed_datetime = meta.commit.committed_datetime if meta.commit else None
     start_time = datetime.now()
     semgrep.create_semgrepignore(sapp.scan.ignore_patterns)
-    os.environ["SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE"] = str(
-        semgrep.SEMGREPIGNORE_ACTION
-    )
     scan_context = semgrep.RunContext(
         config_specifier=config,
         committed_datetime=committed_datetime,
@@ -365,6 +363,7 @@ def protected_main(
         rewrite_rule_ids=(rewrite_rule_ids and not sapp.is_configured),
         enable_metrics=enable_metrics,
         timeout=(timeout if timeout > 0 else None),
+        action_ignores_path=str(SEMGREPIGNORE_ACTION),
     )
     results = semgrep.scan(scan_context)
     semgrep.SEMGREPIGNORE_ACTION.unlink()
