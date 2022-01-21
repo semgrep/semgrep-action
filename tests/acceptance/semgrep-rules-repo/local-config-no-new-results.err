@@ -3,11 +3,9 @@
 | manage            - not logged in
 === setting up agent configuration
 | using semgrep rules from python/lang/best-practice/sleep.yaml
-| using default path ignore rules of common test and dependency directories
 | reporting findings introduced by these commits:
 |   * aaaaaaa XSS via translate filters in Django Templates (#1071)
 | looking at 6 changed paths
-| found 6 files in the paths to be scanned
 === looking for current issues in 6 files
 | No current issues found
 === not looking at pre-existing issues since there are no current issues
