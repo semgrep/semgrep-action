@@ -3,10 +3,12 @@
 | manage            - not logged in
 === setting up agent configuration
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
+| using default path ignore rules of common test and dependency directories
 | reporting findings introduced by these commits:
 |   * aaaaaaa Merge branch 'main' into all-good
 |   * aaaaaaa nothing bad here
 | looking at 1 changed path
+| found 1 file in the paths to be scanned
 === looking for current issues in 1 file
 | No current issues found
 === not looking at pre-existing issues since there are no current issues

@@ -3,9 +3,11 @@
 | manage            - not logged in
 === setting up agent configuration
 | using semgrep rules from .semgrep.yml
+| using default path ignore rules of common test and dependency directories
 | reporting findings introduced by these commits:
 |   * aaaaaaa add rules
 | looking at 2 changed paths
+| found 2 files in the paths to be scanned
 === looking for current issues in 2 files
 | 1 current issue found
 === .semgrep.yml file not found in baseline, skipping scanning for baseline
