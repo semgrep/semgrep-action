@@ -175,9 +175,7 @@ def main(
     scan_environment: str,
 ) -> NoReturn:
 
-    debug_mode = os.getenv("SEMGREP_AGENT_DEBUG")
-
-    if debug_mode:
+    if os.getenv("SEMGREP_AGENT_DEBUG"):
         if not os.path.isdir(LOG_FOLDER):
             os.mkdir(LOG_FOLDER)
 
