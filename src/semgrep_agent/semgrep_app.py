@@ -160,7 +160,12 @@ class Sapp:
     def download_rules(self) -> Tuple[Path, List[str], List[str]]:
         """Save the rules configured on semgrep app to a file in .semgrep_logs"""
         """so that it persists for debugging """
-        rules_file = SEMGREP_RULES_FILE
+        # hey, it's just a tiny YAML file in CI, we'll survive without cleanup
+        rules_file = (
+            SEMGREP_RULES_FILE
+            if os.getenv("SEMGREP_AGENT_DEBUG")
+            else tempfile.NamedTemporaryFile(suffix=".yml", delete=False).name
+        )  # nosem
         rules_path = Path(rules_file)
         rules = self.fetch_rules_text()
         parsed = yaml.load(rules)

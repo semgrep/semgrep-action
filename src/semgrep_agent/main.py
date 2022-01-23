@@ -175,16 +175,19 @@ def main(
     scan_environment: str,
 ) -> NoReturn:
 
-    if not os.path.isdir(LOG_FOLDER):
-        os.mkdir(LOG_FOLDER)
+    debug_mode = os.getenv("SEMGREP_AGENT_DEBUG")
 
-    logging.basicConfig(
-        filename=(LOG_FILE),
-        filemode="w",
-        format="%(asctime)s === %(message)s",
-        datefmt="%H:%M:%S",
-        level=logging.INFO,
-    )
+    if debug_mode:
+        if not os.path.isdir(LOG_FOLDER):
+            os.mkdir(LOG_FOLDER)
+
+        logging.basicConfig(
+            filename=(LOG_FILE),
+            filemode="w",
+            format="%(asctime)s === %(message)s",
+            datefmt="%H:%M:%S",
+            level=logging.INFO,
+        )
 
     click.echo(
         get_aligned_command(
@@ -369,9 +372,6 @@ def protected_main(
     results = semgrep.scan(scan_context)
     semgrep.SEMGREPIGNORE_ACTION.unlink()
     end_time = datetime.now()
-
-    if not os.getenv("SEMGREP_AGENT_DEBUG"):
-        shutil.rmtree(LOG_FOLDER)
 
     new_findings = results.findings.new
     errors = results.findings.errors

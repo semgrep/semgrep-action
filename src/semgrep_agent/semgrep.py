@@ -469,15 +469,18 @@ def invoke_semgrep(
         else os.environ
     )
 
-    semgrep_save_file_baseline = Path(SEMGREP_SAVE_FILE_BASELINE)
-    if not baseline and semgrep_save_file_baseline.exists():
-        semgrep_save_file_baseline.unlink()
+    debug_mode = os.getenv("SEMGREP_AGENT_DEBUG")
 
-    semgrep_save_file_path = (
-        SEMGREP_SAVE_FILE_BASELINE if baseline else SEMGREP_SAVE_FILE
-    )
-    semgrep_save_file = open(semgrep_save_file_path, "w+")
-    semgrep_save_file.write("[")
+    if debug_mode:
+        semgrep_save_file_baseline = Path(SEMGREP_SAVE_FILE_BASELINE)
+        if not baseline and semgrep_save_file_baseline.exists():
+            semgrep_save_file_baseline.unlink()
+
+        semgrep_save_file_path = (
+            SEMGREP_SAVE_FILE_BASELINE if baseline else SEMGREP_SAVE_FILE
+        )
+        semgrep_save_file = open(semgrep_save_file_path, "w+")
+        semgrep_save_file.write("[")
 
     first_chunk = True
 
@@ -508,11 +511,12 @@ def invoke_semgrep(
             ) as f:
                 semgrep_output = f.read()
             parsed_output = json.loads(semgrep_output)
-            if first_chunk:
-                first_chunk = False
-            else:
-                semgrep_save_file.write(",")
-            semgrep_save_file.write(semgrep_output)
+            if debug_mode:
+                if first_chunk:
+                    first_chunk = False
+                else:
+                    semgrep_save_file.write(",")
+                semgrep_save_file.write(semgrep_output)
 
             output.results = [*output.results, *parsed_output["results"]]
             output.errors = [*output.errors, *parsed_output["errors"]]
@@ -522,8 +526,9 @@ def invoke_semgrep(
                 [*output.timing.targets, *parsed_timing.get("targets", [])],
             )
 
-    semgrep_save_file.write("]")
-    semgrep_save_file.close()
+    if debug_mode:
+        semgrep_save_file.write("]")
+        semgrep_save_file.close()
 
     return max_exit_code, output
 
