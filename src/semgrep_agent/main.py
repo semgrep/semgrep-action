@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -368,6 +369,9 @@ def protected_main(
     results = semgrep.scan(scan_context)
     semgrep.SEMGREPIGNORE_ACTION.unlink()
     end_time = datetime.now()
+
+    if not os.getenv("SEMGREP_AGENT_DEBUG"):
+        shutil.rmtree(LOG_FOLDER)
 
     new_findings = results.findings.new
     errors = results.findings.errors
