@@ -129,6 +129,11 @@ def create_semgrepignore(app_ignore_patterns: List[str]) -> None:
         semgrepignore_path = Path(".semgrepignore")
         if semgrepignore_path.is_file():
             semgrepignore.write(semgrepignore_path.read_text())
+
+            # Always ignore .semgrep_logs
+            semgrepignore.write("\n# Semgrep-action log folder")
+            semgrepignore.write("\n.semgrep_logs/")
+            semgrepignore.write("\n")
         else:
 
             semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
