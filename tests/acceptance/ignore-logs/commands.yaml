@@ -13,6 +13,7 @@ steps:
     returncode: 0
     expected_out: new-log.out
     expected_err: new-log.err
+  # Note that semgrep-agent will output that it is scanning 2 files, but in fact they will be ignored
   - name: new agent
     description: run agent on a single new file
     command: semgrep-agent --baseline-ref HEAD~1 --config p/r2c-ci
