@@ -1,0 +1,21 @@
+steps:
+  - include: generic.yaml
+  # Tests ignoring .semgrep_logs, even with a custom .semgrep_ignore which does not include it
+  - name: new add
+    description: create a new file with findings
+    command:
+      - bash
+      - -c
+      - touch .semgrepignore && mkdir .semgrep_logs && echo "2 == 2" > .semgrep_logs/bar.py && git add . && git commit -m 'add finding'
+  - name: new log
+    description: git log with commits
+    command: git log --stat
+    returncode: 0
+    expected_out: new-log.out
+    expected_err: new-log.err
+  - name: new agent
+    description: run agent on a single new file
+    command: semgrep-agent --baseline-ref HEAD~1 --config p/r2c-ci
+    returncode: 0
+    expected_out: new-agent.out
+    expected_err: new-agent.err
