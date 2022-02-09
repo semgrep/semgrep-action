@@ -9,7 +9,6 @@ from datetime import datetime
 from functools import reduce
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Dict
 from typing import Iterator
 from typing import List
@@ -17,7 +16,6 @@ from typing import Mapping
 from typing import Optional
 from typing import Sequence
 from typing import Set
-from typing import TextIO
 from typing import Tuple
 
 import attr
@@ -33,6 +31,7 @@ from semgrep_agent.constants import LOG_FOLDER
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
+from semgrep_agent.ignores import yield_exclude_args
 from semgrep_agent.targets import TargetFileManager
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
@@ -48,8 +47,6 @@ SEMGREP_SAVE_FILE_BASELINE = LOG_FOLDER + "/semgrep_agent_output_baseline"
 # a typical old system has 128 * 1024 as their max command length
 # we assume an average ~250 characters for a path in the worst case
 PATHS_CHUNK_SIZE = 500
-
-SEMGREPIGNORE_ACTION = Path(".semgrepignore_action")
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -68,8 +65,8 @@ class RunContext:
     enable_metrics: bool
     # If present, Semgrep run is aborted after this many seconds
     timeout: Optional[int]
-    # The path to the semgrepignore file to be used by the Semgrep CLI
-    action_ignores_path: str
+    # Ignore patterns configured on the semgrep app UI
+    requested_excludes: Sequence[str]
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -120,33 +117,6 @@ def resolve_config_shorthand(config: str) -> str:
     if maybe_prefix in {"p/", "r/", "s/"}:
         return f"https://semgrep.dev/c/{config}"
     return config
-
-
-def create_semgrepignore(app_ignore_patterns: List[str]) -> None:
-    with open(SEMGREPIGNORE_ACTION, "w") as semgrepignore:
-        TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
-
-        semgrepignore_path = Path(".semgrepignore")
-        if semgrepignore_path.is_file():
-            semgrepignore.write(semgrepignore_path.read_text())
-
-            # Always ignore .semgrep_logs
-            semgrepignore.write("\n# Semgrep-action log folder")
-            semgrepignore.write("\n.semgrep_logs/")
-            semgrepignore.write("\n")
-            # Always ignore .semgrep folder
-            semgrepignore.write("\n# Semgrep rules folder")
-            semgrepignore.write("\n.semgrep")
-            semgrepignore.write("\n")
-        else:
-
-            semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
-
-        if app_ignore_patterns:
-            click.echo("| using path ignore rules configured on the web UI", err=True)
-            semgrepignore.write("\n# Ignores from semgrep app\n")
-            semgrepignore.write("\n".join(app_ignore_patterns))
-            semgrepignore.write("\n")
 
 
 @dataclass
@@ -215,6 +185,7 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
     """
     debug_echo("=== adding semgrep configuration")
 
+    exclude_args: Sequence[str] = list(yield_exclude_args(context.requested_excludes))
     rewrite_args: Sequence[str] = (
         [] if context.rewrite_rule_ids else ["--no-rewrite-rule-ids"]
     )
@@ -224,9 +195,7 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
         workdir = Path.cwd()
         debug_echo(f"Workdir: {str(workdir)}")
         targets = TargetFileManager(
-            base_path=workdir,
-            base_commit=base_ref,
-            all_paths=[workdir],
+            base_path=workdir, base_commit=base_ref, all_paths=[workdir]
         )
         debug_echo("Initialized TargetFileManager")
 
@@ -240,21 +209,24 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
         debug_echo("=== seeing if there are any findings")
 
         findings, stats = _get_head_findings(
-            context, [*config_args, *metrics_args, *rewrite_args], targets
+            context,
+            [*config_args, *metrics_args, *rewrite_args, *exclude_args],
+            targets,
         )
 
-    _update_baseline_findings(context, findings, local_configs, rewrite_args, targets)
+    _update_baseline_findings(
+        context, findings, local_configs, [*rewrite_args, *exclude_args], targets
+    )
 
     if os.getenv("INPUT_GENERATESARIF"):
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         with targets.current_paths() as paths:
-            args = [*rewrite_args, *config_args]
+            args = [*rewrite_args, *config_args, *exclude_args]
             _, sarif_output = invoke_semgrep_sarif(
                 args,
                 [str(p) for p in paths],
                 timeout=context.timeout,
-                explicit_semgrepignore_path=context.action_ignores_path,
             )
         rewrite_sarif_file(sarif_output, sarif_path)
 
@@ -295,7 +267,6 @@ def _get_head_findings(
             args,
             [str(p) for p in paths],
             timeout=context.timeout,
-            explicit_semgrepignore_path=context.action_ignores_path,
         )
         findings = FindingSets(
             exit_code,
@@ -419,7 +390,6 @@ def _update_baseline_findings(
                         paths_to_check,
                         timeout=context.timeout,
                         baseline=True,
-                        explicit_semgrepignore_path=context.action_ignores_path,
                     )
                     findings.baseline.update_findings(
                         Finding.from_semgrep_result(result, context.committed_datetime)
@@ -457,7 +427,6 @@ def invoke_semgrep(
     *,
     timeout: Optional[int],
     baseline: bool = False,
-    explicit_semgrepignore_path: Optional[str] = None,
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -469,14 +438,6 @@ def invoke_semgrep(
     """
     max_exit_code = 0
     output = SemgrepOutput([], [], SemgrepTiming([], []))
-    _env = (
-        {
-            "SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE": explicit_semgrepignore_path,
-            **os.environ,
-        }
-        if explicit_semgrepignore_path
-        else os.environ
-    )
 
     semgrep_save_file_baseline = Path(SEMGREP_SAVE_FILE_BASELINE)
     if not baseline and semgrep_save_file_baseline.exists():
@@ -505,9 +466,7 @@ def invoke_semgrep(
 
             debug_echo(f"== Invoking semgrep with { len(args) } args")
 
-            exit_code = semgrep_exec(
-                *args, _timeout=timeout, _err=debug_echo, _env=_env
-            ).exit_code
+            exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
             max_exit_code = max(max_exit_code, exit_code)
 
             debug_echo(f"== Semgrep finished with exit code { exit_code }")
@@ -538,11 +497,7 @@ def invoke_semgrep(
 
 
 def invoke_semgrep_sarif(
-    semgrep_args: List[str],
-    targets: List[str],
-    *,
-    timeout: Optional[int],
-    explicit_semgrepignore_path: Optional[str] = None,
+    semgrep_args: List[str], targets: List[str], *, timeout: Optional[int]
 ) -> Tuple[int, Dict[str, List[Any]]]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -552,14 +507,6 @@ def invoke_semgrep_sarif(
     output: Dict[str, List[Any]] = {}
 
     max_exit_code = 0
-    _env = (
-        {
-            "SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE": explicit_semgrepignore_path,
-            **os.environ,
-        }
-        if explicit_semgrepignore_path
-        else os.environ
-    )
 
     for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
         with tempfile.NamedTemporaryFile("w") as output_json_file:
@@ -574,9 +521,7 @@ def invoke_semgrep_sarif(
             for c in chunk:
                 args.append(c)
 
-            exit_code = semgrep_exec(
-                *args, _timeout=timeout, _err=debug_echo, _env=_env
-            ).exit_code
+            exit_code = semgrep_exec(*args, _timeout=timeout, _err=debug_echo).exit_code
             max_exit_code = max(max_exit_code, exit_code)
 
             with open(
