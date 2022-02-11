@@ -5,6 +5,7 @@
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
 | reporting findings introduced by these commits:
 |   * aaaaaaa Add symlink to dir
+=== looking for new issues
 | No current issues found
 === analyzing new issues in this scan
 === exiting with success status

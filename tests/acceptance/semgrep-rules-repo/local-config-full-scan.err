@@ -4,5 +4,6 @@
 | manage            - not logged in
 === setting up agent configuration
 | using semgrep rules from python/lang/best-practice/sleep.yaml
+=== looking for new issues
 | 2 current issues found
 === exiting with failing status

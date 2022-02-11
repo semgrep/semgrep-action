@@ -9,6 +9,7 @@
 |   * aaaaaaa fix finding
 | to exclude these latter commits, run with
 |   --baseline-ref $(git merge-base main HEAD)
+=== looking for new issues
 | 1 current issue found
 === analyzing new issues in this scan
 === exiting with failing status

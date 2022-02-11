@@ -5,6 +5,7 @@
 | using semgrep rules from python/lang/best-practice/sleep.yaml
 | reporting findings introduced by these commits:
 |   * aaaaaaa XSS via translate filters in Django Templates (#1071)
+=== looking for new issues
 | No current issues found
 === analyzing new issues in this scan
 === exiting with success status

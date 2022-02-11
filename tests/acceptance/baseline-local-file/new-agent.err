@@ -5,6 +5,7 @@
 | using semgrep rules from .semgrep.yml
 | reporting findings introduced by these commits:
 |   * aaaaaaa add rules
+=== looking for new issues
 | 1 current issue found
 === analyzing new issues in this scan
 === exiting with failing status

@@ -5,6 +5,7 @@
 | using semgrep rules from python/django/security/audit/xss/template-translate-as-no-escape.yaml
 | reporting findings introduced by these commits:
 |   * aaaaaaa XSS via translate filters in Django Templates (#1071)
+=== looking for new issues
 | 2 current issues found
 === analyzing new issues in this scan
 | audit mode is on for unknown, so the findings won't cause failure
