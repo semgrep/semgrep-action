@@ -326,7 +326,12 @@ def invoke_semgrep(
     """
     with tempfile.NamedTemporaryFile("w") as output_json_file:
         args = [*semgrep_args, "."]
-        kwargs = {"output": output_json_file.name, "debug": True, **semgrep_kwargs}
+        kwargs = {
+            # nosemgrep: python.lang.correctness.tempfile.flush.tempfile-without-flush
+            "output": output_json_file.name,
+            "debug": True,
+            **semgrep_kwargs,
+        }
 
         debug_echo(f"== Invoking semgrep with {args} and {kwargs}")
 
@@ -367,6 +372,7 @@ def invoke_semgrep_sarif(
     with tempfile.NamedTemporaryFile("w") as output_json_file:
         args = [*semgrep_args, "."]
         kwargs = {
+            # nosemgrep: python.lang.correctness.tempfile.flush.tempfile-without-flush
             "output": output_json_file.name,
             "debug": True,
             "sarif": True,
