@@ -213,10 +213,9 @@ class Sapp:
                 "token": os.getenv("GITHUB_TOKEN"),
                 "gitlab_token": os.getenv("GITLAB_TOKEN"),
                 "findings": [
-                    finding.to_dict(omit=fields_to_omit)
-                    for finding in results.findings.new
+                    finding.to_dict(omit=fields_to_omit) for finding in results.findings
                 ],
-                "searched_paths": [str(p) for p in results.findings.searched_paths],
+                "searched_paths": [str(p) for p in results.searched_paths],
                 "rule_ids": rule_ids,
                 "cai_ids": cai_ids,
             },
