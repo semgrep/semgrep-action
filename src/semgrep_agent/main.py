@@ -447,7 +447,7 @@ def protected_main(
             f"| {unit_len(results.findings.new_ignored, 'muted issue')} synced to the app",
             err=True,
         )
-        if len(results.findings.new_all) > 0:
+        if results.findings.new_all:
             click.echo(
                 f"| visit {publish_url}/orgs/{sapp.deployment_name}/findings?repo={meta.repo_name}",
                 err=True,

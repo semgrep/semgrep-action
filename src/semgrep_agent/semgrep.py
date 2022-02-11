@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 from typing import Dict
 from typing import Iterator
 from typing import List
@@ -16,6 +16,7 @@ from typing import Mapping
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
+from typing import Union
 
 import attr
 import click

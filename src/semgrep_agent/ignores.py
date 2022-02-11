@@ -1,6 +1,6 @@
-from typing import Iterable, Sequence
-
 from pathlib import Path
+from typing import Iterable
+from typing import Sequence
 
 SEMGREPIGNORE_PATH = Path(".semgrepignore")
 

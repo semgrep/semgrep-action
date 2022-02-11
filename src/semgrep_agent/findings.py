@@ -278,4 +278,4 @@ class FindingSets:
 
     @property
     def new_all(self) -> Set[Finding]:
-        return self.new + self.new_ignored
+        return self.new | self.new_ignored
