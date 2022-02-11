@@ -4,7 +4,5 @@
 | manage            - not logged in
 === setting up agent configuration
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
-=== looking for current issues in 1 file
 | 1 current issue found
-=== not looking at pre-existing issues since all files with current issues are newly created
 === exiting with failing status

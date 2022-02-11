@@ -234,6 +234,7 @@ def _get_new_findings(
     :param targets: This run's target manager
     :return: A findings object with existing head findings and empty baseline findings
     """
+    click.echo("=== looking for new issues", err=True)
     semgrep_kwargs = {
         "skip_unknown_extensions": True,
         "disable_nosem": True,
