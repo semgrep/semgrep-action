@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import tempfile
 import time
 from contextlib import contextmanager
@@ -36,7 +37,7 @@ from semgrep_agent.utils import print_git_log
 from semgrep_agent.utils import render_error
 
 os.environ["SEMGREP_USER_AGENT_APPEND"] = "(Agent)"
-semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False)
+semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False, _err=sys.stderr)
 
 SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
 
@@ -62,6 +63,10 @@ class RunContext:
     timeout: Optional[int]
     # Ignore patterns configured on the semgrep app UI
     requested_excludes: Sequence[str]
+    # api key used by semgrep to download policy
+    api_key: Optional[str]
+    # used by semgrep to download policy
+    repo_name: Optional[str]
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -212,7 +217,7 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         _, sarif_output = invoke_semgrep_sarif(
-            [*config_args, *exclude_args], rewrite_kwargs, timeout=context.timeout
+            [*config_args, *exclude_args], rewrite_kwargs, api_key=context.api_key, repo_name=context.repo_name, timeout=context.timeout
         )
         rewrite_sarif_file(sarif_output, sarif_path)
 
@@ -247,6 +252,8 @@ def _get_new_findings(
         semgrep_args=semgrep_args,
         semgrep_kwargs=semgrep_kwargs,
         timeout=context.timeout,
+        api_key=context.api_key,
+        repo_name=context.repo_name,
     )
     findings = FindingSets(
         exit_code,
@@ -311,7 +318,7 @@ class SemgrepOutput:
 
 
 def invoke_semgrep(
-    semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs, *, timeout: Optional[int]
+    semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs, api_key: Optional[str], repo_name: Optional[str], *, timeout: Optional[int]
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -321,6 +328,11 @@ def invoke_semgrep(
 
     Returns json output of semgrep as dict object
     """
+    env = {}
+    if api_key and repo_name:
+        env["SEMGREP_LOGIN_TOKEN"] = api_key
+        env["SEMGREP_REPO_NAME"] = repo_name
+
     with tempfile.NamedTemporaryFile("w") as output_json_file:
         output_json_file.flush()
         args = [*semgrep_args, "."]
@@ -334,7 +346,7 @@ def invoke_semgrep(
         debug_echo(f"== Invoking semgrep with {args} and {kwargs}")
 
         exit_code = semgrep_exec(
-            *args, **kwargs, _timeout=timeout, _err=debug_echo
+            *args, **kwargs, _timeout=timeout, _err=debug_echo, _env=env,
         ).exit_code
 
         debug_echo(f"== Semgrep finished with exit code {exit_code}")
@@ -360,13 +372,18 @@ def invoke_semgrep(
 
 
 def invoke_semgrep_sarif(
-    semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs, *, timeout: Optional[int]
+    semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs, api_key: Optional[str], repo_name: Optional[str], *, timeout: Optional[int]
 ) -> Tuple[int, Dict[str, List[Any]]]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
 
     Returns sarif output of semgrep as dict object
     """
+    env = {}
+    if api_key and repo_name:
+        env["SEMGREP_LOGIN_TOKEN"] = api_key
+        env["SEMGREP_REPO_NAME"] = repo_name
+
     with tempfile.NamedTemporaryFile("w") as output_json_file:
         output_json_file.flush()
         args = [*semgrep_args, "."]
@@ -378,10 +395,14 @@ def invoke_semgrep_sarif(
             **semgrep_kwargs,
         }
 
+    if api_key and repo_name:
+        _env["SEMGREP_LOGIN_TOKEN"] = api_key
+        _env["SEMGREP_REPO_NAME"] = repo_name
+
         debug_echo(f"== Invoking semgrep with {args} and {kwargs}")
 
         exit_code = semgrep_exec(
-            *args, **kwargs, _timeout=timeout, _err=debug_echo
+            *args, **kwargs, _timeout=timeout, _err=debug_echo, _env=env
         ).exit_code
 
         debug_echo(f"== Semgrep SARIF scan finished with exit code {exit_code}")
@@ -418,6 +439,9 @@ class SemgrepError(Exception):
 
 
 def scan(context: RunContext) -> Results:
+    """
+    Return results object of a scan. Main function exposed by this file
+    """
     before = time.time()
     try:
         findings, stats = _get_findings(context)

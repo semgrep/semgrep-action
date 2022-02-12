@@ -134,43 +134,6 @@ class Sapp:
             )
             debug_echo(f"=== Our scan object is: {self.scan!r}")
 
-    def fetch_rules_text(self) -> str:
-        """Get a YAML string with the configured semgrep rules in it."""
-        response = self.session.get(
-            f"{self.url}/api/agent/scan/{self.scan.id}/rules.yaml",
-            timeout=30,
-        )
-        debug_echo(f"=== POST .../rules.yaml responded: {response!r}")
-
-        try:
-            response.raise_for_status()
-        except requests.RequestException:
-            raise ActionFailure(
-                f"API server at {self.url} returned this error: {response.text}\n"
-                "Failed to get configured rules"
-            )
-
-        # Can remove once server guarantees will always have at least one rule
-        parsed = yaml.load(response.text)
-        if not parsed["rules"]:
-            raise ActionFailure("No rules returned by server for this scan.")
-        else:
-            return response.text
-
-    def download_rules(self) -> Tuple[Path, List[str], List[str]]:
-        """Save the rules configured on semgrep app to a file in .semgrep_logs"""
-        """so that it persists for debugging """
-        rules_file = SEMGREP_RULES_FILE
-        rules_path = Path(rules_file)
-        rules = self.fetch_rules_text()
-        parsed = yaml.load(rules)
-        rules_path.write_text(rules)
-        rule_ids = [
-            r["id"] for r in parsed["rules"] if "r2c-internal-cai" not in r["id"]
-        ]
-        cai_ids = [r["id"] for r in parsed["rules"] if "r2c-internal-cai" in r["id"]]
-        return rules_path, rule_ids, cai_ids
-
     def report_failure(self, stderr: str, exit_code: int) -> int:
         """
         Send semgrep cli non-zero exit code information to server
