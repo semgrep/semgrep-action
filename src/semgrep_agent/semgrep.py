@@ -172,17 +172,20 @@ class Results:
             return
 
         click.echo(
-            f"=== Semgrep may be taking longer than expected to run (took {self.total_time:0.2f} s)."
+            f"=== Semgrep may be taking longer than expected to run (took {self.total_time:0.2f} s).",
+            err=True,
         )
         click.echo(
             "| These files are taking the most time. Consider adding them to .semgrepignore or\n"
-            "| ignoring them in your Semgrep.dev policy."
+            "| ignoring them in your Semgrep.dev policy.",
+            err=True,
         )
         for t in self.run_stats.longest_targets(10):
             rt = sum(t.get("run_times", []))
             click.echo(f"|   - {rt:0.2f} s: {t.get('path', '')}")
         click.echo(
-            "| These rules are taking the most time. Consider removing them from your config."
+            "| These rules are taking the most time. Consider removing them from your config.",
+            err=True,
         )
         for r in self.run_stats.longest_rules(10):
             rt = r["run_time"]
