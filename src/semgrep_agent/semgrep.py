@@ -182,14 +182,14 @@ class Results:
         )
         for t in self.run_stats.longest_targets(10):
             rt = sum(t.get("run_times", []))
-            click.echo(f"|   - {rt:0.2f} s: {t.get('path', '')}")
+            click.echo(f"|   - {rt:0.2f} s: {t.get('path', '')}", err=True)
         click.echo(
             "| These rules are taking the most time. Consider removing them from your config.",
             err=True,
         )
         for r in self.run_stats.longest_rules(10):
             rt = r["run_time"]
-            click.echo(f"|   - {rt:0.2f} s: {r.get('id', '')}")
+            click.echo(f"|   - {rt:0.2f} s: {r.get('id', '')}", err=True)
 
 
 def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:
