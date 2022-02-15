@@ -15,7 +15,7 @@ def test_service_report(capsys: CaptureFixture[str]):
     timing = SemgrepTiming(rules=data["rules"], targets=data["targets"])
     results = Results(FindingSets(0), RunStats(timing.rules, timing.targets), 600.0)
     results.service_report(100.0)
-    stdout = capsys.readouterr().out
+    stderr = capsys.readouterr().err
     with (Path(__file__).parent / "service-report.out").open() as fd:
         expected = fd.read()
-    assert stdout == expected
+    assert stderr == expected
