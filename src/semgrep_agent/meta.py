@@ -153,7 +153,7 @@ class GithubMeta(GitMeta):
         return self.event_name in {"pull_request", "pull_request_target"}
 
     @cachedproperty
-    def repo_name(self) -> Optional[str]:
+    def repo_name(self) -> str:
         return os.getenv("GITHUB_REPOSITORY", "[unknown]")
 
     @cachedproperty
