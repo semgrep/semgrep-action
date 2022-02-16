@@ -271,7 +271,7 @@ def protected_main(
 
     # Setup URL/Token
     if sapp.is_configured:
-        policy = sapp.report_start(meta)
+        sapp.report_start(meta)
         to_server = "" if publish_url == "https://semgrep.dev" else f" to {publish_url}"
         click.echo(
             get_aligned_command(
@@ -280,7 +280,9 @@ def protected_main(
             ),
             err=True,
         )
-        click.echo(get_aligned_command("policy", f"using {policy}"), err=True)
+        click.echo(
+            get_aligned_command("policy", f"using {sapp.scan.policy_list}"), err=True
+        )
     else:
         click.echo(get_aligned_command("manage", f"not logged in"), err=True)
 
