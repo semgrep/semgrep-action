@@ -1,5 +1,5 @@
 name: "Semgrep Action"
-author: "Return To Corporation"
+author: "r2c"
 description: "Easily detect and prevent bugs and anti-patterns in your codebase"
 runs:
   using: "docker"
