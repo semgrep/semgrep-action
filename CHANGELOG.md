@@ -6,6 +6,12 @@
 
 ## Removed
 
+# 2022-02-24
+
+## Changed
+
+- Use semgrep 0.83.0
+
 # 2022-02-17
 
 ## Added
