@@ -329,6 +329,7 @@ def invoke_semgrep(
     Returns json output of semgrep as dict object
     """
     with tempfile.NamedTemporaryFile("w") as output_json_file:
+        output_json_file.flush()
         args = [*semgrep_args, "."]
         kwargs = {
             # nosemgrep: python.lang.correctness.tempfile.flush.tempfile-without-flush
@@ -374,6 +375,7 @@ def invoke_semgrep_sarif(
     Returns sarif output of semgrep as dict object
     """
     with tempfile.NamedTemporaryFile("w") as output_json_file:
+        output_json_file.flush()
         args = [*semgrep_args, "."]
         kwargs = {
             # nosemgrep: python.lang.correctness.tempfile.flush.tempfile-without-flush
