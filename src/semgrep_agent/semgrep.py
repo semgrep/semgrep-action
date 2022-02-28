@@ -83,7 +83,7 @@ class RunStats:
         Returns the n longest-running files and their associated timing data
         """
         ordered = sorted(
-            self.target_data, key=lambda i: sum(i.get("run_times", [])), reverse=True
+            self.target_data, key=lambda i: i.get("run_time", 0.0), reverse=True
         )
         return ordered[0:n]
 
@@ -95,7 +95,7 @@ class RunStats:
         empty_times: Sequence[float] = [0.0 for _ in rule_indices]
 
         def combine(memo: Sequence[float], el: Mapping[str, Any]) -> Sequence[float]:
-            rt = el.get("run_times", [])
+            rt = el.get("match_times", [])
             return [memo[ix] + get_path(rt, (ix,), 0.0) for ix in rule_indices]
 
         rule_times = reduce(combine, self.target_data, empty_times)
@@ -144,21 +144,24 @@ class Results:
             return
 
         click.echo(
-            f"=== Semgrep may be taking longer than expected to run (took {self.total_time:0.2f} s)."
+            f"=== Semgrep may be taking longer than expected to run (took {self.total_time:0.2f} s).",
+            err=True,
         )
         click.echo(
             "| These files are taking the most time. Consider adding them to .semgrepignore or\n"
-            "| ignoring them in your Semgrep.dev policy."
+            "| ignoring them in your Semgrep.dev policy.",
+            err=True,
         )
         for t in self.run_stats.longest_targets(10):
-            rt = sum(t.get("run_times", []))
-            click.echo(f"|   - {rt:0.2f} s: {t.get('path', '')}")
+            rt = t.get("run_time", 0.0)
+            click.echo(f"|   - {rt:0.2f} s: {t.get('path', '')}", err=True)
         click.echo(
-            "| These rules are taking the most time. Consider removing them from your config."
+            "| These rules are taking the most time. Consider removing them from your config.",
+            err=True,
         )
         for r in self.run_stats.longest_rules(10):
             rt = r["run_time"]
-            click.echo(f"|   - {rt:0.2f} s: {r.get('id', '')}")
+            click.echo(f"|   - {rt:0.2f} s: {r.get('id', '')}", err=True)
 
 
 def rewrite_sarif_file(sarif_output: Dict[str, Any], sarif_path: Path) -> None:

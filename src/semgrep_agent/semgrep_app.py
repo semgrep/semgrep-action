@@ -42,6 +42,8 @@ RETRYING_ADAPTER = requests.adapters.HTTPAdapter(
 class Scan:
     id: int = -1
     ignore_patterns: List[str] = field(default_factory=list)
+    policy_list: str = "unknown"
+    autofix: bool = False
 
 
 @dataclass
@@ -96,7 +98,7 @@ class Sapp:
         fail_open = repo_data.get("repo").get("fail_open")
         return 0 if fail_open else exit_code
 
-    def report_start(self, meta: GitMeta) -> str:
+    def report_start(self, meta: GitMeta) -> None:
         """
         Get scan id and file ignores
 
@@ -130,9 +132,10 @@ class Sapp:
             self.scan = Scan(
                 id=glom(body, T["scan"]["id"]),
                 ignore_patterns=glom(body, T["scan"]["meta"].get("ignored_files", [])),
+                policy_list=glom(body, T["policy"]),
+                autofix=glom(body, T.get("autofix", False)),
             )
             debug_echo(f"=== Our scan object is: {self.scan!r}")
-            return cast(str, glom(body, T["policy"]))
 
     def fetch_rules_text(self) -> str:
         """Get a YAML string with the configured semgrep rules in it."""
@@ -203,7 +206,7 @@ class Sapp:
 
         fields_to_omit = constants.PRIVACY_SENSITIVE_FIELDS.copy()
 
-        if "pr-comment-autofix" in os.getenv("SEMGREP_AGENT_OPT_IN_FEATURES", ""):
+        if self.scan.autofix:
             fields_to_omit.remove("fixed_lines")
 
         response = self.session.post(
