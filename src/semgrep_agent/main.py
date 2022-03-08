@@ -6,7 +6,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
-from typing import cast
 from typing import NoReturn
 from typing import Sequence
 

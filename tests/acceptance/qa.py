@@ -4,7 +4,6 @@ import re
 import subprocess
 import sys
 import tempfile
-from functools import reduce
 from pathlib import Path
 from typing import Any
 from typing import Callable

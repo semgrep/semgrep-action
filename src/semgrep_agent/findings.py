@@ -6,20 +6,15 @@ from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
 from hashlib import sha224
-from pathlib import Path
 from typing import Any
-from typing import Collection
 from typing import Dict
 from typing import Iterable
-from typing import List
 from typing import Mapping
-from typing import NamedTuple
 from typing import Optional
 from typing import Sequence
 from typing import Set
 
 import attr
-import click
 import pymmh3
 
 from semgrep_agent import constants

@@ -2,12 +2,9 @@ import itertools
 import shutil
 import sys
 import textwrap
-from typing import Collection
 from typing import Iterable
 from typing import List
-from typing import Optional
 from typing import Set
-from typing import TextIO
 
 import click
 

@@ -1,16 +1,12 @@
 import json
 import os
-import sys
 import urllib.parse
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
 from typing import Any
-from typing import cast
 from typing import Dict
 from typing import Optional
-from typing import Type
-from typing import Union
 
 import click
 import git as gitpython
