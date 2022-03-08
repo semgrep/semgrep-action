@@ -217,7 +217,11 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
         _, sarif_output = invoke_semgrep_sarif(
-            [*config_args, *exclude_args], rewrite_kwargs, api_key=context.api_key, repo_name=context.repo_name, timeout=context.timeout
+            [*config_args, *exclude_args],
+            rewrite_kwargs,
+            api_key=context.api_key,
+            repo_name=context.repo_name,
+            timeout=context.timeout,
         )
         rewrite_sarif_file(sarif_output, sarif_path)
 
@@ -318,7 +322,12 @@ class SemgrepOutput:
 
 
 def invoke_semgrep(
-    semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs, api_key: Optional[str], repo_name: Optional[str], *, timeout: Optional[int]
+    semgrep_args: SemgrepArgs,
+    semgrep_kwargs: SemgrepKwargs,
+    api_key: Optional[str],
+    repo_name: Optional[str],
+    *,
+    timeout: Optional[int],
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -346,7 +355,11 @@ def invoke_semgrep(
         debug_echo(f"== Invoking semgrep with {args} and {kwargs}")
 
         exit_code = semgrep_exec(
-            *args, **kwargs, _timeout=timeout, _err=debug_echo, _env=env,
+            *args,
+            **kwargs,
+            _timeout=timeout,
+            _err=debug_echo,
+            _env=env,
         ).exit_code
 
         debug_echo(f"== Semgrep finished with exit code {exit_code}")
@@ -372,7 +385,12 @@ def invoke_semgrep(
 
 
 def invoke_semgrep_sarif(
-    semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs, api_key: Optional[str], repo_name: Optional[str], *, timeout: Optional[int]
+    semgrep_args: SemgrepArgs,
+    semgrep_kwargs: SemgrepKwargs,
+    api_key: Optional[str],
+    repo_name: Optional[str],
+    *,
+    timeout: Optional[int],
 ) -> Tuple[int, Dict[str, List[Any]]]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -394,10 +412,6 @@ def invoke_semgrep_sarif(
             "sarif": True,
             **semgrep_kwargs,
         }
-
-    if api_key and repo_name:
-        _env["SEMGREP_LOGIN_TOKEN"] = api_key
-        _env["SEMGREP_REPO_NAME"] = repo_name
 
         debug_echo(f"== Invoking semgrep with {args} and {kwargs}")
 

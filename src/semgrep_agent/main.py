@@ -26,7 +26,6 @@ from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
-from semgrep_agent.semgrep_app import SEMGREP_RULES_FILE
 from semgrep_agent.utils import get_aligned_command
 from semgrep_agent.utils import maybe_print_debug_info
 from semgrep_agent.utils import print_sh_error_info
