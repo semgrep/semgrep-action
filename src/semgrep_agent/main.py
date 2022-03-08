@@ -205,6 +205,7 @@ def main(
         protected_main(
             config=config,
             publish_url=publish_url,
+            publish_token=publish_token,
             enable_metrics=enable_metrics,
             rewrite_rule_ids=rewrite_rule_ids,
             json_output=json_output,
@@ -249,6 +250,7 @@ def main(
 def protected_main(
     config: Sequence[str],
     publish_url: str,
+    publish_token: str,
     enable_metrics: bool,
     rewrite_rule_ids: bool,
     json_output: bool,
