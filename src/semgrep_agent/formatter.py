@@ -34,7 +34,7 @@ def by_path(findings: Iterable[Finding]) -> Iterable[Finding]:
     return sorted(findings, key=(lambda v: v.path))
 
 
-def _print_path(path: str, line: int, col: int) -> str:
+def _print_path(path: str, line: int) -> str:
     fpos = click.style(f"{path}:{line}")
     return f"     > {fpos}"
 
@@ -91,7 +91,7 @@ def dump(findings: Set[Finding]) -> None:
     for path, vv in itertools.groupby(ordered, path_of):
         for v in sorted(vv, key=lambda v: (v.line, v.column, v.message)):
             lines.append(_print_error_message(v))
-            lines.append(_print_path(path, v.line, v.column))
+            lines.append(_print_path(path, v.line))
 
             lines += _print_violation(v, max_message_len)
             lines.append("")

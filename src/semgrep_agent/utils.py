@@ -83,15 +83,6 @@ def get_git_repo(path: Optional[Path] = None) -> Optional[gitpython.Repo]:  # ty
         return None
 
 
-def zsplit(s: str) -> List[str]:
-    """Split a string on null characters."""
-    s = s.strip("\0")
-    if s:
-        return s.split("\0")
-    else:
-        return []
-
-
 def get_aligned_command(title: str, subtext: str) -> str:
     return f"| {title.ljust(17)} - {subtext}"
 

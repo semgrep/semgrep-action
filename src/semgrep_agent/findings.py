@@ -50,13 +50,10 @@ class Finding:
     syntactic_context = attr.ib(type=str, converter=normalize_syntactic_context)
     index = attr.ib(type=int, default=0)
     # baseline scans don't calculate autofixes
-    fixed_lines = attr.ib(
-        type=Optional[List[str]], default=None, hash=None, eq=False, kw_only=True
-    )
     end_line = attr.ib(
         type=Optional[int], default=None, hash=None, eq=False, kw_only=True
     )
-    end_column = attr.ib(
+    end_column = attr.ib(  # dead: disable, more confusing if it's not here
         type=Optional[int], default=None, hash=None, eq=False, kw_only=True
     )
     commit_date = attr.ib(
@@ -119,7 +116,6 @@ class Finding:
             message=result["extra"]["message"],
             severity=cls.semgrep_severity_to_int(result["extra"]["severity"]),
             syntactic_context=result["extra"]["lines"],
-            fixed_lines=result["extra"].get("fixed_lines"),
             commit_date=committed_datetime,
             metadata=result["extra"]["metadata"],
         )

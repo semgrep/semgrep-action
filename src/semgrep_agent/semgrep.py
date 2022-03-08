@@ -40,12 +40,6 @@ os.environ["SEMGREP_USER_AGENT_APPEND"] = "(Agent)"
 semgrep_exec = sh.semgrep.bake(_ok_code={0, 1}, _tty_out=False)
 
 SEMGREP_SAVE_FILE = LOG_FOLDER + "/semgrep_agent_output"
-SEMGREP_SAVE_FILE_BASELINE = LOG_FOLDER + "/semgrep_agent_output_baseline"
-
-# a typical old system has 128 * 1024 as their max command length
-# we assume an average ~250 characters for a path in the worst case
-PATHS_CHUNK_SIZE = 500
-
 
 SemgrepArgs = Sequence[str]
 SemgrepKwargs = Mapping[str, Union[bool, str, int, float]]

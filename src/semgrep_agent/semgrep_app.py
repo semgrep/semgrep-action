@@ -65,13 +65,13 @@ class Sapp:
             self.session.headers["Authorization"] = f"Bearer {self.token}"
 
             if validate_token_length(self.token):
-                self.get_deployment_from_token(self.token)
+                self.get_deployment_of_session()
             else:
                 raise ActionFailure(
                     f"Received invalid publish token. Length is too short."
                 )
 
-    def get_deployment_from_token(self, token: str) -> None:
+    def get_deployment_of_session(self) -> None:
         response = self.session.get(
             f"{self.url}/api/agent/deployment",
             json={},

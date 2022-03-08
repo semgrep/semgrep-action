@@ -203,7 +203,19 @@ def main(
     sapp = Sapp(url=publish_url, token=publish_token)
     # Everything below here is covered by fail-open feature
     try:
-        protected_main(**locals())
+        protected_main(
+            config=config,
+            publish_url=publish_url,
+            enable_metrics=enable_metrics,
+            rewrite_rule_ids=rewrite_rule_ids,
+            json_output=json_output,
+            gitlab_output=gitlab_output,
+            gitlab_secrets_output=gitlab_secrets_output,
+            audit_on=audit_on,
+            timeout=timeout,
+            meta=meta,
+            sapp=sapp,
+        )
     except SemgrepError as error:
         print_sh_error_info(error.stdout, error.stderr, error.command, error.exit_code)
         _handle_error(error.stderr, error.exit_code, sapp, meta)
@@ -237,10 +249,7 @@ def main(
 
 def protected_main(
     config: Sequence[str],
-    baseline_ref: str,
     publish_url: str,
-    publish_token: str,
-    publish_deployment: int,
     enable_metrics: bool,
     rewrite_rule_ids: bool,
     json_output: bool,
@@ -248,7 +257,6 @@ def protected_main(
     gitlab_secrets_output: bool,
     audit_on: Sequence[str],
     timeout: int,
-    scan_environment: str,
     sapp: Sapp,
     meta: GitMeta,
 ) -> NoReturn:

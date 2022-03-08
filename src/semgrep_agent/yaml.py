@@ -20,8 +20,5 @@ class YamlSerializer:
     def load(self, stream: Union[bytes, str, IO[bytes], IO[str]]) -> Any:
         return pyyaml.load(stream, Loader=pyyaml.CSafeLoader)
 
-    safe_dump = dump
-    safe_load = load
-
 
 yaml = YamlSerializer()

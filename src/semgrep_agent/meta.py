@@ -237,10 +237,6 @@ class GithubMeta(GitMeta):
         return os.getenv("GITHUB_REF")
 
     @cachedproperty
-    def ci_actor(self) -> Optional[str]:
-        return os.getenv("GITHUB_ACTOR")
-
-    @cachedproperty
     def ci_job_url(self) -> Optional[str]:
         value = os.getenv("GITHUB_RUN_ID")
         if self.repo_url and value:
@@ -324,10 +320,6 @@ class GitlabMeta(GitMeta):
             git("merge-base", "--all", head_sha, "FETCH_HEAD").stdout.decode().strip()
         )
         return base_sha
-
-    @cachedproperty
-    def ci_actor(self) -> Optional[str]:
-        return os.getenv("GITLAB_USER_LOGIN")
 
     @cachedproperty
     def ci_job_url(self) -> Optional[str]:
