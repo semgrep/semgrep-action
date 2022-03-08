@@ -339,7 +339,7 @@ def invoke_semgrep(
     """
     env = {}
     if api_key and repo_name:
-        env["SEMGREP_LOGIN_TOKEN"] = api_key
+        env["SEMGREP_APP_TOKEN"] = api_key
         env["SEMGREP_REPO_NAME"] = repo_name
 
     with tempfile.NamedTemporaryFile("w") as output_json_file:
@@ -399,7 +399,7 @@ def invoke_semgrep_sarif(
     """
     env = {}
     if api_key and repo_name:
-        env["SEMGREP_LOGIN_TOKEN"] = api_key
+        env["SEMGREP_APP_TOKEN"] = api_key
         env["SEMGREP_REPO_NAME"] = repo_name
 
     with tempfile.NamedTemporaryFile("w") as output_json_file:
