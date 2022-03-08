@@ -219,7 +219,7 @@ class Sapp:
                     finding.to_dict(omit=fields_to_omit)
                     for finding in results.findings.new
                 ],
-                "searched_paths": [str(p) for p in results.findings.searched_paths],
+                "searched_paths": list(results.findings.searched_paths),
                 "rule_ids": rule_ids,
                 "cai_ids": cai_ids,
             },

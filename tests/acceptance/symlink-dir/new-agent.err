@@ -5,10 +5,7 @@
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
 | reporting findings introduced by these commits:
 |   * aaaaaaa Add symlink to dir
-| Skipping bar/foo since it is a symlink to a directory: foo
-| looking at No changed paths
-=== looking for current issues in No files
+=== looking for new issues
 | No current issues found
-=== not looking at pre-existing issues since there are no current issues
 === analyzing new issues in this scan
 === exiting with success status

@@ -5,9 +5,7 @@
 | using semgrep rules from https://semgrep.dev/c/p/r2c-ci
 | reporting findings introduced by these commits:
 |   * aaaaaaa add finding
-| looking at 2 changed paths
-=== looking for current issues in 2 files
+=== looking for new issues
 | No current issues found
-=== not looking at pre-existing issues since there are no current issues
 === analyzing new issues in this scan
 === exiting with success status

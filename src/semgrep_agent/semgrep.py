@@ -9,21 +9,18 @@ from datetime import datetime
 from functools import reduce
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Dict
 from typing import Iterator
 from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
-from typing import Set
-from typing import TextIO
 from typing import Tuple
+from typing import Union
 
 import attr
 import click
 import sh
-from boltons.iterutils import chunked_iter
 from boltons.iterutils import get_path
 from boltons.strutils import unit_len
 from sh.contrib import git
@@ -33,7 +30,7 @@ from semgrep_agent.constants import LOG_FOLDER
 from semgrep_agent.exc import ActionFailure
 from semgrep_agent.findings import Finding
 from semgrep_agent.findings import FindingSets
-from semgrep_agent.targets import TargetFileManager
+from semgrep_agent.ignores import yield_exclude_args
 from semgrep_agent.utils import debug_echo
 from semgrep_agent.utils import get_git_repo
 from semgrep_agent.utils import print_git_log
@@ -49,7 +46,9 @@ SEMGREP_SAVE_FILE_BASELINE = LOG_FOLDER + "/semgrep_agent_output_baseline"
 # we assume an average ~250 characters for a path in the worst case
 PATHS_CHUNK_SIZE = 500
 
-SEMGREPIGNORE_ACTION = Path(".semgrepignore_action")
+
+SemgrepArgs = Sequence[str]
+SemgrepKwargs = Mapping[str, Union[bool, str, int, float]]
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -68,8 +67,8 @@ class RunContext:
     enable_metrics: bool
     # If present, Semgrep run is aborted after this many seconds
     timeout: Optional[int]
-    # The path to the semgrepignore file to be used by the Semgrep CLI
-    action_ignores_path: str
+    # Ignore patterns configured on the semgrep app UI
+    requested_excludes: Sequence[str]
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -120,33 +119,6 @@ def resolve_config_shorthand(config: str) -> str:
     if maybe_prefix in {"p/", "r/", "s/"}:
         return f"https://semgrep.dev/c/{config}"
     return config
-
-
-def create_semgrepignore(app_ignore_patterns: List[str]) -> None:
-    with open(SEMGREPIGNORE_ACTION, "w") as semgrepignore:
-        TEMPLATES_DIR = (Path(__file__).parent / "templates").resolve()
-
-        semgrepignore_path = Path(".semgrepignore")
-        if semgrepignore_path.is_file():
-            semgrepignore.write(semgrepignore_path.read_text())
-
-            # Always ignore .semgrep_logs
-            semgrepignore.write("\n# Semgrep-action log folder")
-            semgrepignore.write("\n.semgrep_logs/")
-            semgrepignore.write("\n")
-            # Always ignore .semgrep folder
-            semgrepignore.write("\n# Semgrep rules folder")
-            semgrepignore.write("\n.semgrep")
-            semgrepignore.write("\n")
-        else:
-
-            semgrepignore.write((TEMPLATES_DIR / ".semgrepignore").read_text())
-
-        if app_ignore_patterns:
-            click.echo("| using path ignore rules configured on the web UI", err=True)
-            semgrepignore.write("\n# Ignores from semgrep app\n")
-            semgrepignore.write("\n".join(app_ignore_patterns))
-            semgrepignore.write("\n")
 
 
 @dataclass
@@ -217,228 +189,118 @@ def _get_findings(context: RunContext) -> Tuple[FindingSets, RunStats]:
     :return: This project's findings
     """
     debug_echo("=== adding semgrep configuration")
-
-    rewrite_args: Sequence[str] = (
-        [] if context.rewrite_rule_ids else ["--no-rewrite-rule-ids"]
+    exclude_args: SemgrepArgs = list(yield_exclude_args(context.requested_excludes))
+    rewrite_kwargs: SemgrepKwargs = (
+        {} if context.rewrite_rule_ids else {"no_rewrite_rule_ids": True}
     )
-    metrics_args: Sequence[str] = ["--enable-metrics"] if context.enable_metrics else []
+    metrics_kwargs: SemgrepKwargs = (
+        {"enable_metrics": True} if context.enable_metrics else {}
+    )
 
     with _fix_head_for_github(context.base_ref, context.head_ref) as base_ref:
         workdir = Path.cwd()
         debug_echo(f"Workdir: {str(workdir)}")
-        targets = TargetFileManager(
-            base_path=workdir,
-            base_commit=base_ref,
-            all_paths=[workdir],
-        )
-        debug_echo("Initialized TargetFileManager")
 
         config_args = []
         # Keep track of which config specifiers are local files/dirs
-        local_configs: Set[str] = set()
         for conf in context.config_specifier:
-            if Path(conf).exists():
-                local_configs.add(conf)
             config_args.extend(["--config", conf])
         debug_echo("=== seeing if there are any findings")
 
-        findings, stats = _get_head_findings(
-            context, [*config_args, *metrics_args, *rewrite_args], targets
-        )
+        semgrep_kwargs = {**rewrite_kwargs, **metrics_kwargs}
+        if base_ref is not None:
+            semgrep_kwargs["baseline_commit"] = base_ref
 
-    _update_baseline_findings(context, findings, local_configs, rewrite_args, targets)
+        findings, stats = _get_new_findings(
+            context, [*config_args, *exclude_args], semgrep_kwargs
+        )
 
     if os.getenv("INPUT_GENERATESARIF"):
         click.echo("=== re-running scan to generate a SARIF report", err=True)
         sarif_path = Path("semgrep.sarif")
-        with targets.current_paths() as paths:
-            args = [*rewrite_args, *config_args]
-            _, sarif_output = invoke_semgrep_sarif(
-                args,
-                [str(p) for p in paths],
-                timeout=context.timeout,
-                explicit_semgrepignore_path=context.action_ignores_path,
-            )
+        _, sarif_output = invoke_semgrep_sarif(
+            [*config_args, *exclude_args], rewrite_kwargs, timeout=context.timeout
+        )
         rewrite_sarif_file(sarif_output, sarif_path)
 
     return findings, stats
 
 
-def _get_head_findings(
-    context: RunContext, extra_args: Sequence[str], targets: TargetFileManager
+def _get_new_findings(
+    context: RunContext, semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs
 ) -> Tuple[FindingSets, RunStats]:
     """
     Gets findings for the project's HEAD git commit
 
     :param context: The Semgrep run context object
-    :param extra_args: Extra arguments to pass to Semgrep
+    :param semgrep_args: Extra arguments to pass to Semgrep
+    :param semgrep_kwargs: Extra arguments to pass to Semgrep
     :param targets: This run's target manager
     :return: A findings object with existing head findings and empty baseline findings
     """
-    with targets.current_paths() as paths:
+    click.echo("=== looking for new issues", err=True)
+    semgrep_kwargs = {
+        "skip_unknown_extensions": True,
+        "disable_nosem": True,
+        "json": True,
+        "autofix": True,
+        "dryrun": True,
+        "time": True,
+        "timeout_threshold": 3,
+        **semgrep_kwargs,
+    }
+
+    exit_code, semgrep_output = invoke_semgrep(
+        semgrep_args=semgrep_args,
+        semgrep_kwargs=semgrep_kwargs,
+        timeout=context.timeout,
+    )
+    findings = FindingSets(
+        exit_code,
+        searched_paths=set(semgrep_output.searched_paths),
+        errors=semgrep_output.errors,
+    )
+
+    stats = RunStats(
+        rule_list=semgrep_output.timing.rules,
+        target_data=semgrep_output.timing.targets,
+    )
+
+    findings.new.update_findings(
+        Finding.from_semgrep_result(result, context.committed_datetime)
+        for result in semgrep_output.results
+        if not result["extra"].get("is_ignored")
+    )
+    findings.new_ignored.update_findings(
+        Finding.from_semgrep_result(result, context.committed_datetime)
+        for result in semgrep_output.results
+        if result["extra"].get("is_ignored")
+    )
+    if findings.errors:
         click.echo(
-            "=== looking for current issues in " + unit_len(paths, "file"), err=True
-        )
-
-        for path in paths:
-            debug_echo(f"searching {str(path)}")
-
-        args = [
-            "--skip-unknown-extensions",
-            "--disable-nosem",
-            "--json",
-            "--autofix",
-            "--dryrun",
-            "--time",
-            "--timeout-threshold",
-            "3",
-            *extra_args,
-        ]
-        exit_code, semgrep_output = invoke_semgrep(
-            args,
-            [str(p) for p in paths],
-            timeout=context.timeout,
-            explicit_semgrepignore_path=context.action_ignores_path,
-        )
-        findings = FindingSets(
-            exit_code,
-            searched_paths=set(targets.searched_paths),
-            errors=semgrep_output.errors,
-        )
-
-        stats = RunStats(
-            rule_list=semgrep_output.timing.rules,
-            target_data=semgrep_output.timing.targets,
-        )
-
-        findings.current.update_findings(
-            Finding.from_semgrep_result(result, context.committed_datetime)
-            for result in semgrep_output.results
-            if not result["extra"].get("is_ignored")
-        )
-        findings.ignored.update_findings(
-            Finding.from_semgrep_result(result, context.committed_datetime)
-            for result in semgrep_output.results
-            if result["extra"].get("is_ignored")
-        )
-        if findings.errors:
-            click.echo(
-                f"| Semgrep exited with {unit_len(findings.errors, 'error')}:",
-                err=True,
-            )
-            for e in findings.errors:
-                for s in render_error(e):
-                    click.echo(f"|    {s}", err=True)
-        inventory_findings_len = 0
-        for finding in findings.current:
-            if finding.is_cai_finding():
-                inventory_findings_len += 1
-        click.echo(
-            f"| {unit_len(range(len(findings.current) - inventory_findings_len), 'current issue')} found",
+            f"| Semgrep exited with {unit_len(findings.errors, 'error')}:",
             err=True,
         )
-        if len(findings.ignored) > 0:
-            click.echo(
-                f"| {unit_len(findings.ignored, 'issue')} muted with nosemgrep comment (not counted as current)",
-                err=True,
-            )
-    return findings, stats
-
-
-def _update_baseline_findings(
-    context: RunContext,
-    findings: FindingSets,
-    local_configs: Set[str],
-    extra_args: Sequence[str],
-    targets: TargetFileManager,
-) -> None:
-    """
-    Updates findings.baseline with findings from the baseline git commit
-
-    :param context: Semgrep run context
-    :param findings: Findings structure from running on the head git commit
-    :param local_configs: Any local semgrep.yml configs
-    :param extra_args: Extra Semgrep arguments
-    :param targets: File targets from head commit
-    """
-    if not findings.current and not findings.ignored:
+        for e in findings.errors:
+            for s in render_error(e):
+                click.echo(f"|    {s}", err=True)
+    inventory_findings_len = 0
+    for finding in findings.new:
+        if finding.is_cai_finding():
+            inventory_findings_len += 1
+    click.echo(
+        f"| {unit_len(range(len(findings.new) - inventory_findings_len), 'current issue')} found",
+        err=True,
+    )
+    if len(findings.new_ignored) > 0:
         click.echo(
-            "=== not looking at pre-existing issues since there are no current issues",
+            f"| {unit_len(findings.new_ignored, 'issue')} muted with nosemgrep comment (not counted as current)",
             err=True,
         )
-    else:
-        with targets.baseline_paths() as paths:
-            paths_with_findings = {
-                finding.path for finding in findings.current.union(findings.ignored)
-            }
-            paths_to_check = list(
-                set(str(path) for path in paths) & paths_with_findings
-            )
-            if not paths_to_check:
-                click.echo(
-                    "=== not looking at pre-existing issues since all files with current issues are newly created",
-                    err=True,
-                )
-            else:
-                config_args = []
-                for conf in context.config_specifier:
-                    # If a local config existed with initial scan but doesn't exist
-                    # in baseline, treat as if no issues found in baseline with that config
-                    if conf in local_configs and not Path(conf).exists():
-                        click.echo(
-                            f"=== {conf} file not found in baseline, skipping scanning for baseline",
-                            err=True,
-                        )
-                        continue
-                    config_args.extend(["--config", conf])
-
-                if not config_args:
-                    click.echo(
-                        "=== not looking at pre-exiting issues since after filtering out local files that don't exist in baseline, no configs left to run",
-                        err=True,
-                    )
-                else:
-                    click.echo(
-                        "=== looking for pre-existing issues in "
-                        + unit_len(paths_to_check, "file"),
-                        err=True,
-                    )
-
-                    args = [
-                        "--skip-unknown-extensions",
-                        "--disable-nosem",
-                        "--json",
-                        *extra_args,
-                        *config_args,
-                    ]
-
-                    # If possible, disable metrics so that we get metrics only once per semgrep-action run
-                    # However, if run with config auto we must allow metrics to be sent
-                    if "auto" not in config_args:
-                        args.extend(["--metrics", "off"])
-
-                    _, semgrep_output = invoke_semgrep(
-                        args,
-                        paths_to_check,
-                        timeout=context.timeout,
-                        baseline=True,
-                        explicit_semgrepignore_path=context.action_ignores_path,
-                    )
-                    findings.baseline.update_findings(
-                        Finding.from_semgrep_result(result, context.committed_datetime)
-                        for result in semgrep_output.results
-                    )
-                    inventory_findings_len = 0
-                    for finding in findings.baseline:
-                        if finding.is_cai_finding():
-                            inventory_findings_len += 1
-                    baseline_findings_count = (
-                        len(findings.baseline) - inventory_findings_len
-                    )
-                    click.echo(
-                        f"| {unit_len(range(baseline_findings_count), 'current issue')} removed by diffing logic",
-                        err=True,
-                    )
+    return (
+        findings,
+        stats,
+    )
 
 
 @attr.s(auto_attribs=True)
@@ -450,17 +312,13 @@ class SemgrepTiming:
 @attr.s(auto_attribs=True)
 class SemgrepOutput:
     results: Sequence[Any]
+    searched_paths: Sequence[str]
     errors: Sequence[Any]
     timing: SemgrepTiming
 
 
 def invoke_semgrep(
-    semgrep_args: List[str],
-    targets: List[str],
-    *,
-    timeout: Optional[int],
-    baseline: bool = False,
-    explicit_semgrepignore_path: Optional[str] = None,
+    semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs, *, timeout: Optional[int]
 ) -> Tuple[int, SemgrepOutput]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
@@ -470,132 +328,76 @@ def invoke_semgrep(
 
     Returns json output of semgrep as dict object
     """
-    max_exit_code = 0
-    output = SemgrepOutput([], [], SemgrepTiming([], []))
-    _env = (
-        {
-            "SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE": explicit_semgrepignore_path,
-            **os.environ,
+    with tempfile.NamedTemporaryFile("w") as output_json_file:
+        output_json_file.flush()
+        args = [*semgrep_args, "."]
+        kwargs = {
+            # nosemgrep: python.lang.correctness.tempfile.flush.tempfile-without-flush
+            "output": output_json_file.name,
+            "debug": True,
+            **semgrep_kwargs,
         }
-        if explicit_semgrepignore_path
-        else os.environ
+
+        debug_echo(f"== Invoking semgrep with {args} and {kwargs}")
+
+        exit_code = semgrep_exec(
+            *args, **kwargs, _timeout=timeout, _err=debug_echo
+        ).exit_code
+
+        debug_echo(f"== Semgrep finished with exit code {exit_code}")
+
+        # nosemgrep: python.lang.correctness.tempfile.flush.tempfile-without-flush
+        with open(output_json_file.name) as f:
+            semgrep_output = f.read()
+    with open(SEMGREP_SAVE_FILE, "w+") as semgrep_save_file:
+        semgrep_save_file.write(f"[{semgrep_output}]")
+
+    parsed_output = json.loads(semgrep_output)
+    parsed_timing = parsed_output.get("time", {})
+
+    timing = SemgrepTiming(parsed_timing["rules"], parsed_timing["targets"])
+    output = SemgrepOutput(
+        parsed_output["results"],
+        parsed_output["paths"]["scanned"],
+        parsed_output["errors"],
+        timing,
     )
 
-    semgrep_save_file_baseline = Path(SEMGREP_SAVE_FILE_BASELINE)
-    if not baseline and semgrep_save_file_baseline.exists():
-        semgrep_save_file_baseline.unlink()
-
-    semgrep_save_file_path = (
-        SEMGREP_SAVE_FILE_BASELINE if baseline else SEMGREP_SAVE_FILE
-    )
-    semgrep_save_file = open(semgrep_save_file_path, "w+")
-    semgrep_save_file.write("[")
-
-    first_chunk = True
-
-    for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
-        with tempfile.NamedTemporaryFile("w") as output_json_file:
-            args = semgrep_args.copy()
-            args.extend(["--debug"])
-            args.extend(
-                [
-                    "-o",
-                    output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-                ]
-            )
-            for c in chunk:
-                args.append(c)
-
-            debug_echo(f"== Invoking semgrep with { len(args) } args")
-
-            exit_code = semgrep_exec(
-                *args, _timeout=timeout, _err=debug_echo, _env=_env
-            ).exit_code
-            max_exit_code = max(max_exit_code, exit_code)
-
-            debug_echo(f"== Semgrep finished with exit code { exit_code }")
-
-            with open(
-                output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-            ) as f:
-                semgrep_output = f.read()
-            parsed_output = json.loads(semgrep_output)
-            if first_chunk:
-                first_chunk = False
-            else:
-                semgrep_save_file.write(",")
-            semgrep_save_file.write(semgrep_output)
-
-            output.results = [*output.results, *parsed_output["results"]]
-            output.errors = [*output.errors, *parsed_output["errors"]]
-            parsed_timing = parsed_output.get("time", {})
-            output.timing = SemgrepTiming(
-                parsed_timing.get("rules", output.timing.rules),
-                [*output.timing.targets, *parsed_timing.get("targets", [])],
-            )
-
-    semgrep_save_file.write("]")
-    semgrep_save_file.close()
-
-    return max_exit_code, output
+    return exit_code, output
 
 
 def invoke_semgrep_sarif(
-    semgrep_args: List[str],
-    targets: List[str],
-    *,
-    timeout: Optional[int],
-    explicit_semgrepignore_path: Optional[str] = None,
+    semgrep_args: SemgrepArgs, semgrep_kwargs: SemgrepKwargs, *, timeout: Optional[int]
 ) -> Tuple[int, Dict[str, List[Any]]]:
     """
     Call semgrep passing in semgrep_args + targets as the arguments
 
     Returns sarif output of semgrep as dict object
     """
-    output: Dict[str, List[Any]] = {}
-
-    max_exit_code = 0
-    _env = (
-        {
-            "SEMGREP_R2C_INTERNAL_EXPLICIT_SEMGREPIGNORE": explicit_semgrepignore_path,
-            **os.environ,
+    with tempfile.NamedTemporaryFile("w") as output_json_file:
+        output_json_file.flush()
+        args = [*semgrep_args, "."]
+        kwargs = {
+            # nosemgrep: python.lang.correctness.tempfile.flush.tempfile-without-flush
+            "output": output_json_file.name,
+            "debug": True,
+            "sarif": True,
+            **semgrep_kwargs,
         }
-        if explicit_semgrepignore_path
-        else os.environ
-    )
 
-    for chunk in chunked_iter(targets, PATHS_CHUNK_SIZE):
-        with tempfile.NamedTemporaryFile("w") as output_json_file:
-            args = semgrep_args.copy()
-            args.extend(["--debug", "--sarif"])
-            args.extend(
-                [
-                    "-o",
-                    output_json_file.name,  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-                ]
-            )
-            for c in chunk:
-                args.append(c)
+        debug_echo(f"== Invoking semgrep with {args} and {kwargs}")
 
-            exit_code = semgrep_exec(
-                *args, _timeout=timeout, _err=debug_echo, _env=_env
-            ).exit_code
-            max_exit_code = max(max_exit_code, exit_code)
+        exit_code = semgrep_exec(
+            *args, **kwargs, _timeout=timeout, _err=debug_echo
+        ).exit_code
 
-            with open(
-                output_json_file.name  # nosem: python.lang.correctness.tempfile.flush.tempfile-without-flush
-            ) as f:
-                parsed_output = json.load(f)
+        debug_echo(f"== Semgrep SARIF scan finished with exit code {exit_code}")
 
-            if len(output) == 0:
-                output = parsed_output
-            else:
-                output["runs"][0]["results"].extend(parsed_output["runs"][0]["results"])
-                output["runs"][0]["tool"]["driver"]["rules"].extend(
-                    parsed_output["runs"][0]["tool"]["driver"]["rules"]
-                )
+        # nosemgrep: python.lang.correctness.tempfile.flush.tempfile-without-flush
+        with open(output_json_file.name) as f:
+            semgrep_output = f.read()
 
-    return max_exit_code, output
+    return exit_code, json.loads(semgrep_output)
 
 
 class SemgrepError(Exception):

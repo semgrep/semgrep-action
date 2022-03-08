@@ -271,20 +271,11 @@ class FindingSet(Set[Finding]):
 class FindingSets:
     # 2 if semgrep has errors, otherwise 1 if semgrep has findings, otherwise 0
     max_exit_code: int = field()
-    baseline: FindingSet = field(default_factory=FindingSet)
-    current: FindingSet = field(default_factory=FindingSet)
-    ignored: FindingSet = field(default_factory=FindingSet)
-    searched_paths: Set[Path] = field(default_factory=set)
+    new: FindingSet = field(default_factory=FindingSet)
+    new_ignored: FindingSet = field(default_factory=FindingSet)
+    searched_paths: Set[str] = field(default_factory=set)
     errors: Sequence[Mapping[str, Any]] = field(default_factory=list)
 
     @property
-    def new(self) -> Set[Finding]:
-        return self.current - self.baseline
-
-    @property
-    def new_ignored(self) -> Set[Finding]:
-        return self.ignored - self.baseline
-
-    @property
     def new_all(self) -> Set[Finding]:
-        return self.new.union(self.new_ignored)
+        return self.new | self.new_ignored
