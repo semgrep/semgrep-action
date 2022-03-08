@@ -1,4 +1,5 @@
-FROM python:3.10-alpine
+# the boltons library is not yet compatible with 3.10 - https://github.com/mahmoud/boltons/issues/294
+FROM python:3.9-alpine
 
 WORKDIR /app
 COPY poetry.lock pyproject.toml ./
