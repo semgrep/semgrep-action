@@ -183,9 +183,9 @@ class GithubMeta(GitMeta):
         return self.glom_event(T["pull_request"]["base"]["sha"])  # type: ignore
 
     def _find_branchoff_point(self, attempt_count: int = 0) -> str:
-        fetch_depth = 4 ** attempt_count  # fetch 4, 16, 64, 256, 1024, ...
+        fetch_depth = 4**attempt_count  # fetch 4, 16, 64, 256, 1024, ...
         if attempt_count >= self.MAX_FETCH_ATTEMPT_COUNT:  # get all commits on last try
-            fetch_depth = 2 ** 31 - 1  # git expects a signed 32-bit integer
+            fetch_depth = 2**31 - 1  # git expects a signed 32-bit integer
 
         if attempt_count:  # skip fetching on first try
             debug_echo(

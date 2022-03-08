@@ -396,7 +396,7 @@ def protected_main(
     elif gitlab_secrets_output:
         # schema https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/secret-detection-report-format.json
         # output all new findings in Gitlab secret detection format
-        gitlab_contents = {
+        gitlab_secrets_contents = {
             "version": "14.0.0",
             "vulnerabilities": [f.to_gitlab_secrets() for f in new_findings],
             "remediations": [],
@@ -414,7 +414,7 @@ def protected_main(
                 "status": "success" if not errors else "failed",
             },
         }
-        click.echo(json.dumps(gitlab_contents))
+        click.echo(json.dumps(gitlab_secrets_contents))
     else:
         # Print out blocking findings
         formatter.dump(blocking_findings)
