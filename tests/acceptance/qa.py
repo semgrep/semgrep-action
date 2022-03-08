@@ -114,8 +114,7 @@ def check_command(step: Any, pwd: str, target: str, rewrite: bool) -> None:
         cwd=pwd,
         env=env,
         stdin=slave_fd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         encoding="utf-8",
     )
 
@@ -176,22 +175,19 @@ def run_repo(
         if target_repo:
             subprocess.run(
                 ["git", "clone", target_repo, target_dir],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
             subprocess.run(
                 ["git", "checkout", target_hash],
                 cwd=target_dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
             subprocess.run(
                 ["git", "clean", "-xdf"],
                 cwd=target_dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 check=True,
             )
 
