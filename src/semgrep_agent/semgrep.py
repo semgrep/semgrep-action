@@ -341,6 +341,7 @@ def invoke_semgrep(
     if api_key and repo_name:
         env["SEMGREP_APP_TOKEN"] = api_key
         env["SEMGREP_REPO_NAME"] = repo_name
+        env["SEMGREP_POLICY_INCLUDE_CAI"] = "1"
 
     with tempfile.NamedTemporaryFile("w") as output_json_file:
         output_json_file.flush()
