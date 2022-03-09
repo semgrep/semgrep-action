@@ -26,7 +26,6 @@ from semgrep_agent.meta import generate_meta_from_environment
 from semgrep_agent.meta import GitMeta
 from semgrep_agent.semgrep import SemgrepError
 from semgrep_agent.semgrep_app import Sapp
-from semgrep_agent.semgrep_app import SEMGREP_RULES_FILE
 from semgrep_agent.utils import get_aligned_command
 from semgrep_agent.utils import maybe_print_debug_info
 from semgrep_agent.utils import print_sh_error_info
@@ -205,6 +204,7 @@ def main(
         protected_main(
             config=config,
             publish_url=publish_url,
+            publish_token=publish_token,
             enable_metrics=enable_metrics,
             rewrite_rule_ids=rewrite_rule_ids,
             json_output=json_output,
@@ -249,6 +249,7 @@ def main(
 def protected_main(
     config: Sequence[str],
     publish_url: str,
+    publish_token: str,
     enable_metrics: bool,
     rewrite_rule_ids: bool,
     json_output: bool,
@@ -320,35 +321,13 @@ def protected_main(
             click.echo(f"| using semgrep rules from {resolved}", err=True)
         config = resolved_config
     elif sapp.is_configured:
-        local_config_path, rule_ids, cai_ids = sapp.download_rules()
-        if len(rule_ids) + len(cai_ids) == 0:
-            message = """
-            === [ERROR] This policy will not run any rules
-
-            Semgrep will only run rules in your policy that
-            have an action associated with them (notify or block).
-            We have a logging-only option coming soon, but in
-            the mean time, you can accomplish this by selecting
-            "notify" on the policy tab and not configuring any
-            channels on the notifications tab
-            """
-            message = dedent(message).strip()
-            click.secho(message, err=True, fg="red")
-            sys.exit(1)
-        config = (str(local_config_path),)
-        logging.info(f"Config saved to {SEMGREP_RULES_FILE}")
-        click.echo(
-            f"| using {len(rule_ids)} semgrep rules configured on the web UI", err=True
-        )
-        click.echo(f"| using {len(cai_ids)} code asset inventory rules", err=True)
+        # Assert api key  and repo_name are defined
+        # TODO scan number?
+        config = ("policy",)
     elif Path(".semgrep.yml").is_file():
-        click.echo("| using semgrep rules from the committed .semgrep.yml", err=True)
-        config = (".semgrep.yml",)
+        pass
     elif Path(".semgrep").is_dir():
-        click.echo(
-            "| using semgrep rules from the committed .semgrep/ directory", err=True
-        )
-        config = (".semgrep/",)
+        pass
     else:
         message = """
             == [ERROR] you didn't configure what rules semgrep should scan with.
@@ -372,6 +351,8 @@ def protected_main(
         enable_metrics=enable_metrics,
         timeout=(timeout if timeout > 0 else None),
         requested_excludes=sapp.scan.ignore_patterns,
+        api_key=publish_token,
+        repo_name=meta.repo_name,
     )
     results = semgrep.scan(scan_context)
     end_time = datetime.now()
