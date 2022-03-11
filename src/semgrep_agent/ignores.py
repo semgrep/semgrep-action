@@ -25,7 +25,7 @@ def yield_valid_patterns(patterns: Iterable[str]) -> Iterable[str]:
 
 def yield_exclude_args(requested_patterns: Sequence[str]) -> Iterable[str]:
     patterns = [*yield_valid_patterns(requested_patterns), *ALWAYS_EXCLUDE_PATTERNS]
-    if SEMGREPIGNORE_PATH.is_file():
+    if SEMGREPIGNORE_PATH.is_file() and not requested_patterns:
         patterns.extend(DEFAULT_EXCLUDE_PATTERNS)
 
     for pattern in patterns:
