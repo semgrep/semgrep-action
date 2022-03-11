@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING
 import click
 import git as gitpython
 import sh
-from boltons import ecoutils
 from sh.contrib import git
 
 from semgrep_agent import constants
@@ -50,8 +49,14 @@ def maybe_print_debug_info(meta: "GitMeta") -> None:
     if not os.getenv("SEMGREP_AGENT_DEBUG"):
         return
 
-    debug_echo("\n== ecosystem profile:")
-    debug_echo(json.dumps(ecoutils.get_profile(), indent=2, sort_keys=True))
+    try:
+        from boltons import ecoutils
+    except AttributeError:
+        pass  # https://github.com/mahmoud/boltons/issues/294
+    else:
+        debug_echo("\n== ecosystem profile:")
+        debug_echo(json.dumps(ecoutils.get_profile(), indent=2, sort_keys=True))
+
     debug_echo("\n== meta info:")
     debug_echo(json.dumps(meta.to_dict(), indent=2, sort_keys=True))
 
