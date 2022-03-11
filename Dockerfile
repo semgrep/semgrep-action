@@ -4,7 +4,7 @@ FROM python:3.9-alpine
 WORKDIR /app
 COPY poetry.lock pyproject.toml ./
 
-ENV INSTALLED_SEMGREP_VERSION=0.83.0
+ENV INSTALLED_SEMGREP_VERSION=0.84.0
 
 
 # This is all in one run command in order to save disk space.
@@ -13,6 +13,7 @@ RUN apk add --no-cache --virtual=.build-deps build-base cargo libffi-dev openssl
     apk add --no-cache --virtual=.run-deps bash git git-lfs less libffi openssl yaml &&\
     pip install --no-cache-dir pipx~=1.0.0 &&\
     pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
+    pipx inject semgrep 'git+https://github.com/returntocorp/semgrep.git@55af3ff7ee6d16454f6a31f59603094283c46c87#egg=semgrep&subdirectory=semgrep' &&\
     (pip freeze | xargs pip uninstall -y) &&\
     pip install --no-cache-dir poetry~=1.1.13 &&\
     poetry config virtualenvs.create false &&\
