@@ -16,7 +16,7 @@ jobs:
       PIPX_HOME: .pipx
       PIPX_BIN_DIR: .pipx_bin
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
@@ -63,7 +63,7 @@ jobs:
     name: live run of action on this repo
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - id: semgrep-app-config
         name: with semgrep-app connection
         uses: ./tests/local-image-action
