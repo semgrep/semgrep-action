@@ -537,6 +537,16 @@ def invoke_semgrep(
     semgrep_save_file.write("]")
     semgrep_save_file.close()
 
+    if os.getenv("INPUT_GENERATE_JSON_REPORT"):
+        debug_echo("=== generate a Semgrep JSON report")
+        report_path = Path("semgrep-report.json")
+        semgrep_report = {
+            "results": output.results,
+            "errors": output.errors,
+        }
+        with open(report_path, "w") as fh:
+            json.dump(semgrep_report, fh, indent=4)
+
     return max_exit_code, output
 
 
