@@ -1,30 +1,10 @@
-FROM returntocorp/semgrep:develop
+# commit SHA is from https://github.com/returntocorp/semgrep/pull/4777
+FROM returntocorp/semgrep:cc962011f0c405ba5a4cc5b7af2ec4ca5472406d
 
 WORKDIR /app
-COPY poetry.lock pyproject.toml ./
-USER root
+COPY src/ .
 
-# This is all in one run command in order to save disk space.
-# Note that there's a tradeoff here for debuggability.
-RUN apk add --no-cache --virtual=.build-deps build-base cargo libffi-dev openssl-dev yaml-dev &&\
-    apk add --no-cache --virtual=.run-deps bash git git-lfs less libffi openssl yaml &&\
-    pip install --no-cache-dir poetry~=1.1.13 &&\
-    poetry config virtualenvs.create false &&\
-    # Don't install dev dependencies or semgrep-agent
-    poetry install --no-dev --no-root &&\
-    apk del .build-deps &&\
-    rm -rf /root/.cache/* /root/.cargo/* /tmp/* &&\
-    find / \( -name '*.pyc' -o -path '*/__pycache__*' \) -delete
-
-COPY ./src/semgrep_agent /app/src/semgrep_agent
-RUN poetry install --no-dev &&\
-    rm -rf /root/.cache/* /tmp/* &&\
-    find / \( -name '*.pyc' -o -path '*/__pycache__*' \) -delete &&\
-    SEMGREP_SKIP_BIN=true python -m pip install /semgrep
-
-ENV PATH=/root/.local/bin:${PATH}
-
-CMD ["semgrep-agent"]
+CMD ["python", "/app/src/semgrep_agent.py"]
 
 ENV SEMGREP_ACTION=true\
     SEMGREP_ACTION_VERSION=v1\

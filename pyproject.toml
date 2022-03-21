@@ -10,27 +10,13 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-requests = "^2.24.0"
-click = ">=7.1.2,<9.0.0"
-sh = "^1.13.1"
-boltons = ">=20.2.1,<22.0.0"
-glom = "^22.1.0"
-pymmh3 = "^0.0.5"
-attrs = ">=20.3,<22.0"
-GitPython = "^3.1.11"
-PyYAML = "^6.0"
-urllib3 = "^1.26.8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
 jsonschema = "^4.4.0"
-types-PyYAML = "^6.0.4"
-types-click = "^7.1.8"
-types-requests = "^2.27.11"
-types-urllib3 = "^1.26.10"
 
 [tool.poetry.scripts]
-semgrep-agent = "semgrep_agent.__main__:error_guard"
+semgrep-agent = "semgrep_agent.main"
 
 [build-system]
 requires = ["poetry>=1.0.10"]
