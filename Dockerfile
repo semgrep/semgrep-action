@@ -3,6 +3,7 @@ FROM returntocorp/semgrep:deed9410c79873c48530b9e9eac22b28858e7340
 
 WORKDIR /app
 COPY src/ .
+USER root
 
 CMD ["python", "/app/src/semgrep_agent.py"]
 
