@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import subprocess
+import os
 
 
 def main() -> None:
-    subprocess.call(["semgrep", "ci"])
+    os.execlp("semgrep", "ci")
 
 
 if __name__ == "__main__":
