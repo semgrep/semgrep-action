@@ -1,5 +1,5 @@
 # commit SHA is from https://github.com/returntocorp/semgrep/pull/4777
-FROM returntocorp/semgrep:cc962011f0c405ba5a4cc5b7af2ec4ca5472406d
+FROM returntocorp/semgrep:bdeb43ff85578561d5b698165da9ebc290071f7d
 
 WORKDIR /app
 COPY src/ .
