@@ -3,7 +3,7 @@ import os
 
 
 def main() -> None:
-    os.execlp("semgrep", "ci")
+    os.execvp("semgrep", ["semgrep", "ci"])
 
 
 if __name__ == "__main__":
