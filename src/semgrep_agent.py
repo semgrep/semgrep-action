@@ -21,6 +21,33 @@ def print_deprecation_notice(message: str) -> None:
     )
 
 
+def adapt_environment() -> list[str]:
+    """Update env vars and return CLI flags for compatibility with latest Semgrep."""
+    ENV_MAPPINGS: dict[str, str] = {
+        "INPUT_CONFIG": "SEMGREP_RULES",
+        "BASELINE_REF": "SEMGREP_BASELINE_COMMIT",
+        "SEMGREP_BASELINE_REF": "SEMGREP_BASELINE_COMMIT",
+        "INPUT_PUBLISHTOKEN": "SEMGREP_APP_TOKEN",
+        "INPUT_PUBLISHURL": "SEMGREP_APP_URL",
+        "REWRITE_RULE_IDS": "SEMGREP_REWRITE_RULE_IDS",
+        "SEMGREP_JSON_OUTPUT": "SEMGREP_REWRITE_RULE_IDS",
+        "INPUT_AUDITON": "SEMGREP_AUDIT_ON",
+    }
+
+    for old_var, new_var in ENV_MAPPINGS.items():
+        if old_var in os.environ:
+            os.environ[new_var] = os.environ.pop(old_var)
+
+    FLAG_MAPPINGS: dict[str, str] = {
+        "REWRITE_RULE_IDS": "--rewrite-rule-ids",
+        "SEMGREP_JSON_OUTPUT": "--json",
+        "SEMGREP_GITLAB_JSON": "--gitlab-sast",
+        "SEMGREP_GITLAB_SECRETS_JSON": "--gitlab-secrets",
+    }
+
+    return [flag for envvar, flag in FLAG_MAPPINGS.items() if envvar in os.environ]
+
+
 def run_sarif_scan() -> None:
     cmd = ["semgrep", "scan", "--sarif", "--output=semgrep.sarif"]
 
@@ -43,10 +70,12 @@ def run_sarif_scan() -> None:
 
 
 def main() -> None:
+    flags = adapt_environment()
+
     if os.environ.get("INPUT_GENERATESARIF", "0") == "1":
         run_sarif_scan()
 
-    if os.environ.get("INPUT_AUDITON", ""):
+    if os.environ.get("SEMGREP_AUDIT_ON", ""):
         print_deprecation_notice(
             """
             Semgrep's audit mode setting will be removed by 2022 May.
@@ -58,7 +87,7 @@ def main() -> None:
             """
         )
 
-    os.execvp("semgrep", ["semgrep", "ci"])
+    os.execvp("semgrep", ["semgrep", "ci", *flags])
 
 
 if __name__ == "__main__":
