@@ -6,6 +6,7 @@ WORKDIR /semgrep-agent
 COPY src/* .
 RUN ln -s /semgrep-agent/semgrep_agent.py /usr/local/bin/semgrep-agent
 
+ENTRYPOINT []
 CMD ["semgrep-agent"]
 
 ENV SEMGREP_ACTION=true\
