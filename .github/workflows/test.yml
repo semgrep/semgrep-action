@@ -55,8 +55,6 @@ jobs:
           unset CI
           unset "${!GITHUB_@}"
 
-          poetry run pytest
-
           poetry run pytest tests/acceptance/qa.py
 
   live-runs:

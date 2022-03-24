@@ -23,11 +23,11 @@ ALL_TESTS = [
 
 REPO_ROOT = str(Path(__file__).parent.parent.parent.resolve())
 
-BRANCH_COMMIT = re.compile(r"^(commit|\|   \*) ([0-9a-f]+)", re.MULTILINE)
+BRANCH_COMMIT = re.compile(r"^(commit|\s+?\*) ([0-9a-f]+)", re.MULTILINE)
 DATE_STR = re.compile(r"^Date:   (.*)$", re.MULTILINE)
 BRANCH_MERGE = re.compile(r"^Merge: (.*)$", re.MULTILINE)
 ENV_VERSIONS = re.compile(
-    r"^(\| versions\s+?- semgrep ).+?( on Python ).+?$", re.MULTILINE
+    r"^(\s+?versions\s+?- semgrep ).+?( on python ).+?$", re.MULTILINE
 )
 GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.*?\n", re.MULTILINE)
 

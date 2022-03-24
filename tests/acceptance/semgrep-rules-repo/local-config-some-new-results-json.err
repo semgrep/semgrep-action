@@ -1,6 +1,6 @@
 Running `semgrep ci` without API token but with configs ('python/django/security/audit/xss/template-translate-as-no-escape.yaml',)
 Scan environment:
-  versions    - semgrep 0.86.0 on python 3.10.0
+  versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
 Fetching configuration from semgrep.dev

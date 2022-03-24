@@ -1,6 +1,6 @@
 Running `semgrep ci` without API token but with configs ('.semgrep.yml',)
 Scan environment:
-  versions    - semgrep 0.86.0 on python 3.10.0
+  versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
 Fetching configuration from semgrep.dev
@@ -9,7 +9,7 @@ Scanning 1 file.
 
 Switching repository to baseline commit 'HEAD~1'.
   Will report findings introduced by these commits:
-    * 97950ad add rules
+    * aaaaaaa add rules
 
 Scanning 1 file.
 
