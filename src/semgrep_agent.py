@@ -8,14 +8,16 @@ import textwrap
 def print_deprecation_notice(message: str) -> None:
     print(
         textwrap.dedent(
-            f"""
+            """
                 =========== DEPRECATION WARNING ===========
 
-                {textwrap.dedent(message).strip()}
+                {}
 
                 For questions or support, please reach out at https://r2c.dev/slack
             """
-        ).strip()
+        )
+        .strip()
+        .format(textwrap.dedent(message).strip())
         + "\n\n",
         file=sys.stderr,
     )
