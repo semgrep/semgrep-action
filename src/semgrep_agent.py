@@ -39,6 +39,7 @@ ENV_TO_FLAG: dict[str, str] = {
     "SEMGREP_JSON_OUTPUT": "--json",
     "SEMGREP_GITLAB_JSON": "--gitlab-sast",
     "SEMGREP_GITLAB_SECRETS_JSON": "--gitlab-secrets",
+    "SEMGREP_CI_DRY_RUN": "--dry-run",
 }
 
 
