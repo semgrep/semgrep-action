@@ -57,7 +57,7 @@ def run_sarif_scan() -> None:
         cmd.append("--config=policy")
 
     print_deprecation_notice(
-        """
+        f"""
         Semgrep's SARIF file generation is changing by 2022 May.
         Please update your CI configuration. Your CI script should run this command to get a SARIF file:
             $ {' '.join(cmd)}
