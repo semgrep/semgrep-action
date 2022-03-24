@@ -1,1 +1,9 @@
-Error: Option '--publish-token' requires an argument.
+usage: semgrep_agent.py [-h] [--publish-url PUBLISH_URL]
+                        [--publish-deployment PUBLISH_DEPLOYMENT]
+                        [--publish-token PUBLISH_TOKEN] [--config CONFIG]
+                        [--baseline-ref BASELINE_REF] [--timeout TIMEOUT]
+                        [--audit-on AUDIT_ON] [--enable-metrics]
+                        [--disable-metrics] [--rewrite-rule-ids]
+                        [--no-rewrite-rule-ids] [--json] [--gitlab-json]
+                        [--gitlab-secrets-json]
+semgrep_agent.py: error: argument --publish-token: expected one argument

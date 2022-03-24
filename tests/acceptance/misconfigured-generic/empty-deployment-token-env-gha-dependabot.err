@@ -1,9 +1,1 @@
-| versions          - semgrep x.y.z on Python x.y.z
-| environment       - running in environment github-actions, triggering event is 'unknown'
-| manage            - not logged in
-=== setting up agent configuration
-== [ERROR] you didn't configure what rules semgrep should scan with.
-
-Please either set a config or pass in a token to connect to Semgrep App.
-Detailed explanation and examples are at
-https://semgrep.dev/docs/semgrep-ci/configuration-reference/.
+run `semgrep login` before using `semgrep ci` or set `--config`

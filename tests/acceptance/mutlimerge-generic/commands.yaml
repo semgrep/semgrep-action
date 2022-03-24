@@ -32,7 +32,7 @@ steps:
     expected_err: new-log.err
   - name: new agent
     description: expect no errors even though merge contains an error
-    command: semgrep-agent --baseline-ref main --config p/r2c-ci
+    command: python -m semgrep_agent --baseline-ref main --config p/r2c-ci
     returncode: 0
     expected_out: new-agent.out
     expected_err: new-agent.err

@@ -4,9 +4,6 @@ version = "22.3.0"
 description = ""
 authors = ["r2c <support@r2c.dev>"]
 license = "Proprietary"
-packages = [
-	{ include = "semgrep_agent", from = "src" },
-]
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -14,9 +11,7 @@ python = "^3.7"
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
 jsonschema = "^4.4.0"
-
-[tool.poetry.scripts]
-semgrep-agent = "semgrep_agent.main"
+PyYAML = "^6.0"
 
 [build-system]
 requires = ["poetry>=1.0.10"]

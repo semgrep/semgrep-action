@@ -1,11 +1,18 @@
-| versions          - semgrep x.y.z on Python x.y.z
-| environment       - running in environment git, triggering event is 'unknown'
-| manage            - not logged in
-=== setting up agent configuration
-| using semgrep rules from https://semgrep.dev/c/p/r2c-ci
-| reporting findings introduced by these commits:
-|   * aaaaaaa Add symlink to dir
-=== looking for new issues
-| No current issues found
-=== analyzing new issues in this scan
-=== exiting with success status
+Running `semgrep ci` without API token but with configs ('p/r2c-ci',)
+Scan environment:
+  versions    - semgrep 0.86.0 on python 3.10.0
+  environment - running in environment git, triggering event is unknown
+
+Fetching configuration from semgrep.dev
+Fetching rules from https://semgrep.dev/registry.
+Nothing to scan.
+  Current version has 0 findings.
+
+Skipping baseline scan, because there are no current findings.
+
+Some files were skipped.
+  Scan was limited to files changed since baseline commit.
+
+Ran 135 rules on 0 files: 0 findings.
+Ran 135 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
+No findings so exiting with code 0
