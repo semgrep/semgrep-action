@@ -1,4 +1,4 @@
-FROM returntocorp/semgrep:21210813d8fee4bb3f85b8d8bcf227d9a60cda83
+FROM returntocorp/semgrep:9abb0bbc8f7c88049f186c8cbe47278edf5a9771
 
 USER root
 WORKDIR /semgrep-agent
