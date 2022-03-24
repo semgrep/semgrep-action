@@ -1,8 +1,61 @@
 #!/usr/bin/env python
+import argparse
 import os
 import subprocess
 import sys
 import textwrap
+
+# compat mappings
+ENV_TO_ENV: dict[str, str] = {
+    "INPUT_CONFIG": "SEMGREP_RULES",
+    "BASELINE_REF": "SEMGREP_BASELINE_COMMIT",
+    "SEMGREP_BASELINE_REF": "SEMGREP_BASELINE_COMMIT",
+    "INPUT_PUBLISHTOKEN": "SEMGREP_APP_TOKEN",
+    "INPUT_PUBLISHURL": "SEMGREP_APP_URL",
+    "REWRITE_RULE_IDS": "SEMGREP_REWRITE_RULE_IDS",
+    "INPUT_AUDITON": "SEMGREP_AUDIT_ON",
+}
+FLAG_TO_ENV: dict[str, str] = {
+    "--publish-url": "SEMGREP_APP_URL",
+    "--publish-deployment": "_",  # unused, but we don't want to fail if this is set
+    "--publish-token": "SEMGREP_APP_TOKEN",
+    "--config": "SEMGREP_RULES",
+    "--baseline-ref": "SEMGREP_BASELINE_COMMIT",
+    "--timeout": "SEMGREP_TIMEOUT",
+    "--audit-on": "SEMGREP_AUDIT_ON",
+}
+
+FLAG_TO_FLAG: dict[str, str] = {
+    "--enable-metrics": "--enable-metrics",
+    "--disable-metrics": "--disable-metrics",
+    "--rewrite-rule-ids": "--rewrite-rule-ids",
+    "--no-rewrite-rule-ids": "--no-rewrite-rule-ids",
+    "--json": "--json",
+    "--gitlab-json": "--gitlab-sast",
+    "--gitlab-secrets-json": "--gitlab-secrets",
+}
+ENV_TO_FLAG: dict[str, str] = {
+    "REWRITE_RULE_IDS": "--rewrite-rule-ids",
+    "SEMGREP_JSON_OUTPUT": "--json",
+    "SEMGREP_GITLAB_JSON": "--gitlab-sast",
+    "SEMGREP_GITLAB_SECRETS_JSON": "--gitlab-secrets",
+}
+
+
+class ForwardAction(argparse.Action):
+    def __init__(self, option_strings, dest, **kwargs) -> None:  # type: ignore
+        super().__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, _, namespace, values, option_string=None) -> None:  # type: ignore
+        envvar = FLAG_TO_ENV.get(option_string)
+        if envvar:
+            os.environ[envvar] = values
+
+        new_flag = FLAG_TO_FLAG.get(option_string)
+        if new_flag:
+            if not hasattr(namespace, "new_flags"):
+                namespace.new_flags = set()
+            namespace.new_flags.add(new_flag)
 
 
 def print_deprecation_notice(message: str) -> None:
@@ -23,31 +76,25 @@ def print_deprecation_notice(message: str) -> None:
     )
 
 
-def adapt_environment() -> list[str]:
+def adapt_environment() -> set[str]:
     """Update env vars and return CLI flags for compatibility with latest Semgrep."""
-    ENV_MAPPINGS: dict[str, str] = {
-        "INPUT_CONFIG": "SEMGREP_RULES",
-        "BASELINE_REF": "SEMGREP_BASELINE_COMMIT",
-        "SEMGREP_BASELINE_REF": "SEMGREP_BASELINE_COMMIT",
-        "INPUT_PUBLISHTOKEN": "SEMGREP_APP_TOKEN",
-        "INPUT_PUBLISHURL": "SEMGREP_APP_URL",
-        "REWRITE_RULE_IDS": "SEMGREP_REWRITE_RULE_IDS",
-        "SEMGREP_JSON_OUTPUT": "SEMGREP_REWRITE_RULE_IDS",
-        "INPUT_AUDITON": "SEMGREP_AUDIT_ON",
-    }
 
-    for old_var, new_var in ENV_MAPPINGS.items():
+    for old_var, new_var in ENV_TO_ENV.items():
         if old_var in os.environ:
             os.environ[new_var] = os.environ.pop(old_var)
 
-    FLAG_MAPPINGS: dict[str, str] = {
-        "REWRITE_RULE_IDS": "--rewrite-rule-ids",
-        "SEMGREP_JSON_OUTPUT": "--json",
-        "SEMGREP_GITLAB_JSON": "--gitlab-sast",
-        "SEMGREP_GITLAB_SECRETS_JSON": "--gitlab-secrets",
-    }
+    parser = argparse.ArgumentParser()
+    for flag in FLAG_TO_ENV:
+        parser.add_argument(flag, action=ForwardAction)
+    for flag in FLAG_TO_FLAG:
+        parser.add_argument(flag, nargs=0, action=ForwardAction)
+    args = parser.parse_args()
 
-    return [flag for envvar, flag in FLAG_MAPPINGS.items() if envvar in os.environ]
+    new_flags = {flag for envvar, flag in ENV_TO_FLAG.items() if envvar in os.environ}
+    if hasattr(args, "new_flags"):
+        new_flags.update(args.new_flags)
+
+    return new_flags
 
 
 def run_sarif_scan() -> None:
@@ -69,6 +116,8 @@ def run_sarif_scan() -> None:
         """
     )
 
+    envvars = [f"{k}={v} " for k, v in os.environ.items() if k.startswith("SEMGREP_")]
+    print("Running: " + "".join(envvars) + " ".join(cmd))
     subprocess.run(cmd)
 
 
@@ -90,7 +139,11 @@ def main() -> None:
             """
         )
 
-    os.execvp("semgrep", ["semgrep", "ci", *flags])
+    envvars = [f"{k}={v} " for k, v in os.environ.items() if k.startswith("SEMGREP_")]
+    cmd = ["semgrep", "ci", *flags]
+    print("Running: " + "".join(envvars) + " ".join(cmd))
+
+    os.execvp("semgrep", cmd)
 
 
 if __name__ == "__main__":
