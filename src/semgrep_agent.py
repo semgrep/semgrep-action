@@ -54,6 +54,7 @@ def run_sarif_scan() -> None:
     cmd = ["semgrep", "scan", "--sarif", "--output=semgrep.sarif"]
 
     if os.environ.get("SEMGREP_APP_TOKEN"):
+        os.environ["SEMGREP_REPO_NAME"] = os.environ.get("GITHUB_REPOSITORY", "")
         cmd.append("--config=policy")
 
     print_deprecation_notice(
