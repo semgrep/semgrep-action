@@ -117,7 +117,11 @@ def run_sarif_scan() -> None:
         """
     )
 
-    envvars = [f"{k}={v} " for k, v in os.environ.items() if k.startswith("SEMGREP_")]
+    envvars = [
+        f"{k}={v} "
+        for k, v in os.environ.items()
+        if k in {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()} - {"SEMGREP_APP_TOKEN"}
+    ]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),
         file=sys.stderr,
@@ -164,7 +168,11 @@ def main() -> None:
             file=sys.stderr,
         )
 
-    envvars = [f"{k}={v} " for k, v in os.environ.items() if k.startswith("SEMGREP_")]
+    envvars = [
+        f"{k}={v} "
+        for k, v in os.environ.items()
+        if k in {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()} - {"SEMGREP_APP_TOKEN"}
+    ]
     cmd = ["semgrep", "ci", *flags]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),
