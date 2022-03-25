@@ -29,7 +29,7 @@ jobs:
           python -m pip install --upgrade poetry==1.1.4 pipx==0.15.6.0
           echo "$(pwd)/.pipx_bin" >> $GITHUB_PATH
           poetry config virtualenvs.in-project true
-          echo "::set-output name=installed-semgrep-version::$(sed --quiet --regexp-extended 's/.+FROM returntocorp/semgrep:(.+)/\1/p' Dockerfile)"
+          echo "::set-output name=installed-semgrep-version::$(sed --quiet --regexp-extended 's/^FROM returntocorp[/]semgrep:(.+)$/\1/p' Dockerfile)"
 
       - id: reuse-poetry-virtualenv
         name: Reuse poetry's virtualenv
