@@ -1,1 +1,2 @@
+=== Running: SEMGREP_APP_TOKEN= semgrep ci
 run `semgrep login` before using `semgrep ci` or set `--config`

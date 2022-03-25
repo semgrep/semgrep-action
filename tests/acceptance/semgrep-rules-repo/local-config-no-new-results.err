@@ -1,3 +1,4 @@
+=== Running: SEMGREP_RULES=python/lang/best-practice/sleep.yaml SEMGREP_BASELINE_COMMIT=HEAD~1 semgrep ci
 Running `semgrep ci` without API token but with configs ('python/lang/best-practice/sleep.yaml',)
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z
