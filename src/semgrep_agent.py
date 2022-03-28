@@ -83,7 +83,7 @@ def adapt_environment() -> set[str]:
     """Update env vars and return CLI flags for compatibility with latest Semgrep."""
 
     for old_var, new_var in ENV_TO_ENV.items():
-        if old_var in os.environ:
+        if os.getenv(old_var):
             os.environ[new_var] = os.environ.pop(old_var)
 
     parser = argparse.ArgumentParser()
@@ -93,7 +93,7 @@ def adapt_environment() -> set[str]:
         parser.add_argument(flag, nargs=0, action=ForwardAction)
     args = parser.parse_args()
 
-    new_flags = {flag for envvar, flag in ENV_TO_FLAG.items() if envvar in os.environ}
+    new_flags = {flag for envvar, flag in ENV_TO_FLAG.items() if os.getenv(envvar)}
     if hasattr(args, "new_flags"):
         new_flags.update(args.new_flags)
 
