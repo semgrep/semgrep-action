@@ -98,7 +98,8 @@ def adapt_environment() -> set[str]:
     if hasattr(args, "new_flags"):
         new_flags.update(args.new_flags)
 
-    os.environ["SEMGREP_URL"] = os.getenv("SEMGREP_APP_URL", "")
+    if os.getenv("SEMGREP_APP_URL"):
+        os.environ["SEMGREP_URL"] = os.environ["SEMGREP_APP_URL"]
 
     return new_flags
 
