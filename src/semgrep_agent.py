@@ -99,7 +99,8 @@ def adapt_environment() -> set[str]:
         new_flags.update(args.new_flags)
 
     if os.getenv("SEMGREP_APP_URL"):
-        os.environ["SEMGREP_URL"] = os.environ["SEMGREP_APP_URL"]
+        # registry URL needs to be updated as well; this URL expects trailing slash
+        os.environ["SEMGREP_URL"] = os.environ["SEMGREP_APP_URL"].rstrip("/") + "/"
 
     return new_flags
 
