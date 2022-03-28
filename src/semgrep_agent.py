@@ -42,7 +42,8 @@ ENV_TO_FLAG: dict[str, str] = {
     "SEMGREP_CI_DRY_RUN": "--dry-run",
 }
 
-NEW_ENV_VARS = {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()}
+ENV_VARS_TO_LOG = {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()}
+ENV_VARS_TO_LOG.remove("SEMGREP_APP_TOKEN")
 
 
 class ForwardAction(argparse.Action):
@@ -121,11 +122,7 @@ def run_sarif_scan() -> None:
         """
     )
 
-    envvars = [
-        f"{k}={v} "
-        for k, v in os.environ.items()
-        if k in NEW_ENV_VARS - {"SEMGREP_APP_TOKEN"} and v
-    ]
+    envvars = [f"{k}={v} " for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),
         file=sys.stderr,
@@ -172,11 +169,7 @@ def main() -> None:
             file=sys.stderr,
         )
 
-    envvars = [
-        f"{k}={v} "
-        for k, v in os.environ.items()
-        if k in NEW_ENV_VARS - {"SEMGREP_APP_TOKEN"} and v
-    ]
+    envvars = [f"{k}={v} " for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
     cmd = ["semgrep", "ci", *flags]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),
