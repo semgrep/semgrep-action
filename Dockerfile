@@ -9,6 +9,7 @@ RUN ln -s /semgrep-agent/semgrep_agent.py /usr/local/bin/semgrep-agent &&\
 ENTRYPOINT []
 CMD ["semgrep-agent"]
 
-ENV SEMGREP_ACTION=true\
+ENV PYTHONPATH=/semgrep-agent:$PYTHONPATH\
+    SEMGREP_ACTION=true\
     SEMGREP_ACTION_VERSION=v1\
     R2C_USE_REMOTE_DOCKER=1
