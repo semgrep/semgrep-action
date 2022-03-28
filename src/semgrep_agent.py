@@ -95,6 +95,8 @@ def adapt_environment() -> set[str]:
     if hasattr(args, "new_flags"):
         new_flags.update(args.new_flags)
 
+    os.environ["SEMGREP_URL"] = os.getenv("SEMGREP_APP_URL", "")
+
     return new_flags
 
 
@@ -120,7 +122,7 @@ def run_sarif_scan() -> None:
     envvars = [
         f"{k}={v} "
         for k, v in os.environ.items()
-        if k in {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()} - {"SEMGREP_APP_TOKEN"}
+        if k in {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()} - {"SEMGREP_APP_TOKEN"} and v
     ]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),
@@ -171,7 +173,7 @@ def main() -> None:
     envvars = [
         f"{k}={v} "
         for k, v in os.environ.items()
-        if k in {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()} - {"SEMGREP_APP_TOKEN"}
+        if k in {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()} - {"SEMGREP_APP_TOKEN"} and v
     ]
     cmd = ["semgrep", "ci", *flags]
     print(
