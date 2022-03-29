@@ -44,6 +44,7 @@ ENV_TO_FLAG: dict[str, str] = {
 
 ENV_VARS_TO_LOG = {*ENV_TO_ENV.values(), *FLAG_TO_ENV.values()}
 ENV_VARS_TO_LOG.remove("SEMGREP_APP_TOKEN")
+ENV_VARS_TO_LOG.remove("_")
 
 
 class ForwardAction(argparse.Action):
