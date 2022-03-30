@@ -1,35 +1,15 @@
-FROM python:3.9-alpine3.15
+FROM returntocorp/semgrep:0.86.5
 
-WORKDIR /app
-COPY poetry.lock pyproject.toml ./
+USER root
+WORKDIR /semgrep-agent
+COPY src/* .
+RUN ln -s /semgrep-agent/semgrep_agent.py /usr/local/bin/semgrep-agent &&\
+    apk add --no-cache --virtual=.agent-run-deps bash git git-lfs less libffi openssl yaml
 
-ENV INSTALLED_SEMGREP_VERSION=0.83.0
-
-
-# This is all in one run command in order to save disk space.
-# Note that there's a tradeoff here for debuggability.
-RUN apk add --no-cache --virtual=.build-deps build-base cargo libffi-dev openssl-dev yaml-dev &&\
-    apk add --no-cache --virtual=.run-deps bash git git-lfs less libffi openssl yaml &&\
-    pip install --no-cache-dir pipx~=0.16.3 &&\
-    pipx install semgrep==${INSTALLED_SEMGREP_VERSION} &&\
-    (pip freeze | xargs pip uninstall -y) &&\
-    pip install --no-cache-dir poetry~=1.1.6 &&\
-    poetry config virtualenvs.create false &&\
-    # Don't install dev dependencies or semgrep-agent
-    poetry install --no-dev --no-root &&\
-    apk del .build-deps &&\
-    rm -rf /root/.cache/* /root/.cargo/* /tmp/* &&\
-    find / \( -name '*.pyc' -o -path '*/__pycache__*' \) -delete
-
-COPY ./src/semgrep_agent /app/src/semgrep_agent
-RUN poetry install --no-dev &&\
-    rm -rf /root/.cache/* /tmp/* &&\
-    find / \( -name '*.pyc' -o -path '*/__pycache__*' \) -delete
-
-ENV PATH=/root/.local/bin:${PATH}
-
+ENTRYPOINT []
 CMD ["semgrep-agent"]
 
-ENV SEMGREP_ACTION=true\
+ENV PYTHONPATH=/semgrep-agent:$PYTHONPATH\
+    SEMGREP_ACTION=true\
     SEMGREP_ACTION_VERSION=v1\
     R2C_USE_REMOTE_DOCKER=1

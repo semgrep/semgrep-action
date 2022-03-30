@@ -11,15 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.10"]
     env:
       PIPX_HOME: .pipx
       PIPX_BIN_DIR: .pipx_bin
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -29,7 +29,7 @@ jobs:
           python -m pip install --upgrade poetry==1.1.4 pipx==0.15.6.0
           echo "$(pwd)/.pipx_bin" >> $GITHUB_PATH
           poetry config virtualenvs.in-project true
-          echo "::set-output name=installed-semgrep-version::$(sed --quiet --regexp-extended 's/.+INSTALLED_SEMGREP_VERSION=(.+)/\1/p' Dockerfile)"
+          echo "::set-output name=installed-semgrep-version::$(sed --quiet --regexp-extended 's/^FROM returntocorp[/]semgrep:(.+)$/\1/p' Dockerfile)"
 
       - id: reuse-poetry-virtualenv
         name: Reuse poetry's virtualenv
@@ -55,15 +55,13 @@ jobs:
           unset CI
           unset "${!GITHUB_@}"
 
-          poetry run pytest
-
           poetry run pytest tests/acceptance/qa.py
 
   live-runs:
     name: live run of action on this repo
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - id: semgrep-app-config
         name: with semgrep-app connection
         uses: ./tests/local-image-action

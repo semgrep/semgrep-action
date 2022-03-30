@@ -2,7 +2,7 @@ steps:
   - include: generic.yaml
   - name: push agent
     description: run agent on a codebase
-    command: semgrep-agent --config p/r2c-ci
+    command: python -m semgrep_agent --config p/r2c-ci
     returncode: 1
     expected_out: push-agent.out
     expected_err: push-agent.err

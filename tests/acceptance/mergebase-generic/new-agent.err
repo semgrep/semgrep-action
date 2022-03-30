@@ -1,17 +1,19 @@
-| versions          - semgrep x.y.z on Python x.y.z
-| environment       - running in environment git, triggering event is 'unknown'
-| manage            - not logged in
-=== setting up agent configuration
-| using semgrep rules from https://semgrep.dev/c/p/r2c-ci
-| reporting findings introduced by these commits:
-|   * aaaaaaa add pr finding
-| also reporting findings fixed by these commits from the baseline branch:
-|   * aaaaaaa fix finding
-| to exclude these latter commits, run with
-|   --baseline-ref $(git merge-base main HEAD)
-| looking at 1 changed path
-=== looking for current issues in 1 file
-| 1 current issue found
-=== not looking at pre-existing issues since all files with current issues are newly created
-=== analyzing new issues in this scan
-=== exiting with failing status
+=== Running: SEMGREP_BASELINE_COMMIT=main SEMGREP_RULES=p/r2c-ci semgrep ci
+Running `semgrep ci` without API token but with configs ('p/r2c-ci',)
+Scan environment:
+  versions    - semgrep x.y.z on python x.y.z
+  environment - running in environment git, triggering event is unknown
+
+Fetching configuration from semgrep.dev
+Fetching rules from https://semgrep.dev/registry.
+Scanning 1 file with 60 python rules.
+  Current version has 1 finding.
+
+Skipping baseline scan, because all current findings are in files that didn't exist in the baseline commit.
+
+Some files were skipped.
+  Scan was limited to files changed since baseline commit.
+
+Ran 135 rules on 1 file: 1 finding.
+Ran 135 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
+Has findings for blocking rules so exiting with code 1
