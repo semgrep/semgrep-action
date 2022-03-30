@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
 
 # compat mappings
 ENV_TO_ENV: dict[str, str] = {
@@ -102,6 +103,11 @@ def adapt_environment() -> set[str]:
     if os.getenv("SEMGREP_APP_URL"):
         # registry URL needs to be updated as well; this URL expects trailing slash
         os.environ["SEMGREP_URL"] = os.environ["SEMGREP_APP_URL"].rstrip("/") + "/"
+
+    if Path(".semgrep.yml").exists():
+        os.environ["SEMGREP_RULES"] = ".semgrep.yml"
+    if Path(".semgrep").exists():
+        os.environ["SEMGREP_RULES"] = ".semgrep"
 
     return new_flags
 
