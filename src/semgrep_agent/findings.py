@@ -136,7 +136,7 @@ class Finding:
 
     def to_gitlab(self) -> Dict[str, Any]:
         return {
-            "id": str(uuid.uuid5(uuid.NAMESPACE_URL, str(self.path))),
+            "id": self.syntactic_identifier_str(),
             "category": "sast",
             # CVE is a required field from Gitlab schema.  Semgrep is CVE-unaware AFAIK
             "cve": "",
