@@ -100,10 +100,6 @@ def adapt_environment() -> set[str]:
     if hasattr(args, "new_flags"):
         new_flags.update(args.new_flags)
 
-    if os.getenv("SEMGREP_APP_URL"):
-        # registry URL needs to be updated as well; this URL expects trailing slash
-        os.environ["SEMGREP_URL"] = os.environ["SEMGREP_APP_URL"].rstrip("/") + "/"
-
     if not os.getenv("SEMGREP_APP_TOKEN"):
         if Path(".semgrep.yml").exists():
             os.environ["SEMGREP_RULES"] = ".semgrep.yml"
