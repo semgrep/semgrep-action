@@ -1,8 +1,8 @@
-# Semgrep CI
+# Semgrep Action
 
 <p align="center">
   <a href="https://r2c.dev/slack">
-      <img src="https://img.shields.io/badge/Slack-1K%2B%20members-black" alt="Slack invite" />
+      <img src="https://img.shields.io/badge/Slack-1.5K%2B%20members-black" alt="Slack invite" />
   </a>
   <a href="https://semgrep.dev/docs/semgrep-ci/">
       <img src="https://img.shields.io/badge/docs-semgrep.dev-purple" alt="Documentation" />
@@ -15,17 +15,46 @@
   </a>
 </p>
 
-Semgrep CI (aka Semgrep Action or `semgrep-agent`) is a specialized Docker image for running [Semgrep](https://github.com/returntocorp/semgrep) in CI environments. It can also optionally connect to [Semgrep App](https://semgrep.dev/login) for centralized rule and findings management.
+## Update from April 11th, 2022
+
+**Semgrep now supports GitHub Actions natively!** :tada:
+
+Instead of using this Semgrep Action wrapper script,
+we recommend running `semgrep ci` in the official Semgrep image.
+You can do that by using this GitHub Actions config:
+
+```yaml
+  semgrep:
+    name: Scan
+    runs-on: ubuntu-20.04
+    container:
+      image: returntocorp/semgrep
+    steps:
+    - uses: actions/checkout@v3
+    - run: semgrep ci
+```
+
+To see all the configuration options, [check Semgrep docs](https://semgrep.dev/docs/semgrep-ci/sample-ci-configs/#github-actions).
+
+If you prefer to use the Semgrep Action,
+it will remain maintained for the foreseeable future,
+but the Semgrep team can provide better support and documentation for you
+if you use the native `semgrep ci` command instead.
+
+## Project summary
+
+Semgrep Action runs [Semgrep](https://github.com/returntocorp/semgrep) in CI environments.
+It can also connect to [Semgrep App](https://semgrep.dev/products/semgrep-app) to configure rules and review findings on a web UI.
 
 - **Scan every commit.** Semgrep CI rapidly scans modified files on pull and merge requests, protecting developer productivity. Longer full project scans are configurable on merges to specific branches.
 - **Block new bugs.** You shouldn’t have to fix existing bugs just to adopt a tool. Semgrep CI reports newly introduced issues on pull and merge requests, scanning them at their base and HEAD commits to compare findings. Developers are signficantly more likely to fix the issues they introduced themselves on PRs and MRs.
 - **Get findings where you work.** Semgrep CI can connect to Semgrep App to present findings in Slack, on PRs and MRs via inline comments, email, and through 3rd party services.
 
-> Semgrep CI runs fully in your build environment: code is never sent anywhere.
+> Semgrep runs fully in your build environment: code is never sent anywhere.
 
 ## Getting started
 
-Semgrep CI behaves like other static analysis and linting tools:
+Semgrep behaves like other static analysis and linting tools:
 it runs a set of user-configured rules and returns a non-zero exit code if there are findings,
 resulting in its job showing a ✅ or ❌.
 
@@ -37,7 +66,7 @@ Find a relevant template for your CI provider through these links:
 
 Read through the comments in the template to adjust when and what Semgrep CI scans, selecting pull and merge requests, merges to branches, or both.
 
-Once Semgrep CI is running, [explore the Semgrep Registry](https://semgrep.dev/r) to find and add more project-specific rules.
+Once Semgrep Action is running, [explore the Semgrep Registry](https://semgrep.dev/r) to find and add more project-specific rules.
 
 ## Configuration
 
@@ -45,72 +74,21 @@ See [Advanced Configuration documentation](https://semgrep.dev/docs/semgrep-ci/o
 
 ## Metrics
 
-Semgrep CI collects opt-out non-identifiable aggregate metrics for improving the user experience, guiding Semgrep feature development, and identifying regressions.
+Semgrep collects opt-out non-identifiable aggregate metrics for improving the user experience, guiding Semgrep feature development, and identifying regressions.
 
 The [`PRIVACY.md`](PRIVACY.md) file describes the principles that guide our data-collection decisions, the breakdown of the data that are and are not collected, and how to opt-out of Semgrep CI’s metrics.
 
-> Semgrep CI never sends your source code anywhere.
+> Semgrep never sends your source code anywhere.
 
 ## Technical details
 
 ### Packaging
 
-Semgrep CI is published under the name `semgrep-agent`.
+The [Semgrep Action](https://github.com/marketplace/actions/semgrep-action) GitHub Marketplace listing
+runs the [`semgrep-agent` Docker image](https://hub.docker.com/r/returntocorp/semgrep-agent).
 
-- The [`semgrep_agent` Python package](https://github.com/returntocorp/semgrep-action/tree/develop/src/semgrep_agent) uses this name.
-- The [`semgrep-agent` Docker image](https://hub.docker.com/r/returntocorp/semgrep-agent) also uses this name.
-- The [semgrep-action](https://github.com/marketplace/actions/semgrep-action) GitHub Marketplace listing
-  runs the above Docker image.
-- The [semgrep-action repository](https://github.com/returntocorp/semgrep-action)
-  holds the code for Semgrep CI, the Docker image, and the GitHub Marketplace manifest.
-
-New versions of Semgrep CI and the Docker image above are released by Semgrep maintainers on a regular basis. To run all jobs with the latest releases, use `returntocorp/semgrep-action@v1` in your GitHub Actions workflow, or the `returntocorp/semgrep-agent:v1` Docker image with other providers.
-
-> The Python package itself is not published to PyPI,
-> or any other package index,
-> but you can still use it by cloning the GitHub repository.
-
-### Usage outside CI
-
-While Semgrep CI is designed
-for integrating with various CI providers,
-it's versatile enough to be used locally
-to scan a repository with awareness of its git history.
-
-To locally scan issues in your current branch
-that are not found on the `main` branch,
-run the following command:
-
-```sh
-docker run -v $(pwd):/src --workdir /src returntocorp/semgrep-agent:v1 semgrep-agent --config p/ci --baseline-ref main
-```
-
-Another use case is when you want to scan only commits
-from the past weeks for new issues they introduced.
-This can be done by using a git command
-that gets the tip of the current branch two weeks earlier:
-
-```sh
-docker run -v $(pwd):/src --workdir /src returntocorp/semgrep-agent:v1 semgrep-agent --config p/ci --baseline-ref $(git rev-parse '@{2.weeks.ago}')
-```
-
-To compare two commits
-and find the issues added between them,
-checkout the more recent commit of the two
-before running Semgrep CI:
-
-```sh
-git checkout $RECENT_SHA
-docker run -v $(pwd):/src --workdir /src returntocorp/semgrep-agent:v1 semgrep-agent --config p/ci --baseline-ref $OLDER_SHA
-```
-
-> The above commands all require `docker`
-> to be installed on your machine.
-> They also use Docker volumes
-> to make your working directory accessible to the container.
-> `--config p/ci` is the Semgrep rule configuration,
-> which can be changed to any value
-> that `semgrep` itself understands.
+New versions of Semgrep CI and the Docker image above are released by Semgrep maintainers on a regular basis.
+To run all jobs with the latest releases, use the `returntocorp/semgrep` Docker image, or the `returntocorp/semgrep-action@v1` action.
 
 ## Contributing
 
