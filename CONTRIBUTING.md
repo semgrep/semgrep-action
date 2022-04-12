@@ -2,59 +2,40 @@
 
 ## Development setup
 
-Install the correct version of poetry:
-
-```
-pip3 install poetry==1.0.10
-```
-
 Install semgrep
 
 ```
-pip3 install semgrep
-```
-
-Install dependencies with poetry
-
-```
-poetry install
-```
-
-Get a Poetry shell with
-```
-poetry shell
+pip install semgrep
 ```
 
 Install pre-commit hooks:
 
 ```
-python -m pip install pre-commit
+pip install pre-commit
 pre-commit install
 ```
-
 
 Run the agent with
 
 ```
-poetry shell
-export PYTHONPATH=$(pwd)/src
-python -m semgrep_agent --config p/r2c
+python src/semgrep_agent.py
 ```
 
 Run diff-aware scans in a git repo with clean state with
 
 ```
-python -m semgrep_agent --config p/r2c --baseline-ref HEAD~1
+python src/semgrep_agent.py --config p/r2c --baseline-ref HEAD~1
 ```
 
 Connect to semgrep-app with the `--publish-token` flag.
 
 ## Tests
 
-### Unit tests
+### Install testing dependencies
 
 ```
-pytest tests
+pip install poetry
+poetry install
 ```
 
 ### Acceptance tests
@@ -62,31 +43,16 @@ pytest tests
 Run with
 
 ```
-pytest tests/acceptance/qa.py
+poetry run pytest tests/acceptance/qa.py
 ```
 
 Regenerate snapshots with
 
 ```
-python tests/acceptance/qa.py
+poetry run python tests/acceptance/qa.py
 ```
 
 Please always double-check generated snapshots for accuracy prior to committing!
-
-### Testing a branch on a real repo
-
-To test your changes on your `my-changes` branch on a real project,
-change the semgrep-action CI job config from
-
-```yaml
-uses: returntocorp/semgrep-action@v1
-```
-
-to
-
-```yaml
-uses: returntocorp/semgrep-action/tests/local-image-action@my-changes
-```
 
 ## Release
 
