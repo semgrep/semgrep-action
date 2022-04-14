@@ -55,7 +55,10 @@ class ForwardAction(argparse.Action):
     def __call__(self, _, namespace, values, option_string=None) -> None:  # type: ignore
         envvar = FLAG_TO_ENV.get(option_string)
         if envvar:
-            os.environ[envvar] = values
+            if envvar in os.environ:
+                os.environ[envvar] += " " + values
+            else:
+                os.environ[envvar] = values
 
         new_flag = FLAG_TO_FLAG.get(option_string)
         if new_flag:
