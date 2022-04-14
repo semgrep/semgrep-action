@@ -1,5 +1,9 @@
 # Upcoming - Date
 
+# 2022-04-14
+
+- Allow --config multiple times (#566)
+
 # 2022-03-24
 
 ## Changed
