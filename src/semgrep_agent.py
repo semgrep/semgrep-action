@@ -25,6 +25,7 @@ FLAG_TO_ENV: dict[str, str] = {
     "--timeout": "SEMGREP_TIMEOUT",
     "--audit-on": "SEMGREP_AUDIT_ON",
 }
+MULTI_VALUED_ENV=["SEMGREP_AUDIT_ON", "SEMGREP_RULES"]
 
 FLAG_TO_FLAG: dict[str, str] = {
     "--enable-metrics": "--enable-metrics",
@@ -55,7 +56,7 @@ class ForwardAction(argparse.Action):
     def __call__(self, _, namespace, values, option_string=None) -> None:  # type: ignore
         envvar = FLAG_TO_ENV.get(option_string)
         if envvar:
-            if envvar in os.environ:
+            if envvar in MULTI_VALUED_ENV and envvar in os.environ:
                 os.environ[envvar] += " " + values
             else:
                 os.environ[envvar] = values
