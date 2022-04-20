@@ -5,6 +5,14 @@
 ## Changed
 
 - Use semgrep 0.89.0
+- The version of Git included in the Docker image has been bumped to 2.35.2;
+  this means that the
+  [safe directory check added in response to CVE-2022-24765](https://github.blog/2022-04-12-git-security-vulnerability-announced/)
+  now applies to scans done with semgrep-agent.
+  
+  If the directory you scan is owned by a different user than semgrep-agent runs with,
+  you will need to run `git config --global --add safe.directory /YOUR/REPO/PATH` before scanning,
+  see [discussion on the release PR](https://github.com/returntocorp/semgrep-action/pull/567#issuecomment-1104375865).
 
 ## Fixed
 
