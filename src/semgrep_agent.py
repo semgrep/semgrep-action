@@ -25,6 +25,7 @@ FLAG_TO_ENV: dict[str, str] = {
     "--timeout": "SEMGREP_TIMEOUT",
     "--audit-on": "SEMGREP_AUDIT_ON",
 }
+MULTI_VALUED_ENV = ["SEMGREP_AUDIT_ON", "SEMGREP_RULES"]
 
 FLAG_TO_FLAG: dict[str, str] = {
     "--enable-metrics": "--enable-metrics",
@@ -55,7 +56,10 @@ class ForwardAction(argparse.Action):
     def __call__(self, _, namespace, values, option_string=None) -> None:  # type: ignore
         envvar = FLAG_TO_ENV.get(option_string)
         if envvar:
-            os.environ[envvar] = values
+            if envvar in MULTI_VALUED_ENV and envvar in os.environ:
+                os.environ[envvar] += " " + values
+            else:
+                os.environ[envvar] = values
 
         new_flag = FLAG_TO_FLAG.get(option_string)
         if new_flag:
@@ -128,7 +132,7 @@ def run_sarif_scan() -> None:
         """
     )
 
-    envvars = [f"{k}={v} " for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
+    envvars = [f'{k}="{v}" ' for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),
         file=sys.stderr,
@@ -175,7 +179,7 @@ def main() -> None:
             file=sys.stderr,
         )
 
-    envvars = [f"{k}={v} " for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
+    envvars = [f'{k}="{v}" ' for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
     cmd = ["semgrep", "ci", *flags]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),

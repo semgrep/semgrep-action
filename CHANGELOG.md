@@ -6,6 +6,10 @@
 
 - Use semgrep 0.89.0
 
+## Fixed
+
+- Allow --config and --audit-on multiple times (#566)
+
 # 2022-03-24
 
 ## Changed
