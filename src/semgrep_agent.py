@@ -132,7 +132,7 @@ def run_sarif_scan() -> None:
         """
     )
 
-    envvars = [f"{k}={v} " for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
+    envvars = [f'{k}="{v}" ' for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),
         file=sys.stderr,
@@ -179,7 +179,7 @@ def main() -> None:
             file=sys.stderr,
         )
 
-    envvars = [f"{k}={v} " for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
+    envvars = [f'{k}="{v}" ' for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
     cmd = ["semgrep", "ci", *flags]
     print(
         "=== Running: " + "".join(envvars) + " ".join(cmd),

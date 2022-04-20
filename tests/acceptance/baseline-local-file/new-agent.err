@@ -1,4 +1,4 @@
-=== Running: SEMGREP_BASELINE_COMMIT=HEAD~1 SEMGREP_RULES=.semgrep.yml semgrep ci
+=== Running: SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_RULES=".semgrep.yml" semgrep ci
 Running `semgrep ci` without API token but with configs ('.semgrep.yml',)
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z

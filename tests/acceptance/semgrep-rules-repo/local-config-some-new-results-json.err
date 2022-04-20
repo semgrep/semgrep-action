@@ -11,7 +11,7 @@ This legacy image will keep working until May 2022.
 For questions or support, please reach out at https://r2c.dev/slack
 
 
-=== Running: SEMGREP_RULES=python/django/security/audit/xss/template-translate-as-no-escape.yaml SEMGREP_BASELINE_COMMIT=HEAD~1 semgrep ci --json
+=== Running: SEMGREP_RULES="python/django/security/audit/xss/template-translate-as-no-escape.yaml" SEMGREP_BASELINE_COMMIT="HEAD~1" semgrep ci --json
 Running `semgrep ci` without API token but with configs ('python/django/security/audit/xss/template-translate-as-no-escape.yaml',)
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z

@@ -1,12 +1,12 @@
-=== Running: SEMGREP_BASELINE_COMMIT=HEAD~1 SEMGREP_RULES=p/r2c semgrep ci
-Running `semgrep ci` without API token but with configs ('p/r2c',)
+=== Running: SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_RULES="p/r2c-ci p/r2c" semgrep ci
+Running `semgrep ci` without API token but with configs ('p/r2c-ci', 'p/r2c')
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
 Fetching configuration from semgrep.dev
 Fetching rules from https://semgrep.dev/registry.
-Scanning 1 file with 26 python rules.
+Scanning 1 file with 74 python rules.
   Current version has 1 finding.
 
 Skipping baseline scan, because all current findings are in files that didn't exist in the baseline commit.
@@ -14,6 +14,6 @@ Skipping baseline scan, because all current findings are in files that didn't ex
 Some files were skipped.
   Scan was limited to files changed since baseline commit.
 
-Ran 78 rules on 1 file: 1 finding.
-Ran 78 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
+Ran 174 rules on 1 file: 1 finding.
+Ran 174 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
 Has findings for blocking rules so exiting with code 1
