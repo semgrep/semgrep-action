@@ -7,7 +7,6 @@ Findings:
         vulnerability where translators could include malicious script tags in their translations.
         Consider using `force_escape` to explicitly escape a transalted text.
 
-
           2┆ {% translate "Hello world" as the_title %}
           3┆ <div>
           4┆ <h1>{{ the_title }}</h1>
