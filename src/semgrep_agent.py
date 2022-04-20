@@ -25,7 +25,7 @@ FLAG_TO_ENV: dict[str, str] = {
     "--timeout": "SEMGREP_TIMEOUT",
     "--audit-on": "SEMGREP_AUDIT_ON",
 }
-MULTI_VALUED_ENV=["SEMGREP_AUDIT_ON", "SEMGREP_RULES"]
+MULTI_VALUED_ENV = ["SEMGREP_AUDIT_ON", "SEMGREP_RULES"]
 
 FLAG_TO_FLAG: dict[str, str] = {
     "--enable-metrics": "--enable-metrics",
