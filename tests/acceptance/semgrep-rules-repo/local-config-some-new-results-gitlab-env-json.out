@@ -26,7 +26,10 @@
       "message": "Translated strings will not be escaped when rendered in a template.\nThis leads to a vulnerability where translators could include malicious script tags in their translations.\nConsider using `force_escape` to explicitly escape a transalted text.\n",
       "scanner": {
         "id": "semgrep",
-        "name": "Semgrep"
+        "name": "Semgrep",
+        "vendor": {
+          "name": "Semgrep"
+        }
       },
       "severity": "Info"
     },
@@ -54,7 +57,10 @@
       "message": "Translated strings will not be escaped when rendered in a template.\nThis leads to a vulnerability where translators could include malicious script tags in their translations.\nConsider using `force_escape` to explicitly escape a transalted text.\n",
       "scanner": {
         "id": "semgrep",
-        "name": "Semgrep"
+        "name": "Semgrep",
+        "vendor": {
+          "name": "Semgrep"
+        }
       },
       "severity": "Info"
     }
