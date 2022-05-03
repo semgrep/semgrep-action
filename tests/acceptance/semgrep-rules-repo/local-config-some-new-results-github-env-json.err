@@ -28,4 +28,5 @@ Some files were skipped.
 
 Ran 1 rule on 6 files: 2 findings.
 Ran 1 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
+Found 2 findings from blocking rules and 0 findings from non-blocking rules
 Has findings for blocking rules so exiting with code 1
