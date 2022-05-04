@@ -18,4 +18,5 @@ Some files were skipped.
 
 Ran 135 rules on 0 files: 0 findings.
 Ran 135 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
+Found 0 findings from blocking rules and 0 findings from non-blocking rules
 No findings so exiting with code 0

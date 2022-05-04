@@ -16,4 +16,5 @@ Some files were skipped.
 
 Ran 174 rules on 1 file: 1 finding.
 Ran 174 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
+Found 1 findings from blocking rules and 0 findings from non-blocking rules
 Has findings for blocking rules so exiting with code 1

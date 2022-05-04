@@ -17,4 +17,5 @@ Some files were skipped.
 (need more rules? `semgrep login` for additional free Semgrep Registry rules)
 Ran 135 rules on 1 file: 0 findings.
 Ran 135 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
+Found 0 findings from blocking rules and 0 findings from non-blocking rules
 No findings so exiting with code 0
