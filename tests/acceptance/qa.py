@@ -29,6 +29,7 @@ BRANCH_MERGE = re.compile(r"^Merge: (.*)$", re.MULTILINE)
 ENV_VERSIONS = re.compile(
     r"^(\s+?versions\s+?- semgrep ).+?( on python ).+?$", re.MULTILINE
 )
+JSON_VERSION = re.compile(r'"version": "[0-9]+?[.][0-9]+?[.][0-9]+?"')
 GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.*?\n", re.MULTILINE)
 
 PIPE_OUTPUT: Mapping[str, Callable[[subprocess.CompletedProcess], str]] = {
@@ -51,6 +52,7 @@ CLEANING_FUNCS: Sequence[Callable[[str], str]] = [
     lambda s: re.sub(DATE_STR, r"Date:   YYYY-MM-DD", s),
     lambda s: re.sub(BRANCH_MERGE, r"Merge: aaaaaaa bbbbbbb", s),
     lambda s: re.sub(ENV_VERSIONS, r"\1x.y.z\2x.y.z", s),
+    lambda s: re.sub(JSON_VERSION, r'"version": "x.y.z"', s),
     lambda s: re.sub(GITHUB_ACTIONS_DEBUG, "", s),
     lambda s: re.sub(
         SYMLINK_SKIP_MSG,
