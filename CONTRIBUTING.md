@@ -52,6 +52,13 @@ Regenerate snapshots with
 poetry run python tests/acceptance/qa.py
 ```
 
+You may want to use a specific Semgrep build while doing this.
+In this case, prepend the directory of your Semgrep binary to your `PATH`.
+
+```
+PATH=~/cli/semgrep/.venv/bin:$PATH poetry run python tests/acceptance/qa.py
+```
+
 Please always double-check generated snapshots for accuracy prior to committing!
 
 ## Release
