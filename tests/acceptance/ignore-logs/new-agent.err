@@ -16,7 +16,6 @@ Some files were skipped or only partially analyzed.
   Scan skipped: 1 files matching --exclude patterns
   For a full list of skipped files, run semgrep with the --verbose flag.
 
-Ran 135 rules on 0 files: 0 findings.
-Ran 135 blocking rules, 0 audit rules, and 0 internal rules used for rule recommendations.
-Found 0 findings from blocking rules and 0 findings from non-blocking rules
-No findings so exiting with code 0
+CI scan completed successfully.
+  Found 0 findings (0 blocking) from 135 rules.
+  No findings so exiting with code 0
