@@ -16,4 +16,4 @@ Some files were skipped or only partially analyzed.
 
 CI scan completed successfully.
   Found 0 findings (0 blocking) from 135 rules.
-  No findings so exiting with code 0
+  No blocking findings so exiting with code 0
