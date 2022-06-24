@@ -1,6 +1,6 @@
 {
   "$schema": "https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/sast-report-format.json",
-  "version": "2.0",
+  "version": "x.y.z",
   "vulnerabilities": [
     {
       "category": "sast",
@@ -16,9 +16,6 @@
         }
       ],
       "location": {
-        "dependency": {
-          "package": {}
-        },
         "end_line": 4,
         "file": "python/django/security/audit/xss/template-translate-as-no-escape.html",
         "start_line": 2
@@ -47,9 +44,6 @@
         }
       ],
       "location": {
-        "dependency": {
-          "package": {}
-        },
         "end_line": 9,
         "file": "python/django/security/audit/xss/template-translate-as-no-escape.html",
         "start_line": 8
