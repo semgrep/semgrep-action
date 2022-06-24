@@ -69,6 +69,10 @@ def clean_output(output: str) -> str:
 
 
 def show_first_differing_line(a: str, b: str) -> [int, str, str]:
+    """Return line number and line contents where the strings start to differ.
+
+    The line number is zero-based.
+    """
     alines = a.split('\n')
     blines = b.split('\n')
     alen = len(alines)
