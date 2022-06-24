@@ -1,5 +1,11 @@
 # Upcoming - Date
 
+# 2022-06-23
+
+## Changed
+
+- Use semgrep 0.100.0
+
 # 2022-05-25
 
 ## Changed
