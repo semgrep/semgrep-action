@@ -1,17 +1,18 @@
-=== Running: SEMGREP_RULES="python/lang/best-practice/sleep.yaml" semgrep ci
+=== Running: SEMGREP_RULES="python/lang/best-practice/sleep.yaml" SEMGREP_BASELINE_COMMIT="HEAD~1" semgrep ci
 Running `semgrep ci` without API token but with configs ('python/lang/best-practice/sleep.yaml',)
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
 Fetching configuration from semgrep.dev
-Scanning 210 files.
+Nothing to scan.
+  Current version has 0 findings.
+
+Skipping baseline scan, because there are no current findings.
 
 Some files were skipped or only partially analyzed.
-  Scan was limited to files tracked by git.
-  Scan skipped: 5 files matching .semgrepignore patterns
-  For a full list of skipped files, run semgrep with the --verbose flag.
+  Scan was limited to files changed since baseline commit.
 
 CI scan completed successfully.
-  Found 2 findings (2 blocking) from 1 rule.
-  Has findings for blocking rules so exiting with code 1
+  Found 0 findings (0 blocking) from 1 rule.
+  No blocking findings so exiting with code 0
