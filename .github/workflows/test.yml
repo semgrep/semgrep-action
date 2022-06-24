@@ -57,10 +57,12 @@ jobs:
 
           poetry run python tests/acceptance/qa.py
 
-          if [ git status -s -- tests/acceptance/ | grep M ]; then
-            exit 0
+          if git status -s -- tests/acceptance/ | grep M; then
+              echo "snapshot changes found"
+              exit 1
           else
-            exit 1
+              echo "no snapshot changes found"
+              exit 0
           fi
       - name: Commit snapshot updates
         id: snapshot-commit
