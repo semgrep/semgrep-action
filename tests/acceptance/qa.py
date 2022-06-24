@@ -68,7 +68,21 @@ def clean_output(output: str) -> str:
     return output
 
 
-def match_expected(output: str, expected: str) -> bool:
+def show_first_differing_line(a: str, b: str) -> [int, str, str]:
+    alines = a.split('\n')
+    blines = b.split('\n')
+    alen = len(alines)
+    blen = len(blines)
+    min_len = min(alen, blen)
+    for i in range(min_len):
+        if alines[i] != blines[i]:
+            return (i, alines[i], blines[i])
+    aline = alines[min_len] if alen > min_len else ''
+    bline = blines[min_len] if blen > min_len else ''
+    return (min_len, aline, bline)
+
+
+def match_expected(output: str, expected_raw: str) -> bool:
     """Checks that OUTPUT matches EXPECTED
 
     Checks that OUTPUT and EXPECTED are exact
@@ -77,11 +91,17 @@ def match_expected(output: str, expected: str) -> bool:
     """
     output = clean_output(output)
 
-    if output.strip() != expected.strip():
+    actual = output.strip()
+    expected = expected_raw.strip()
+    if actual != expected:
         print("==== EXPECTED ====")
         print(expected)
         print("==== ACTUAL ====")
         print(output)
+        pos, expected_line, actual_line = show_first_differing_line(expected, actual)
+        print(f"Expected and actual output differ on line {pos+1}:\n"
+              f"expected: {expected_line}\n"
+              f"actual  : {actual_line}\n")
     return output.strip() == expected.strip()
 
 
