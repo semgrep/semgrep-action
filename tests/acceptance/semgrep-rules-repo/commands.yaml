@@ -9,10 +9,10 @@ steps:
     returncode: 13
   - name: local-config-full-scan
     description: expected set of findings with a local config
-    command: python -m semgrep_agent --config python/lang/best-practice/sleep.yaml
+    command: python -m semgrep_agent --config python/lang/best-practice/sleep.yaml --baseline-ref=HEAD~1
     expected_err: local-config-full-scan.err
     expected_out: local-config-full-scan.out
-    returncode: 1
+    returncode: 0
   - name: local-config-no-new-results
     description: expected no new findings in latest commit
     command: python -m semgrep_agent --config python/lang/best-practice/sleep.yaml --baseline-ref=HEAD~1
