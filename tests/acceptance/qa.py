@@ -105,6 +105,7 @@ def match_expected(output: str, expected_raw: str) -> bool:
         print(output)
         pos, expected_line, actual_line = show_first_differing_line(expected, actual)
         print(
+            f"=============================================================\n"
             f"Expected and actual output differ on line {pos+1}:\n"
             f"expected: {expected_line}\n"
             f"actual  : {actual_line}\n"
