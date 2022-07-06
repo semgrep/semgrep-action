@@ -1,16 +1,3 @@
-=========== WARNING ===========
-
-The --json flag has recently changed and is now using
-a format consistent with Semgrep itself.
-
-If you rely on the old format, please pin your Docker image to:
-  returntocorp/semgrep-agent:legacy
-
-This legacy image will keep working until May 2022.
-
-For questions or support, please reach out at https://r2c.dev/slack
-
-
 === Running: SEMGREP_RULES="python/django/security/audit/xss/template-translate-as-no-escape.yaml" SEMGREP_BASELINE_COMMIT="HEAD~1" semgrep ci --json
 Running `semgrep ci` without API token but with configs ('python/django/security/audit/xss/template-translate-as-no-escape.yaml',)
 Scan environment:
