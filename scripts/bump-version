@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# USAGE: scripts/bump-version 0.100.0
+
+sed -i '' 's|\(FROM returntocorp/semgrep:\)\(.*\)|\1'"${1}"'|' Dockerfile
