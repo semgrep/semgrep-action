@@ -158,27 +158,6 @@ def main() -> None:
             """
         )
 
-    if "--json" in flags:
-        print(
-            textwrap.dedent(
-                """
-                    =========== WARNING ===========
-
-                    The --json flag has recently changed and is now using
-                    a format consistent with Semgrep itself.
-
-                    If you rely on the old format, please pin your Docker image to:
-                      returntocorp/semgrep-agent:legacy
-
-                    This legacy image will keep working until May 2022.
-
-                    For questions or support, please reach out at https://r2c.dev/slack
-                """
-            ).strip()
-            + "\n\n",
-            file=sys.stderr,
-        )
-
     envvars = [f'{k}="{v}" ' for k, v in os.environ.items() if k in ENV_VARS_TO_LOG]
     cmd = ["semgrep", "ci", *flags]
     print(
