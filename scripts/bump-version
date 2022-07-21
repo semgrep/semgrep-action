@@ -3,3 +3,5 @@
 # USAGE: scripts/bump-version 0.100.0
 
 sed -i 's|\(FROM returntocorp/semgrep:\)\(.*\)|\1'"${1}"'|' Dockerfile
+git tag --force v1
+git push --tags --force
