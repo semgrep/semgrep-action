@@ -1,0 +1,34 @@
+name: Revert Semgrep Action Docker Image
+on:
+  workflow_dispatch:
+    inputs:
+      docker_tag:
+        description: "Docker Tag to point 'latest' to, example: 0.5.0. This isn't the version of semgrep, but rather, the tag from this repo."
+        required: true
+
+jobs:
+  rollback-docker-image:
+    strategy:
+      matrix:
+        # TODO: change to real repo (returntocorp/semgrep)
+        repo: ['returntocorp/semgrep-action', 'returntocorp/semgrep-agent']
+    name: Rollback Docker Image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - id: pull
+        name: Pull Image to Retag as Latest
+        run: |
+          docker pull ${{ matrix.repo }}:${{ inputs.docker_tag }}
+      - id: retag
+        name: Re-Tag Docker Image
+        run: |
+          docker tag ${{ matrix.repo }}:${{ inputs.docker_tag }} ${{ matrix.repo }}:latest
+      - id: push
+        name: Push New Latest Tag
+        run: |
+          docker push ${{ matrix.repo }}:latest
