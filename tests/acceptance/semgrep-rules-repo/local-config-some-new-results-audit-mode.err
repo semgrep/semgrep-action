@@ -28,3 +28,5 @@ Some files were skipped or only partially analyzed.
 CI scan completed successfully.
   Found 2 findings (2 blocking) from 1 rule.
   Audit mode is on for unknown, so exiting with code 0 even if matches found
+
+A new version of Semgrep is available. See https://semgrep.dev/docs/upgrading
