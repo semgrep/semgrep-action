@@ -1,0 +1,29 @@
+name: Revert Semgrep Action for GHA
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "version to point 'v1' to, example: 0.1.0"
+        required: true
+
+jobs:
+  release-action:
+    name: Release Semgrep Action
+    runs-on: ubuntu-22.04
+    steps:
+      # Specifically we do NOT use the semgrep-ci bot. We don't want to trigger a rebuild upon pushing this tag
+      # we just want to move the tag, since that's what's used by GHA.
+      - name: Check out code
+        uses: actions/checkout@v3
+        id: checkout
+        with:
+          ref: "v${{ inputs.version }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Move Rolling v1 Tag
+        id: create-rolling-tag
+        run: |
+          git config user.name ${{ github.actor }}
+          git config user.email ${{ github.actor }}@users.noreply.github.com
+          git tag --force v1
+          git push --tags --force
