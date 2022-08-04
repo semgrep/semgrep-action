@@ -1,0 +1,70 @@
+name: Release Action
+
+on:
+  push:
+    branches:
+      - "develop"
+
+jobs:
+  release-action:
+    name: Release GitHub Action
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Get JWT for semgrep-ci GitHub App
+        id: jwt
+        uses: docker://public.ecr.aws/y9k7q4m1/devops/cicd:latest
+        env:
+          EXPIRATION: 600 # seconds
+          ISSUER: ${{ secrets.SEMGREP_CI_APP_ID }} # semgrep-ci GitHub App id
+          PRIVATE_KEY: ${{ secrets.SEMGREP_CI_APP_KEY }}
+      - name: Get token for semgrep-ci GitHub App
+        id: token
+        run: |
+          TOKEN="$(curl -X POST \
+          -H "Authorization: Bearer ${{ steps.jwt.outputs.jwt }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/app/installations/${{ secrets.SEMGREP_CI_APP_INSTALLATION_ID }}/access_tokens" | \
+          jq -r .token)"
+          echo "::add-mask::$TOKEN"
+          echo "::set-output name=token::$TOKEN"
+      - name: Check out code
+        uses: actions/checkout@v3
+        id: checkout
+        with:
+          submodules: "recursive"
+          ref: "${{ github.event.repository.default_branch }}"
+          token: "${{ steps.token.outputs.token }}"
+      - name: Pull Tags
+        id: pull-tags
+        # We don't want a full heavyweight checkout with full history
+        # checkout action only can get tags + full history, so do this separately.
+        # Don't need tags in submodules.
+        run: git fetch --no-recurse-submodules origin 'refs/tags/*:refs/tags/*'
+      - name: Get latest version
+        id: latest-version
+        run: |
+          LATEST_TAG=$(git tag --list "v*.*.*" | sort -V | tail -n 1 | cut -c 2- )
+          echo ::set-output name=latest-version::${LATEST_TAG}
+      - name: Get Next SemVer tag
+        id: next-version
+        uses: christian-draeger/increment-semantic-version@9d04121fb4825e033aeeaaf6d42b44b8b4e81ac5
+        with:
+          current-version: "${{ steps.latest-version.outputs.latest-version }}"
+          version-fragment: "feature"
+      - name: Find Current Semgrep Version (Metadata only)
+        id: semgrep-version
+        run: |
+          SEMGREP_VERSION=$(sed -n 's|FROM returntocorp/semgrep:\(.*\)|\1|p' Dockerfile)
+          echo "::set-output name=semgrep-version::$SEMGREP_VERSION"
+      - name: Add New SemVer (Immutable) Tag
+        id: create-tag
+        run: |
+          git config user.name ${{ github.actor }}
+          git config user.email ${{ github.actor }}@users.noreply.github.com
+          git tag -a -m "Semgrep Action for Semgrep Version ${{ steps.semgrep-version.outputs.semgrep-version }}" "v${{ steps.next-version.outputs.next-version }}"
+          git push origin "v${{ steps.next-version.outputs.next-version }}"
+      - name: Move Rolling v1 Tag
+        id: create-rolling-tag
+        run: |
+          git tag --force v1
+          git push --tags --force

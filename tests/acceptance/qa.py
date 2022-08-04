@@ -32,6 +32,9 @@ ENV_VERSIONS = re.compile(
 )
 JSON_VERSION = re.compile(r'"version": "[0-9]+?[.][0-9]+?[.][0-9]+?"')
 GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.*?\n", re.MULTILINE)
+NEW_VERSION_AVAILABLE = re.compile(
+    r"\nA new version of Semgrep is available.*\n", re.MULTILINE
+)
 
 PIPE_OUTPUT: Mapping[str, Callable[[subprocess.CompletedProcess], str]] = {
     "expected_out": lambda r: cast(str, r.stdout),
@@ -55,6 +58,7 @@ CLEANING_FUNCS: Sequence[Callable[[str], str]] = [
     lambda s: re.sub(ENV_VERSIONS, r"\1x.y.z\2x.y.z", s),
     lambda s: re.sub(JSON_VERSION, r'"version": "x.y.z"', s),
     lambda s: re.sub(GITHUB_ACTIONS_DEBUG, "", s),
+    lambda s: re.sub(NEW_VERSION_AVAILABLE, "", s),
     lambda s: re.sub(
         SYMLINK_SKIP_MSG,
         "Skipping bar/foo since it is a symlink to a directory: foo",
