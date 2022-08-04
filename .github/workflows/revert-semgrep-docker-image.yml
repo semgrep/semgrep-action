@@ -10,7 +10,6 @@ jobs:
   rollback-docker-image:
     strategy:
       matrix:
-        # TODO: change to real repo (returntocorp/semgrep)
         repo: ['returntocorp/semgrep-action', 'returntocorp/semgrep-agent']
     name: Rollback Docker Image
     runs-on: ubuntu-22.04
@@ -27,8 +26,10 @@ jobs:
       - id: retag
         name: Re-Tag Docker Image
         run: |
+          docker tag ${{ matrix.repo }}:${{ inputs.docker_tag }} ${{ matrix.repo }}:v1
           docker tag ${{ matrix.repo }}:${{ inputs.docker_tag }} ${{ matrix.repo }}:latest
       - id: push
         name: Push New Latest Tag
         run: |
+          docker push ${{ matrix.repo }}:v1
           docker push ${{ matrix.repo }}:latest
