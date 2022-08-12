@@ -10,7 +10,7 @@ We recommend setting up separate CI jobs for pull request and push events, so th
 For questions or support, please reach out at https://r2c.dev/slack
 
 
-=== Running: SEMGREP_RULES="python/django/security/audit/xss/template-translate-as-no-escape.yaml" SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_AUDIT_ON="unknown" semgrep ci
+=== Running: SEMGREP_RULES="python/django/security/audit/xss/template-translate-as-no-escape.yaml" SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_AUDIT_ON="unknown" semgrep ci --no-suppress-errors
 Running `semgrep ci` without API token but with configs ('python/django/security/audit/xss/template-translate-as-no-escape.yaml',)
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z
