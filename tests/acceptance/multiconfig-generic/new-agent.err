@@ -1,4 +1,4 @@
-=== Running: SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_RULES="p/r2c-ci p/r2c" semgrep ci
+=== Running: SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_RULES="p/r2c-ci p/r2c" semgrep ci --no-suppress-errors
 Running `semgrep ci` without API token but with configs ('p/r2c-ci', 'p/r2c')
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z

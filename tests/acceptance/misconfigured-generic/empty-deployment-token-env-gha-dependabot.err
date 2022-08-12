@@ -1,2 +1,2 @@
-=== Running: semgrep ci
+=== Running: semgrep ci --no-suppress-errors
 run `semgrep login` before using `semgrep ci` or set `--config`
