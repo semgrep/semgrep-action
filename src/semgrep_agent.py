@@ -111,7 +111,7 @@ def adapt_environment() -> list[str]:
         if Path(".semgrep").exists():
             os.environ["SEMGREP_RULES"] = ".semgrep"
 
-    return new_flags
+    return sorted(new_flags)
 
 
 def run_sarif_scan() -> None:
