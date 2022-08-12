@@ -1,4 +1,4 @@
-=== Running: SEMGREP_RULES="python/django/security/audit/xss/template-translate-as-no-escape.yaml" SEMGREP_BASELINE_COMMIT="HEAD~1" semgrep ci --no-suppress-errors --json
+=== Running: SEMGREP_RULES="python/django/security/audit/xss/template-translate-as-no-escape.yaml" SEMGREP_BASELINE_COMMIT="HEAD~1" semgrep ci --json --no-suppress-errors
 Running `semgrep ci` without API token but with configs ('python/django/security/audit/xss/template-translate-as-no-escape.yaml',)
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z
