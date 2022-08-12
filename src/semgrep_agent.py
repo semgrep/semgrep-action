@@ -35,6 +35,7 @@ FLAG_TO_FLAG: dict[str, str] = {
     "--json": "--json",
     "--gitlab-json": "--gitlab-sast",
     "--gitlab-secrets-json": "--gitlab-secrets",
+    "--no-suppress-errors": "--no-suppress-errors",
 }
 ENV_TO_FLAG: dict[str, str] = {
     "REWRITE_RULE_IDS": "--rewrite-rule-ids",
@@ -86,7 +87,7 @@ def print_deprecation_notice(message: str) -> None:
     )
 
 
-def adapt_environment() -> set[str]:
+def adapt_environment() -> list[str]:
     """Update env vars and return CLI flags for compatibility with latest Semgrep."""
 
     for old_var, new_var in ENV_TO_ENV.items():
@@ -100,9 +101,9 @@ def adapt_environment() -> set[str]:
         parser.add_argument(flag, nargs=0, action=ForwardAction)
     args = parser.parse_args()
 
-    new_flags = {flag for envvar, flag in ENV_TO_FLAG.items() if os.getenv(envvar)}
+    new_flags = [flag for envvar, flag in ENV_TO_FLAG.items() if os.getenv(envvar)]
     if hasattr(args, "new_flags"):
-        new_flags.update(args.new_flags)
+        new_flags.extend(args.new_flags)
 
     if not os.getenv("SEMGREP_APP_TOKEN"):
         if Path(".semgrep.yml").exists():

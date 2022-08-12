@@ -5,5 +5,5 @@ usage: semgrep_agent.py [-h] [--publish-url PUBLISH_URL]
                         [--audit-on AUDIT_ON] [--enable-metrics]
                         [--disable-metrics] [--rewrite-rule-ids]
                         [--no-rewrite-rule-ids] [--json] [--gitlab-json]
-                        [--gitlab-secrets-json]
+                        [--gitlab-secrets-json] [--no-suppress-errors]
 semgrep_agent.py: error: argument --publish-token: expected one argument
