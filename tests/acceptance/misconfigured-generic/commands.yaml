@@ -6,6 +6,7 @@ steps:
       - python
       - -m
       - semgrep_agent
+      - --no-suppress-errors
     returncode: 13
     expected_out: missing-config.out
     expected_err: missing-config.err
@@ -16,7 +17,7 @@ steps:
     command:
       - bash
       - -c
-      - GITHUB_ACTIONS="true" INPUT_PUBLISHTOKEN="" python -m semgrep_agent
+      - GITHUB_ACTIONS="true" INPUT_PUBLISHTOKEN="" python -m semgrep_agent --no-suppress-errors
     returncode: 13
     expected_out: empty-deployment-token-env-gha.out
     expected_err: empty-deployment-token-env-gha.err
@@ -27,7 +28,7 @@ steps:
     command:
       - bash
       - -c
-      - GITHUB_ACTIONS="true" GITHUB_ACTOR="dependabot[bot]" INPUT_PUBLISHTOKEN="" python -m semgrep_agent
+      - GITHUB_ACTIONS="true" GITHUB_ACTOR="dependabot[bot]" INPUT_PUBLISHTOKEN="" python -m semgrep_agent --no-suppress-errors
     returncode: 13
     expected_out: empty-deployment-token-env-gha-dependabot.out
     expected_err: empty-deployment-token-env-gha-dependabot.err
@@ -40,6 +41,7 @@ steps:
       - -m
       - semgrep_agent
       - --publish-token
+      - --no-suppress-errors
     returncode: 2
     expected_out: empty-deployment-token-flag.out
     expected_err: empty-deployment-token-flag.err

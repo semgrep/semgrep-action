@@ -1,4 +1,4 @@
-=== Running: SEMGREP_RULES="p/r2c-ci" semgrep ci
+=== Running: SEMGREP_RULES="p/r2c-ci" semgrep ci --no-suppress-errors
 Running `semgrep ci` without API token but with configs ('p/r2c-ci',)
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z
