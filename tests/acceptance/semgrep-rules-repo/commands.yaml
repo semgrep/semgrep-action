@@ -3,43 +3,43 @@ target_hash: e803ff02847a293375cf0660bc7de68993455f43
 steps:
   - name: no-config
     description: error message when no config is available
-    command: python -m semgrep_agent
+    command: python -m semgrep_agent --no-suppress-errors
     expected_err: no-config.err
     expected_out: null
     returncode: 13
   - name: local-config-full-scan
     description: expected set of findings with a local config
-    command: python -m semgrep_agent --config python/lang/best-practice/sleep.yaml
+    command: python -m semgrep_agent --config python/lang/best-practice/sleep.yaml --no-suppress-errors
     expected_err: local-config-full-scan.err
     expected_out: local-config-full-scan.out
     returncode: 1
   - name: local-config-no-new-results
     description: expected no new findings in latest commit
-    command: python -m semgrep_agent --config python/lang/best-practice/sleep.yaml --baseline-ref=HEAD~1
+    command: python -m semgrep_agent --config python/lang/best-practice/sleep.yaml --baseline-ref=HEAD~1 --no-suppress-errors
     expected_err: local-config-no-new-results.err
     expected_out: local-config-no-new-results.out
     returncode: 0
   - name: local-config-some-new-results
     description: expected some new findings in latest commit
-    command: python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1
+    command: python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --no-suppress-errors
     expected_err: local-config-some-new-results.err
     expected_out: local-config-some-new-results.out
     returncode: 1
   - name: local-config-some-new-results-audit-mode
     description: expected some new findings but success status in latest commit
-    command: python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --audit-on unknown
+    command: python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --audit-on unknown --no-suppress-errors
     expected_err: local-config-some-new-results-audit-mode.err
     expected_out: local-config-some-new-results-audit-mode.out
     returncode: 0
   - name: local-config-some-new-results-json
     description: expected some new findings in latest commit
-    command: python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --json
+    command: python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --json --no-suppress-errors
     expected_err: local-config-some-new-results-json.err
     expected_out: local-config-some-new-results-json.out
     returncode: 1
   - name: local-config-some-new-results-gitlab-json
     description: expected some new findings in latest commit
-    command: python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --gitlab-json
+    command: python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --gitlab-json --no-suppress-errors
     expected_err: local-config-some-new-results-gitlab-json.err
     expected_out: local-config-some-new-results-gitlab-json.out
     returncode: 1
@@ -48,7 +48,7 @@ steps:
     command:
       - bash
       - -c
-      - "GITHUB_ACTIONS=true python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --json"
+      - "GITHUB_ACTIONS=true python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --json --no-suppress-errors"
     expected_err: local-config-some-new-results-github-env-json.err
     expected_out: local-config-some-new-results-github-env-json.out
     returncode: 1
@@ -57,7 +57,7 @@ steps:
     command:
       - bash
       - -c
-      - "GITLAB_CI=true python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --gitlab-json"
+      - "GITLAB_CI=true python -m semgrep_agent --config python/django/security/audit/xss/template-translate-as-no-escape.yaml --baseline-ref=HEAD~1 --gitlab-json --no-suppress-errors"
     expected_err: local-config-some-new-results-gitlab-env-json.err
     expected_out: local-config-some-new-results-gitlab-env-json.out
     returncode: 1

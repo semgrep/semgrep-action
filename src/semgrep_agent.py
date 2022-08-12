@@ -35,6 +35,7 @@ FLAG_TO_FLAG: dict[str, str] = {
     "--json": "--json",
     "--gitlab-json": "--gitlab-sast",
     "--gitlab-secrets-json": "--gitlab-secrets",
+    "--no-suppress-errors": "--no-suppress-errors",
 }
 ENV_TO_FLAG: dict[str, str] = {
     "REWRITE_RULE_IDS": "--rewrite-rule-ids",

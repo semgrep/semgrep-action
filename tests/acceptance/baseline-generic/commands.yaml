@@ -15,7 +15,7 @@ steps:
     expected_err: new-log.err
   - name: new agent
     description: run agent on a single new file
-    command: python -m semgrep_agent --baseline-ref HEAD~1 --config p/r2c-ci
+    command: python -m semgrep_agent --baseline-ref HEAD~1 --config p/r2c-ci --no-suppress-errors
     returncode: 1
     expected_out: new-agent.out
     expected_err: new-agent.err
