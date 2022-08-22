@@ -33,7 +33,7 @@ jobs:
 
       - id: reuse-poetry-virtualenv
         name: Reuse poetry's virtualenv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.8
         with:
           path: .venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-poetry-${{ hashFiles('**/poetry.lock') }}
