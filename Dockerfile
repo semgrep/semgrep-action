@@ -1,4 +1,4 @@
-FROM returntocorp/semgrep:0.111.0
+FROM returntocorp/semgrep:0.111.1
 
 USER root
 WORKDIR /semgrep-agent
