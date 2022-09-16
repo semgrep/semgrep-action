@@ -5,7 +5,7 @@ Scan environment:
   environment - running in environment git, triggering event is unknown
 
 Fetching configuration from semgrep.dev
-Fetching rules from https://semgrep.dev/registry.
+Semgrep rule registry URL is https://semgrep.dev/registry.
 Nothing to scan.
   Current version has 0 findings.
 
