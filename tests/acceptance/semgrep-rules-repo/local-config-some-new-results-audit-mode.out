@@ -1,5 +1,5 @@
 
-Findings:
+Blocking Findings:
 
   python/django/security/audit/xss/template-translate-as-no-escape.html
      python.django.security.audit.xss.template-translate-as-no-escape
@@ -13,3 +13,6 @@ Findings:
           ⋮┆----------------------------------------
           8┆ {% trans "Hello world" as title %}
           9┆ <p>{{ title }}</p>
+
+Blocking Rules Fired:
+   python.django.security.audit.xss.template-translate-as-no-escape

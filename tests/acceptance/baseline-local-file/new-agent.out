@@ -1,5 +1,5 @@
 
-Findings:
+Blocking Findings:
 
   bar.py
      python.lang.correctness.useless-eqeq.useless-eqeq
@@ -8,3 +8,6 @@ Findings:
         Details: https://sg.run/GeAp
 
           1┆ 3 == 3
+
+Blocking Rules Fired:
+   python.lang.correctness.useless-eqeq.useless-eqeq
