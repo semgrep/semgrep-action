@@ -1,5 +1,5 @@
 
-Findings:
+Blocking Findings:
 
   foo.py
      python.lang.correctness.useless-eqeq.useless-eqeq
@@ -8,3 +8,6 @@ Findings:
         Details: https://sg.run/GeAp
 
           1┆ 10 == 10
+
+Blocking Rules Fired:
+   python.lang.correctness.useless-eqeq.useless-eqeq
