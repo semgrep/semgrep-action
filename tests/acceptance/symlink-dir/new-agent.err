@@ -1,5 +1,5 @@
-=== Running: SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_RULES="p/r2c-ci" semgrep ci --no-suppress-errors
-Running `semgrep ci` without API token but with configs ('p/r2c-ci',)
+=== Running: SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_RULES="p/r2c-ci r/python.lang.correctness.useless-eqeq.useless-eqeq" semgrep ci --no-suppress-errors
+Running `semgrep ci` without API token but with configs ('p/r2c-ci', 'r/python.lang.correctness.useless-eqeq.useless-eqeq')
 Scan environment:
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
@@ -15,5 +15,5 @@ Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
 
 CI scan completed successfully.
-  Found 0 findings (0 blocking) from 75 rules.
+  Found 0 findings (0 blocking) from 76 rules.
   No blocking findings so exiting with code 0

@@ -21,7 +21,7 @@ steps:
     returncode: 0
   - name: new agent
     description: run agent should not error out cause of symlink and should not report findings
-    command: python -m semgrep_agent --baseline-ref HEAD~1 --config p/r2c-ci --no-suppress-errors
+    command: python -m semgrep_agent --baseline-ref HEAD~1 --config p/r2c-ci --config r/python.lang.correctness.useless-eqeq.useless-eqeq --no-suppress-errors
     returncode: 0
     expected_out: new-agent.out
     expected_err: new-agent.err
