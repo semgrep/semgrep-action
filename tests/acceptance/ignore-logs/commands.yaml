@@ -16,7 +16,7 @@ steps:
   # Note that semgrep-agent will output that it is scanning 2 files, but in fact they will be ignored
   - name: new agent
     description: run agent on a single new file
-    command: python -m semgrep_agent --baseline-ref HEAD~1 --config p/r2c-ci --no-suppress-errors
+    command: python -m semgrep_agent --baseline-ref HEAD~1 --config p/r2c-ci --config r/python.lang.correctness.useless-eqeq.useless-eqeq --no-suppress-errors
     returncode: 0
     expected_out: new-agent.out
     expected_err: new-agent.err

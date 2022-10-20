@@ -15,5 +15,5 @@ Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
 
 CI scan completed successfully.
-  Found 0 findings (0 blocking) from 75 rules.
+  Found 0 findings (0 blocking) from 106 rules.
   No blocking findings so exiting with code 0
