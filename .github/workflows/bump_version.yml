@@ -82,6 +82,3 @@ jobs:
           # open new pull request with the body of from the local template.
           res=$(gh pr create --title "${TITLE}" --body "Bump Semgrep Version to ${NEW_SEMGREP_VERSION}" \
             --base "${TARGET}" --head "${SOURCE}" --reviewer returntocorp/backenders)
-
-          PR_NUMBER=$(echo $res | jq '.number')
-          echo "::set-output name=pr-number::$PR_NUMBER"
