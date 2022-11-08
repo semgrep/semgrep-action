@@ -80,5 +80,5 @@ jobs:
               exit 1
           fi
           # open new pull request with the body of from the local template.
-          res=$(gh pr create --title "${TITLE}" --body "Bump Semgrep Version to ${NEW_SEMGREP_VERSION}" \
-            --base "${TARGET}" --head "${SOURCE}" --reviewer returntocorp/backenders)
+          gh pr create --title "${TITLE}" --body "Bump Semgrep Version to ${NEW_SEMGREP_VERSION}" \
+            --base "${TARGET}" --head "${SOURCE}" --reviewer returntocorp/backenders
