@@ -10,7 +10,7 @@ python = "^3.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
-jsonschema = "^4.4.0"
+jsonschema = "^4.17.3"
 PyYAML = "^6.0"
 
 [build-system]
