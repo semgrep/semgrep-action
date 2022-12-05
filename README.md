@@ -23,7 +23,7 @@ Refer to the [GitHub Actions configuration document](https://semgrep.dev/docs/se
 
 ## Project summary
 
-**:warning: Warning:warning:**
+**:warning: Warning :warning:**
 This wrapper script is **deprecated**. It is recommended to stop using this wrapper script and migrate to native Semgrep support instead. Refer to the [GitHub Actions configuration document](https://semgrep.dev/docs/semgrep-ci/sample-ci-configs/#sample-github-actions-configuration-file).  
 
 Semgrep Action runs Semgrep in CI environments. It can also connect to Semgrep App to configure rules and review findings on a web UI.
@@ -50,7 +50,7 @@ Once Semgrep Action is running, [explore the Semgrep Registry](https://semgrep.d
 
 ## Configuration
 
-See the [Semgrep in CI configuration documentation](https://semgrep.dev/docs/semgrep-ci/configuration-reference/) for further customizations, such as scanning with custom rules, ignoring files, and tuning performance.
+See the [Semgrep in CI configuration reference](https://semgrep.dev/docs/semgrep-ci/configuration-reference/) for further customizations, such as scanning with custom rules, ignoring files, and tuning performance.
 
 ## Metrics
 
