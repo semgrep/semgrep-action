@@ -19,30 +19,17 @@
 
 **Semgrep now supports GitHub Actions natively!** :tada:
 
-Instead of using this Semgrep Action wrapper script,
-we recommend running `semgrep ci` in the official Semgrep image.
-You can do that by using this GitHub Actions config:
-
-```yaml
-  semgrep:
-    name: Scan
-    runs-on: ubuntu-20.04
-    container:
-      image: returntocorp/semgrep
-    steps:
-    - uses: actions/checkout@v3
-    - run: semgrep ci
-```
-
-To see all the configuration options, [check Semgrep docs](https://semgrep.dev/docs/semgrep-ci/sample-ci-configs/#github-actions).
-
-If you prefer to use the Semgrep Action,
-it will remain maintained for the foreseeable future,
-but the Semgrep team can provide better support and documentation for you
-if you use the native `semgrep ci` command instead.
+Refer to the [GitHub Actions configuration document](https://semgrep.dev/docs/semgrep-ci/sample-ci-configs/#sample-github-actions-configuration-file) to run Semgrep natively in CI environments.
 
 ## Project summary
 
+| **:warning: Warning :warning:** |
+| --------------------------  |
+| This wrapper script is **deprecated**. It is recommended to stop using this wrapper script and migrate to native Semgrep support instead. Refer to the [GitHub Actions configuration document](https://semgrep.dev/docs/semgrep-ci/sample-ci-configs/#sample-github-actions-configuration-file). |
+
+Semgrep Action runs Semgrep in CI environments. It can also connect to Semgrep App to configure rules and review findings on a web UI.
+
+To see all the configuration options, [check Semgrep docs](https://semgrep.dev/docs/semgrep-ci/sample-ci-configs/#sample-github-actions-configuration-file).
 Semgrep Action runs [Semgrep](https://github.com/returntocorp/semgrep) in CI environments.
 It can also connect to [Semgrep App](https://semgrep.dev/products/semgrep-app) to configure rules and review findings on a web UI.
 
@@ -58,19 +45,13 @@ Semgrep behaves like other static analysis and linting tools:
 it runs a set of user-configured rules and returns a non-zero exit code if there are findings,
 resulting in its job showing a ✅ or ❌.
 
-Find a relevant template for your CI provider through these links:
-
-- [**GitHub Actions**](https://semgrep.dev/docs/semgrep-ci/overview/#github-actions)
-- [**GitLab CI/CD**](https://semgrep.dev/docs/semgrep-ci/overview/#gitlab-cicd)
-- [**Other CI providers**](https://semgrep.dev/docs/semgrep-ci/overview/#other-ci-providers) (Buildkite, CircleCI, Jenkins, and more)
-
-Read through the comments in the template to adjust when and what Semgrep CI scans, selecting pull and merge requests, merges to branches, or both.
+Refer to [Getting started with Semgrep in CI](https://semgrep.dev/docs/semgrep-ci/overview/) to set up a CI job with Semgrep.
 
 Once Semgrep Action is running, [explore the Semgrep Registry](https://semgrep.dev/r) to find and add more project-specific rules.
 
 ## Configuration
 
-See [Advanced Configuration documentation](https://semgrep.dev/docs/semgrep-ci/overview/#advanced-configuration) for further customizations, such as scanning with custom rules, ignoring files, and tuning performance.
+See the [Semgrep in CI configuration reference](https://semgrep.dev/docs/semgrep-ci/configuration-reference/) for further customizations, such as scanning with custom rules, ignoring files, and tuning performance.
 
 ## Metrics
 
