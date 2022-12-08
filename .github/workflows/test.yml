@@ -65,6 +65,11 @@ jobs:
               echo "no snapshot changes found"
               exit 0
           fi
+      - name: Configure git creds for push
+        run: |
+          echo "machine github.com" >> ~/.netrc
+          echo "login ${{ github.repository }}" >> ~/.netrc
+          echo "password ${{ secrets.GITHUB_TOKEN }}" >> ~/.netrc
       - name: Commit snapshot updates
         id: snapshot-commit
         if: failure() && github.event_name == 'pull_request' && (github.actor != 'dependabot[bot]' && !(github.event.pull_request.head.repo.full_name != github.repository))
@@ -74,6 +79,8 @@ jobs:
           default_author: github_actions
           message: "Update pytest snapshots"
           new_branch: snapshot-updates-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Remove Credentials
+        run: rm ~/.netrc
       - name: Comment about any snapshot updates
         if: failure() && steps.snapshot-commit.outputs.pushed == 'true'
         run: |
