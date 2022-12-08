@@ -66,6 +66,8 @@ jobs:
               exit 0
           fi
       - name: Configure git creds for push
+        id: configure-creds
+        if: failure() && github.event_name == 'pull_request' && (github.actor != 'dependabot[bot]' && !(github.event.pull_request.head.repo.full_name != github.repository))
         run: |
           echo "machine github.com" >> ~/.netrc
           echo "login ${{ github.repository }}" >> ~/.netrc
@@ -80,6 +82,8 @@ jobs:
           message: "Update pytest snapshots"
           new_branch: snapshot-updates-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Remove Credentials
+        id: remove-creds
+        if: failure() && github.event_name == 'pull_request' && (github.actor != 'dependabot[bot]' && !(github.event.pull_request.head.repo.full_name != github.repository))
         run: rm ~/.netrc
       - name: Comment about any snapshot updates
         if: failure() && steps.snapshot-commit.outputs.pushed == 'true'
