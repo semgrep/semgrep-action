@@ -21,5 +21,5 @@ Some files were skipped or only partially analyzed.
 (need more rules? `semgrep login` for additional free Semgrep Registry rules)
 
 CI scan completed successfully.
-  Found 0 findings (0 blocking) from 80 rules.
+  Found 0 findings (0 blocking) from 81 rules.
   No blocking findings so exiting with code 0
