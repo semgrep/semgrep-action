@@ -9,8 +9,13 @@ Scanning 1 file.
   Current version has 1 finding.
 
 Switching repository to baseline commit 'HEAD~1'.
-  Will report findings introduced by these commits:
+  Will report findings introduced by these commits (may be incomplete for shallow checkouts):
     * aaaaaaa add rules
+  The current branch is missing these commits from the baseline branch:
+
+  Any finding these commits fixed will look like a new finding in the current branch.
+  To avoid reporting such findings, compare to the branch-off point with:
+    --baseline-commit=$(git merge-base HEAD~1 HEAD)
 
 Scanning 1 file.
 
