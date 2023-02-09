@@ -1,11 +1,33 @@
 === Running: SEMGREP_RULES="python/lang/best-practice/sleep.yaml" semgrep ci --no-suppress-errors
 Running `semgrep ci` without API token but with configs ('python/lang/best-practice/sleep.yaml',)
-Scan environment:
+
+
+╭────────────────╮
+│ Debugging Info │
+╰────────────────╯
+
+  SCAN ENVIRONMENT
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
+
+╭─────────────╮
+│ Scan Status │
+╰─────────────╯
+
 Fetching configuration from semgrep.dev
 Scanning 210 files.
+
+
+╭─────────╮
+│ Results │
+╰─────────╯
+
+
+
+╭──────────────╮
+│ Scan Summary │
+╰──────────────╯
 
 Some files were skipped or only partially analyzed.
   Scan was limited to files tracked by git.

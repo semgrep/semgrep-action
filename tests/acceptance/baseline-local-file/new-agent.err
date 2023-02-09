@@ -1,8 +1,19 @@
 === Running: SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_RULES=".semgrep.yml" semgrep ci --no-suppress-errors
 Running `semgrep ci` without API token but with configs ('.semgrep.yml',)
-Scan environment:
+
+
+╭────────────────╮
+│ Debugging Info │
+╰────────────────╯
+
+  SCAN ENVIRONMENT
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
+
+
+╭─────────────╮
+│ Scan Status │
+╰─────────────╯
 
 Fetching configuration from semgrep.dev
 Scanning 1 file.
@@ -18,6 +29,17 @@ Switching repository to baseline commit 'HEAD~1'.
     --baseline-commit=$(git merge-base HEAD~1 HEAD)
 
 Scanning 1 file.
+
+
+╭─────────╮
+│ Results │
+╰─────────╯
+
+
+
+╭──────────────╮
+│ Scan Summary │
+╰──────────────╯
 
 Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
