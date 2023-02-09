@@ -1,4 +1,3 @@
-
 Blocking Findings:
 
   python/django/security/audit/xss/template-translate-as-no-escape.html
