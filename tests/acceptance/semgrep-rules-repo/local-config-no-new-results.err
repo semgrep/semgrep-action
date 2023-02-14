@@ -2,18 +2,18 @@
 Running `semgrep ci` without API token but with configs ('python/lang/best-practice/sleep.yaml',)
 
 
-╭────────────────╮
+┌────────────────┐
 │ Debugging Info │
-╰────────────────╯
+└────────────────┘
 
   SCAN ENVIRONMENT
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
 
-╭─────────────╮
+┌─────────────┐
 │ Scan Status │
-╰─────────────╯
+└─────────────┘
 
 Fetching configuration from semgrep.dev
 Nothing to scan.
@@ -22,9 +22,9 @@ Nothing to scan.
 Skipping baseline scan, because there are no current findings.
 
 
-╭──────────────╮
+┌──────────────┐
 │ Scan Summary │
-╰──────────────╯
+└──────────────┘
 
 Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.

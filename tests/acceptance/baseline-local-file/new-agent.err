@@ -2,18 +2,18 @@
 Running `semgrep ci` without API token but with configs ('.semgrep.yml',)
 
 
-╭────────────────╮
+┌────────────────┐
 │ Debugging Info │
-╰────────────────╯
+└────────────────┘
 
   SCAN ENVIRONMENT
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
 
-╭─────────────╮
+┌─────────────┐
 │ Scan Status │
-╰─────────────╯
+└─────────────┘
 
 Fetching configuration from semgrep.dev
 Scanning 1 file.
@@ -31,15 +31,15 @@ Switching repository to baseline commit 'HEAD~1'.
 Scanning 1 file.
 
 
-╭─────────╮
+┌─────────┐
 │ Results │
-╰─────────╯
+└─────────┘
 
 
 
-╭──────────────╮
+┌──────────────┐
 │ Scan Summary │
-╰──────────────╯
+└──────────────┘
 
 Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
