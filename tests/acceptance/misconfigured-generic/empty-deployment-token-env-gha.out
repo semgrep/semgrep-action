@@ -1,1 +1,1 @@
-
+run `semgrep login` before using `semgrep ci` or set `--config`

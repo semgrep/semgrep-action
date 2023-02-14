@@ -2,18 +2,18 @@
 Running `semgrep ci` without API token but with configs ('p/r2c-ci', 'p/r2c', 'r/python.lang.correctness.useless-eqeq.useless-eqeq')
 
 
-╭────────────────╮
+┌────────────────┐
 │ Debugging Info │
-╰────────────────╯
+└────────────────┘
 
   SCAN ENVIRONMENT
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
 
-╭─────────────╮
+┌─────────────┐
 │ Scan Status │
-╰─────────────╯
+└─────────────┘
 
 Fetching configuration from semgrep.dev
 Semgrep rule registry URL is https://semgrep.dev/registry.
@@ -27,15 +27,15 @@ Scanning across multiple languages:
 Skipping baseline scan, because all current findings are in files that didn't exist in the baseline commit.
 
 
-╭─────────╮
+┌─────────┐
 │ Results │
-╰─────────╯
+└─────────┘
 
 
 
-╭──────────────╮
+┌──────────────┐
 │ Scan Summary │
-╰──────────────╯
+└──────────────┘
 
 Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.

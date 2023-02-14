@@ -14,18 +14,18 @@ For questions or support, please reach out at https://r2c.dev/slack
 Running `semgrep ci` without API token but with configs ('python/django/security/audit/xss/template-translate-as-no-escape.yaml',)
 
 
-╭────────────────╮
+┌────────────────┐
 │ Debugging Info │
-╰────────────────╯
+└────────────────┘
 
   SCAN ENVIRONMENT
   versions    - semgrep x.y.z on python x.y.z
   environment - running in environment git, triggering event is unknown
 
 
-╭─────────────╮
+┌─────────────┐
 │ Scan Status │
-╰─────────────╯
+└─────────────┘
 
 Fetching configuration from semgrep.dev
 Scanning 6 files.
@@ -34,15 +34,15 @@ Scanning 6 files.
 Skipping baseline scan, because all current findings are in files that didn't exist in the baseline commit.
 
 
-╭─────────╮
+┌─────────┐
 │ Results │
-╰─────────╯
+└─────────┘
 
 
 
-╭──────────────╮
+┌──────────────┐
 │ Scan Summary │
-╰──────────────╯
+└──────────────┘
 
 Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
