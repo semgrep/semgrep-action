@@ -15,9 +15,9 @@ Running `semgrep ci` without API token but with configs ('p/r2c-ci', 'r/python.l
 │ Scan Status │
 └─────────────┘
 
-Fetching configuration from semgrep.dev
 Semgrep rule registry URL is https://semgrep.dev/registry.
 Scanning 1 file.
+
   Current version has 0 findings.
 
 Skipping baseline scan, because there are no current findings.
@@ -35,5 +35,5 @@ Some files were skipped or only partially analyzed.
 (need more rules? `semgrep login` for additional free Semgrep Registry rules)
 
 CI scan completed successfully.
-  Found 0 findings (0 blocking) from 81 rules.
+  Found 0 findings (0 blocking) from 82 rules.
   No blocking findings so exiting with code 0

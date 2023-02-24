@@ -15,9 +15,9 @@ Running `semgrep ci` without API token but with configs ('r/python.lang.correctn
 │ Scan Status │
 └─────────────┘
 
-Fetching configuration from semgrep.dev
 Semgrep rule registry URL is https://semgrep.dev/registry.
 Scanning 2 files.
+
   Current version has 2 findings.
 
 Skipping baseline scan, because all current findings are in files that didn't exist in the baseline commit.
