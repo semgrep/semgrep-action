@@ -16,8 +16,8 @@ Running `semgrep ci` without API token but with configs ('python/django/security
 │ Scan Status │
 └─────────────┘
 
-Fetching configuration from semgrep.dev
 Scanning 6 files.
+
   Current version has 2 findings.
 
 Skipping baseline scan, because all current findings are in files that didn't exist in the baseline commit.

@@ -15,8 +15,8 @@ Running `semgrep ci` without API token but with configs ('python/lang/best-pract
 │ Scan Status │
 └─────────────┘
 
-Fetching configuration from semgrep.dev
 Scanning 210 files.
+
 
 
 ┌─────────┐

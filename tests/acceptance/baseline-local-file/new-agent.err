@@ -15,8 +15,8 @@ Running `semgrep ci` without API token but with configs ('.semgrep.yml',)
 │ Scan Status │
 └─────────────┘
 
-Fetching configuration from semgrep.dev
 Scanning 1 file.
+
   Current version has 1 finding.
 
 Switching repository to baseline commit 'HEAD~1'.
@@ -29,6 +29,7 @@ Switching repository to baseline commit 'HEAD~1'.
     --baseline-commit=$(git merge-base HEAD~1 HEAD)
 
 Scanning 1 file.
+
 
 
 ┌─────────┐
