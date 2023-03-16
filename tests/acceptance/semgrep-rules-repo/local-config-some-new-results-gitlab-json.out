@@ -1,11 +1,37 @@
 {
   "$schema": "https://gitlab.com/gitlab-org/security-products/security-report-schemas/-/blob/master/dist/sast-report-format.json",
+  "scan": {
+    "analyzer": {
+      "id": "semgrep",
+      "name": "Semgrep",
+      "url": "https://semgrep.dev",
+      "vendor": {
+        "name": "Semgrep"
+      },
+      "version": "x.y.z"
+    },
+    "end_time": "2023-03-16T00:43:23",
+    "scanner": {
+      "id": "semgrep",
+      "name": "Semgrep",
+      "url": "https://semgrep.dev",
+      "vendor": {
+        "name": "Semgrep"
+      },
+      "version": "x.y.z"
+    },
+    "start_time": "2023-03-16T00:43:23",
+    "status": "success",
+    "type": "sast",
+    "version": "x.y.z"
+  },
   "version": "x.y.z",
   "vulnerabilities": [
     {
       "category": "sast",
-      "confidence": "High",
       "cve": "python/django/security/audit/xss/template-translate-as-no-escape.html:676a433f628cec7914931f26ad682a3c0e54381b0ae0f5795c47f740e439889a:python.django.security.audit.xss.template-translate-as-no-escape",
+      "details": {},
+      "flags": [],
       "id": "d09ee83a-faa4-91ef-daa4-3032a2a896e1",
       "identifiers": [
         {
@@ -32,8 +58,9 @@
     },
     {
       "category": "sast",
-      "confidence": "High",
       "cve": "python/django/security/audit/xss/template-translate-as-no-escape.html:676a433f628cec7914931f26ad682a3c0e54381b0ae0f5795c47f740e439889a:python.django.security.audit.xss.template-translate-as-no-escape",
+      "details": {},
+      "flags": [],
       "id": "c05aaeaf-7b55-6fde-76e5-13617669ae1e",
       "identifiers": [
         {

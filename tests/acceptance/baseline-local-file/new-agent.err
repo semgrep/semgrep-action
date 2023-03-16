@@ -1,5 +1,4 @@
 === Running: SEMGREP_BASELINE_COMMIT="HEAD~1" SEMGREP_RULES=".semgrep.yml" semgrep ci --no-suppress-errors
-Running `semgrep ci` without API token but with configs ('.semgrep.yml',)
 
 
 ┌────────────────┐
@@ -14,9 +13,10 @@ Running `semgrep ci` without API token but with configs ('.semgrep.yml',)
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
+  Scanning 2 files tracked by git with 1 Code rule:
 
-Fetching configuration from semgrep.dev
-Scanning 1 file.
+  CODE RULES
+  Scanning 1 file.
   Current version has 1 finding.
 
 Switching repository to baseline commit 'HEAD~1'.
@@ -28,7 +28,15 @@ Switching repository to baseline commit 'HEAD~1'.
   To avoid reporting such findings, compare to the branch-off point with:
     --baseline-commit=$(git merge-base HEAD~1 HEAD)
 
-Scanning 1 file.
+
+
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 1 file tracked by git with 1 Code rule:
+
+  CODE RULES
+  Scanning 1 file.
 
 
 ┌─────────┐
@@ -36,11 +44,9 @@ Scanning 1 file.
 └─────────┘
 
 
-
 ┌──────────────┐
 │ Scan Summary │
 └──────────────┘
-
 Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
 

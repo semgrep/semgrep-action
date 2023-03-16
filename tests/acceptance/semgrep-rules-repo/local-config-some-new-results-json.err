@@ -1,5 +1,4 @@
 === Running: SEMGREP_RULES="python/django/security/audit/xss/template-translate-as-no-escape.yaml" SEMGREP_BASELINE_COMMIT="HEAD~1" semgrep ci --json --no-suppress-errors
-Running `semgrep ci` without API token but with configs ('python/django/security/audit/xss/template-translate-as-no-escape.yaml',)
 
 
 ┌────────────────┐
@@ -14,9 +13,10 @@ Running `semgrep ci` without API token but with configs ('python/django/security
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
+  Scanning 6 files tracked by git with 1 Code rule:
 
-Fetching configuration from semgrep.dev
-Scanning 6 files.
+  CODE RULES
+  Scanning 6 files.
   Current version has 2 findings.
 
 Skipping baseline scan, because all current findings are in files that didn't exist in the baseline commit.
@@ -27,11 +27,9 @@ Skipping baseline scan, because all current findings are in files that didn't ex
 └─────────┘
 
 
-
 ┌──────────────┐
 │ Scan Summary │
 └──────────────┘
-
 Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
 
