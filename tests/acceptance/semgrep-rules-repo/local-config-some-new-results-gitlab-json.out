@@ -10,7 +10,7 @@
       },
       "version": "x.y.z"
     },
-    "end_time": "2023-03-16T00:43:23",
+    "end_time": "2023-03-16T03:25:10",
     "scanner": {
       "id": "semgrep",
       "name": "Semgrep",
@@ -20,7 +20,7 @@
       },
       "version": "x.y.z"
     },
-    "start_time": "2023-03-16T00:43:23",
+    "start_time": "2023-03-16T03:25:09",
     "status": "success",
     "type": "sast",
     "version": "x.y.z"
