@@ -1,21 +1,27 @@
-Blocking Findings:
-
-  baz.py
-     python.lang.correctness.useless-eqeq.useless-eqeq
-        This expression is always True: `15 == 15` or `15 != 15`. If testing for floating point NaN,
-        use `math.isnan(15)`, or `cmath.isnan(15)` if the number is complex.
-        Details: https://sg.run/GeAp
-
-          1┆ 15 == 15
 
 
-  foo.py
-     python.lang.correctness.useless-eqeq.useless-eqeq
-        This expression is always True: `10 == 10` or `10 != 10`. If testing for floating point NaN,
-        use `math.isnan(10)`, or `cmath.isnan(10)` if the number is complex.
-        Details: https://sg.run/GeAp
+┌──────────────────────────┐
+│ 2 Blocking Code Findings │
+└──────────────────────────┘
 
-          1┆ 10 == 10
+    baz.py
+       python.lang.correctness.useless-eqeq.useless-eqeq
+          This expression is always True: `15 == 15` or `15 != 15`. If testing
+  for floating point NaN,
+          use `math.isnan(15)`, or `cmath.isnan(15)` if the number is complex.
+          Details: https://sg.run/GeAp
 
-Blocking Rules Fired:
-   python.lang.correctness.useless-eqeq.useless-eqeq
+            1┆ 15 == 15
+
+    foo.py
+       python.lang.correctness.useless-eqeq.useless-eqeq
+          This expression is always True: `10 == 10` or `10 != 10`. If testing
+  for floating point NaN,
+          use `math.isnan(10)`, or `cmath.isnan(10)` if the number is complex.
+          Details: https://sg.run/GeAp
+
+            1┆ 10 == 10
+
+  BLOCKING CODE RULES FIRED:
+    python.lang.correctness.useless-eqeq.useless-eqeq
+
