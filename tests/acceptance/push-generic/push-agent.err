@@ -1,5 +1,4 @@
 === Running: SEMGREP_RULES="r/python.lang.correctness.useless-eqeq.useless-eqeq" semgrep ci --no-suppress-errors
-Running `semgrep ci` without API token but with configs ('r/python.lang.correctness.useless-eqeq.useless-eqeq',)
 
 
 ┌────────────────┐
@@ -14,22 +13,13 @@ Running `semgrep ci` without API token but with configs ('r/python.lang.correctn
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
-
-Fetching configuration from semgrep.dev
-Semgrep rule registry URL is https://semgrep.dev/registry.
-Scanning 1 file.
-
-
-┌─────────┐
-│ Results │
-└─────────┘
-
+  Scanning 1 file tracked by git with 1 Code rule:
+  Scanning 1 file.
 
 
 ┌──────────────┐
 │ Scan Summary │
 └──────────────┘
-
 Some files were skipped or only partially analyzed.
   Scan was limited to files tracked by git.
 

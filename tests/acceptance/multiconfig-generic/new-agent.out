@@ -1,12 +1,18 @@
-Blocking Findings:
 
-  bar.py
-     python.lang.correctness.useless-eqeq.useless-eqeq
-        This expression is always True: `2 == 2` or `2 != 2`. If testing for floating point NaN, use
-        `math.isnan(2)`, or `cmath.isnan(2)` if the number is complex.
-        Details: https://sg.run/GeAp
 
-          1┆ 2 == 2
+┌─────────────────────────┐
+│ 1 Blocking Code Finding │
+└─────────────────────────┘
 
-Blocking Rules Fired:
-   python.lang.correctness.useless-eqeq.useless-eqeq
+    bar.py
+       python.lang.correctness.useless-eqeq.useless-eqeq
+          This expression is always True: `2 == 2` or `2 != 2`. If testing for
+  floating point NaN, use
+          `math.isnan(2)`, or `cmath.isnan(2)` if the number is complex.
+          Details: https://sg.run/GeAp
+
+            1┆ 2 == 2
+
+  BLOCKING CODE RULES FIRED:
+    python.lang.correctness.useless-eqeq.useless-eqeq
+

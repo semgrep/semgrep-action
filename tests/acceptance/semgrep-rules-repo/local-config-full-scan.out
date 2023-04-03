@@ -1,12 +1,17 @@
-Blocking Findings:
 
-  python/lang/best-practice/sleep.py
-     python.lang.best-practice.arbitrary-sleep
-        time.sleep() call; did you mean to leave this in?
 
-         12┆ t.sleep(5)
-          ⋮┆----------------------------------------
-         14┆ t.sleep(0.1)
+┌──────────────────────────┐
+│ 2 Blocking Code Findings │
+└──────────────────────────┘
 
-Blocking Rules Fired:
-   python.lang.best-practice.arbitrary-sleep
+    python/lang/best-practice/sleep.py
+       python.lang.best-practice.arbitrary-sleep
+          time.sleep() call; did you mean to leave this in?
+
+           12┆ t.sleep(5)
+            ⋮┆----------------------------------------
+           14┆ t.sleep(0.1)
+
+  BLOCKING CODE RULES FIRED:
+    python.lang.best-practice.arbitrary-sleep
+
