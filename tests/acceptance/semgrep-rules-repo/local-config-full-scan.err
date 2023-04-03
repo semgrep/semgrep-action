@@ -1,5 +1,4 @@
 === Running: SEMGREP_RULES="python/lang/best-practice/sleep.yaml" semgrep ci --no-suppress-errors
-Running `semgrep ci` without API token but with configs ('python/lang/best-practice/sleep.yaml',)
 
 
 ┌────────────────┐
@@ -14,21 +13,13 @@ Running `semgrep ci` without API token but with configs ('python/lang/best-pract
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
-
-Fetching configuration from semgrep.dev
-Scanning 210 files.
-
-
-┌─────────┐
-│ Results │
-└─────────┘
-
+  Scanning 1480 files tracked by git with 1 Code rule:
+  Scanning 210 files.
 
 
 ┌──────────────┐
 │ Scan Summary │
 └──────────────┘
-
 Some files were skipped or only partially analyzed.
   Scan was limited to files tracked by git.
   Scan skipped: 5 files matching .semgrepignore patterns

@@ -31,6 +31,8 @@ ENV_VERSIONS = re.compile(
     r"^(\s+?versions\s+?- semgrep ).+?( on python ).+?$", re.MULTILINE
 )
 JSON_VERSION = re.compile(r'"version": "[0-9]+?[.][0-9]+?[.][0-9]+?"')
+START_TIME = re.compile(r'"start_time": "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"')
+END_TIME = re.compile(r'"end_time": "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"')
 GITHUB_ACTIONS_DEBUG = re.compile(r"^::debug::.*?\n", re.MULTILINE)
 NEW_VERSION_AVAILABLE = re.compile(
     r"\nA new version of Semgrep is available.*\n", re.MULTILINE
@@ -57,6 +59,8 @@ CLEANING_FUNCS: Sequence[Callable[[str], str]] = [
     lambda s: re.sub(BRANCH_MERGE, r"Merge: aaaaaaa bbbbbbb", s),
     lambda s: re.sub(ENV_VERSIONS, r"\1x.y.z\2x.y.z", s),
     lambda s: re.sub(JSON_VERSION, r'"version": "x.y.z"', s),
+    lambda s: re.sub(START_TIME, r'"start_time": "YYYY-MM-DD-THH:MM:SS"', s),
+    lambda s: re.sub(END_TIME, r'"end_time": "YYYY-MM-DD-THH:MM:SS"', s),
     lambda s: re.sub(GITHUB_ACTIONS_DEBUG, "", s),
     lambda s: re.sub(NEW_VERSION_AVAILABLE, "", s),
     lambda s: re.sub(
