@@ -1,5 +1,4 @@
 === Running: SEMGREP_BASELINE_COMMIT="main" SEMGREP_RULES="p/r2c-ci r/python.lang.correctness.useless-eqeq.useless-eqeq" semgrep ci --no-suppress-errors
-Running `semgrep ci` without API token but with configs ('p/r2c-ci', 'r/python.lang.correctness.useless-eqeq.useless-eqeq')
 
 
 ┌────────────────┐
@@ -14,13 +13,12 @@ Running `semgrep ci` without API token but with configs ('p/r2c-ci', 'r/python.l
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
+  Scanning 1 file tracked by git with 87 Code rules:
 
-Fetching configuration from semgrep.dev
-Semgrep rule registry URL is https://semgrep.dev/registry.
-
-Scanning across multiple languages:
-         python | 7 rules × 1 file
-    <multilang> | 1 rule  × 1 file
+  Language      Rules   Files          Origin      Rules
+ ─────────────────────────────        ───────────────────
+  python            7       1          Community      87
+  <multilang>       1       1
 
   Current version has 0 findings.
 
@@ -30,12 +28,11 @@ Skipping baseline scan, because there are no current findings.
 ┌──────────────┐
 │ Scan Summary │
 └──────────────┘
-
 Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
 
 (need more rules? `semgrep login` for additional free Semgrep Registry rules)
 
 CI scan completed successfully.
-  Found 0 findings (0 blocking) from 81 rules.
+  Found 0 findings (0 blocking) from 87 rules.
   No blocking findings so exiting with code 0
