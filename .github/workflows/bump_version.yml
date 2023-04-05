@@ -38,7 +38,7 @@ jobs:
           "https://api.github.com/app/installations/${{ secrets.SEMGREP_CI_APP_INSTALLATION_ID }}/access_tokens" | \
           jq -r .token)"
           echo "::add-mask::$TOKEN"
-          echo "::set-output name=token::$TOKEN"
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
       - uses: actions/checkout@v3
         with:
           submodules: true
@@ -62,8 +62,8 @@ jobs:
           git add .
           git commit -m "$SUBJECT"
           git push --set-upstream origin $BRANCH
-          echo "::set-output name=branch::$BRANCH"
-          echo "::set-output name=subject::$SUBJECT"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "subject=$SUBJECT" >> $GITHUB_OUTPUT
       - name: Create PR
         id: open-pr
         env:
