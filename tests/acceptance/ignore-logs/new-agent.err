@@ -13,7 +13,7 @@
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
-  Scanning 2 files tracked by git with 87 Code rules:
+  Scanning 2 files tracked by git with 89 Code rules:
   Scanning 1 file.
   Current version has 0 findings.
 
@@ -31,5 +31,5 @@ Some files were skipped or only partially analyzed.
 (need more rules? `semgrep login` for additional free Semgrep Registry rules)
 
 CI scan completed successfully.
-  Found 0 findings (0 blocking) from 87 rules.
+  Found 0 findings (0 blocking) from 89 rules.
   No blocking findings so exiting with code 0
