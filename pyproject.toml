@@ -14,5 +14,5 @@ jsonschema = "^4.4.0"
 PyYAML = "^6.0"
 
 [build-system]
-requires = ["poetry>=1.0.10"]
+requires = ["poetry>=1.2"]
 build-backend = "poetry.masonry.api"
