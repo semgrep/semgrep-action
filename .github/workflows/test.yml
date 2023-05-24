@@ -12,9 +12,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
-    env:
-      PIPX_HOME: .pipx
-      PIPX_BIN_DIR: .pipx_bin
     steps:
       - uses: actions/checkout@v3
         with:
