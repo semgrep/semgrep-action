@@ -27,7 +27,7 @@ jobs:
       - id: setup-package-managers
         name: Setup package managers
         run: |
-          pipx install poetry==1.1.15
+          pipx install poetry==1.2.0
           poetry config virtualenvs.in-project true
           echo "::set-output name=installed-semgrep-version::$(sed --quiet --regexp-extended 's/^FROM returntocorp[/]semgrep:(.+)$/\1/p' Dockerfile)"
 
