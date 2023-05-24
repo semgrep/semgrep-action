@@ -27,7 +27,7 @@ jobs:
       - id: setup-package-managers
         name: Setup package managers
         run: |
-          python -m pip install --upgrade poetry==1.1.15 pipx==0.15.6.0
+          python -m pip install --upgrade poetry==1.2.0 pipx==0.15.6.0
           echo "$(pwd)/.pipx_bin" >> $GITHUB_PATH
           poetry config virtualenvs.in-project true
           echo "::set-output name=installed-semgrep-version::$(sed --quiet --regexp-extended 's/^FROM returntocorp[/]semgrep:(.+)$/\1/p' Dockerfile)"
