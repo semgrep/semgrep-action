@@ -17,7 +17,7 @@
   Scanning 1 file.
   Current version has 1 finding.
 
-Switching repository to baseline commit 'HEAD~1'.
+Creating git worktree from 'HEAD~1' to scan baseline.
   Will report findings introduced by these commits (may be incomplete for shallow checkouts):
     * aaaaaaa add rules
   The current branch is missing these commits from the baseline branch:
