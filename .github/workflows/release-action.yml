@@ -26,7 +26,7 @@ jobs:
           "https://api.github.com/app/installations/${{ secrets.SEMGREP_CI_APP_INSTALLATION_ID }}/access_tokens" | \
           jq -r .token)"
           echo "::add-mask::$TOKEN"
-          echo "::set-output name=token::$TOKEN"
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
       - name: Check out code
         uses: actions/checkout@v3
         id: checkout
@@ -44,7 +44,7 @@ jobs:
         id: latest-version
         run: |
           LATEST_TAG=$(git tag --list "v*.*.*" | sort -V | tail -n 1 | cut -c 2- )
-          echo ::set-output name=latest-version::${LATEST_TAG}
+          echo "latest-version=${LATEST_TAG}" >> $GITHUB_OUTPUT
       - name: Get Next SemVer tag
         id: next-version
         uses: christian-draeger/increment-semantic-version@9d04121fb4825e033aeeaaf6d42b44b8b4e81ac5
@@ -55,7 +55,7 @@ jobs:
         id: semgrep-version
         run: |
           SEMGREP_VERSION=$(sed -n 's|FROM returntocorp/semgrep:\(.*\)|\1|p' Dockerfile)
-          echo "::set-output name=semgrep-version::$SEMGREP_VERSION"
+          echo "semgrep-version=$SEMGREP_VERSION" >> $GITHUB_OUTPUT
       - name: Add New SemVer (Immutable) Tag
         id: create-tag
         run: |
