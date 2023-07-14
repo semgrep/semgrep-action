@@ -13,7 +13,7 @@
 ┌─────────────┐
 │ Scan Status │
 └─────────────┘
-  Scanning 0 files tracked by git with 94 Code rules:
+  Scanning 0 files tracked by git with 98 Code rules:
   Nothing to scan.
   Current version has 0 findings.
 
@@ -27,5 +27,5 @@ Some files were skipped or only partially analyzed.
   Scan was limited to files changed since baseline commit.
 
 CI scan completed successfully.
-  Found 0 findings (0 blocking) from 94 rules.
+  Found 0 findings (0 blocking) from 98 rules.
   No blocking findings so exiting with code 0
