@@ -13,7 +13,7 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - name: Setup Python ${{ matrix.python-version }}
@@ -101,7 +101,7 @@ jobs:
     name: live run of action on this repo
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - id: semgrep-app-config

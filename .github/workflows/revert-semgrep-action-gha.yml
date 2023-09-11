@@ -15,7 +15,7 @@ jobs:
       # Specifically we do NOT use the semgrep-ci bot. We don't want to trigger a rebuild upon pushing this tag
       # we just want to move the tag, since that's what's used by GHA.
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         id: checkout
         with:
           ref: "v${{ inputs.version }}"
