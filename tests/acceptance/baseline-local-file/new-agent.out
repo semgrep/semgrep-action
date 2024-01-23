@@ -5,9 +5,8 @@
 └─────────────────────────┘
 
     bar.py
-       python.lang.correctness.useless-eqeq.useless-eqeq
-          This expression is always True: `3 == 3` or `3 != 3`. If testing for
-  floating point NaN, use
+     ❱ python.lang.correctness.useless-eqeq.useless-eqeq
+          This expression is always True: `3 == 3` or `3 != 3`. If testing for floating point NaN, use
           `math.isnan(3)`, or `cmath.isnan(3)` if the number is complex.
           Details: https://sg.run/GeAp
 

@@ -7,8 +7,7 @@
 
   SCAN ENVIRONMENT
   versions    - semgrep x.y.z on python x.y.z
-  environment - running in environment github-actions, triggering event is
-                unknown
+  environment - running in environment github-actions, triggering event is unknown
 
 
 ┌─────────────┐
