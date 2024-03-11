@@ -5,7 +5,7 @@
 └──────────────────────────┘
 
     python/lang/best-practice/sleep.py
-       python.lang.best-practice.arbitrary-sleep
+   ❯❯❱ python.lang.best-practice.arbitrary-sleep
           time.sleep() call; did you mean to leave this in?
 
            12┆ t.sleep(5)
