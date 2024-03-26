@@ -5,10 +5,9 @@
 └─────────────────────────┘
 
     foo.py
-       python.lang.correctness.useless-eqeq.useless-eqeq
-          This expression is always True: `10 == 10` or `10 != 10`. If testing
-  for floating point NaN,
-          use `math.isnan(10)`, or `cmath.isnan(10)` if the number is complex.
+     ❱ python.lang.correctness.useless-eqeq.useless-eqeq
+          This expression is always True: `10 == 10` or `10 != 10`. If testing for floating point NaN, use
+          `math.isnan(10)`, or `cmath.isnan(10)` if the number is complex.
           Details: https://sg.run/GeAp
 
             1┆ 10 == 10
